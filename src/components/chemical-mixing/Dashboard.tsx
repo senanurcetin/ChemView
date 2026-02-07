@@ -6,6 +6,9 @@ import { TrendChart } from './TrendChart';
 import { ControlPanel } from './ControlPanel';
 import { StatusDisplay } from './StatusDisplay';
 import { AlertPanel } from './AlertPanel';
+import { AuditLog } from './AuditLog';
+import { Button } from '@/components/ui/button';
+import { Download } from 'lucide-react';
 
 /**
  * @typedef {Object} DataHistory
@@ -17,38 +20,51 @@ interface DataHistory {
   value: number;
 }
 
+interface LogEntry {
+  id: string;
+  timestamp: string;
+  message: string;
+  level: 'low' | 'medium' | 'high';
+}
+
 /**
  * Dashboard Component
  * 
  * The central controller for the ChemView HMI. It manages the simulated Modbus polling
- * cycle, maintains sensor history for charts, and executes the simulated AI alerting logic.
+ * cycle, maintains sensor history for charts, executes the simulated AI alerting logic,
+ * and handles manual control overrides.
  */
 export function Dashboard() {
   // System State
   const [isRunning, setIsRunning] = useState(false);
+  const [isManualMode, setIsManualMode] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<"Connected" | "Disconnected" | "Connecting">("Connected");
   
-  // Sensors
+  // Sensors & Setpoints
   const [rpm, setRpm] = useState(0);
   const [temp, setTemp] = useState(24.5);
   const [ph, setPh] = useState(7.0);
   const [valveOpen, setValveOpen] = useState(false);
   
+  // Manual Control Setpoints
+  const [targetRpmManual, setTargetRpmManual] = useState(500);
+  const [targetTempManual, setTargetTempManual] = useState(60);
+
   // History & Trends
   const [rpmHistory, setRpmHistory] = useState<DataHistory[]>([]);
   const [tempHistory, setTempHistory] = useState<DataHistory[]>([]);
-  const [stateLog, setStateLog] = useState<any[]>([]);
   
-  // Alerts
+  // Alerts & Audit Log
   const [alerts, setAlerts] = useState<any[]>([]);
+  const [auditLog, setAuditLog] = useState<LogEntry[]>([]);
   const [isAiProcessing, setIsAiProcessing] = useState(false);
 
   /**
    * Modbus Simulation Service - State Update Logic
    * 
    * Simulates the physical dynamics of a mixing tank.
-   * When running: RPM and Temperature ramp up towards setpoints.
-   * When stopped: RPM decays and Temperature cools towards ambient.
+   * Auto Mode: Uses pre-defined operational setpoints with random fluctuation.
+   * Manual Mode: Ramps towards user-defined setpoints from sliders.
    */
   const tick = useCallback(() => {
     if (!isRunning) {
@@ -58,9 +74,15 @@ export function Dashboard() {
       return;
     }
 
-    // Targeted simulated setpoints
-    const targetRpm = 450 + Math.random() * 50;
-    const targetTemp = 65 + Math.random() * 2;
+    // Determine target based on mode
+    const targetRpm = isManualMode 
+      ? targetRpmManual 
+      : (450 + Math.random() * 50);
+    
+    const targetTemp = isManualMode 
+      ? targetTempManual 
+      : (65 + Math.random() * 2);
+
     const targetPh = 7.2 + Math.random() * 0.4;
 
     // Smooth state transitions (linear interpolation simulation)
@@ -71,13 +93,13 @@ export function Dashboard() {
     // Random valve activity simulation
     if (Math.random() > 0.95) setValveOpen(v => !v);
 
-  }, [isRunning]);
+  }, [isRunning, isManualMode, targetRpmManual, targetTempManual]);
 
   /**
    * Polling Cycle Logic
    * 
    * Emulates a Modbus TCP/IP polling cycle by fetching "register" data every 1000ms.
-   * This interval updates the local state and pushes data to the historical trend buffers.
+   * Updates trend history for the last 60 seconds.
    */
   useEffect(() => {
     const interval = setInterval(() => {
@@ -88,40 +110,27 @@ export function Dashboard() {
 
       setRpmHistory(prev => {
         const next = [...prev, { time: timeStr, value: rpm }];
-        return next.slice(-60); // Keep last 60 seconds
+        return next.slice(-60);
       });
 
       setTempHistory(prev => {
         const next = [...prev, { time: timeStr, value: temp }];
         return next.slice(-60);
       });
-
-      setStateLog(prev => {
-        const next = [...prev, {
-          mixingSpeedRpm: rpm,
-          temperatureCelsius: temp,
-          pHLevel: ph,
-          valveStatus: valveOpen ? "open" : "closed",
-          timestamp: now.toISOString()
-        }];
-        return next.slice(-10);
-      });
-
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [tick, rpm, temp, ph, valveOpen]);
+  }, [tick, rpm, temp]);
 
   /**
    * Simulated Intelligence Logic (Mock AI Mode)
    * 
    * Analyzes current system state against operational thresholds to generate
-   * specific, actionable insights for the operator without external API dependencies.
+   * specific, actionable insights and logs them to the Audit Log.
    */
   const checkAlerts = useCallback(() => {
     setIsAiProcessing(true);
     
-    // Artificial delay to simulate processing time
     setTimeout(() => {
       let newAlertMessage = "";
       let urgency: 'low' | 'medium' | 'high' = 'low';
@@ -137,11 +146,22 @@ export function Dashboard() {
         urgency = 'low';
       }
 
-      // Only add if it's a priority message (high/medium) or to refresh the "optimal" status
       setAlerts(prev => {
-        // Prevent exact duplicate spam
         if (prev.length > 0 && prev[0].data.alertMessage === newAlertMessage) return prev;
         
+        // Add significant events to Audit Log
+        if (urgency !== 'low') {
+          setAuditLog(log => [
+            {
+              id: Math.random().toString(36).substr(2, 9),
+              timestamp: new Date().toLocaleTimeString(),
+              message: newAlertMessage,
+              level: urgency
+            },
+            ...log
+          ].slice(0, 50));
+        }
+
         return [{
           id: Math.random().toString(36).substr(2, 9),
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -156,7 +176,6 @@ export function Dashboard() {
     }, 800);
   }, [rpm, temp, valveOpen, isRunning]);
 
-  // Run AI analysis check periodically
   useEffect(() => {
     const timer = setInterval(() => {
       checkAlerts();
@@ -164,11 +183,55 @@ export function Dashboard() {
     return () => clearInterval(timer);
   }, [checkAlerts]);
 
-  const toggleRunning = () => setIsRunning(!isRunning);
+  const toggleRunning = () => {
+    const newState = !isRunning;
+    setIsRunning(newState);
+    setAuditLog(log => [
+      {
+        id: Math.random().toString(36).substr(2, 9),
+        timestamp: new Date().toLocaleTimeString(),
+        message: `System ${newState ? 'STARTED' : 'STOPPED'} by Operator`,
+        level: 'low'
+      },
+      ...log
+    ].slice(0, 50));
+  };
+
   const emergencyStop = () => {
     setIsRunning(false);
     setRpm(0);
     setValveOpen(false);
+    setAuditLog(log => [
+      {
+        id: Math.random().toString(36).substr(2, 9),
+        timestamp: new Date().toLocaleTimeString(),
+        message: "EMERGENCY STOP TRIGGERED",
+        level: 'high'
+      },
+      ...log
+    ].slice(0, 50));
+  };
+
+  const exportToCsv = () => {
+    const csvRows = [
+      ["Timestamp", "RPM", "Temperature (°C)"],
+      ...rpmHistory.map((item, idx) => [
+        item.time,
+        item.value.toFixed(2),
+        tempHistory[idx]?.value.toFixed(2) || "0"
+      ])
+    ];
+
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + csvRows.map(e => e.join(",")).join("\n");
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `reactor_logs_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -177,20 +240,23 @@ export function Dashboard() {
       <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/10 pb-6">
         <div>
           <h1 className="text-4xl font-bold tracking-tighter text-primary">CHEMVIEW <span className="text-white font-light">HMI 4.0</span></h1>
-          <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest mt-1">Chemical Mixing Management System // Open Source Prototype</p>
+          <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest mt-1">Industrial Control System // Digital Twin Prototype</p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <div className="text-[10px] uppercase text-muted-foreground tracking-tighter">Production Line</div>
-            <div className="text-sm font-bold text-primary">REACTOR_UNIT_B7</div>
-          </div>
-          <div className="h-10 w-px bg-white/10 mx-2 hidden lg:block" />
+        <div className="flex items-center gap-6">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={exportToCsv}
+            className="border-primary/20 hover:border-primary/50 text-xs font-mono gap-2"
+          >
+            <Download className="w-3 h-3" /> EXPORT CSV
+          </Button>
           <div className="flex flex-col items-end">
              <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_#00FFFF]" />
-                <span className="text-xs font-mono text-primary font-bold">SIMULATED MODBUS ACTIVE</span>
+                <span className="text-xs font-mono text-primary font-bold uppercase">Modbus Active</span>
              </div>
-             <span className="text-[10px] text-muted-foreground font-mono">POLLING: 1000MS // PORT: 502</span>
+             <span className="text-[10px] text-muted-foreground font-mono">192.168.1.50:502</span>
           </div>
         </div>
       </header>
@@ -198,7 +264,7 @@ export function Dashboard() {
       {/* Main Grid Layout */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         
-        {/* Left Column: Tank & Status */}
+        {/* Left Column: Visuals & History */}
         <div className="xl:col-span-8 flex flex-col gap-6">
           <StatusDisplay 
             mixingSpeed={rpm}
@@ -208,7 +274,7 @@ export function Dashboard() {
           />
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-grow">
-            <div className="hmi-panel flex items-center justify-center min-h-[400px]">
+            <div className="hmi-panel flex items-center justify-center min-h-[450px]">
               <TankSimulation 
                 rpm={rpm}
                 isRunning={isRunning}
@@ -230,37 +296,44 @@ export function Dashboard() {
                 data={rpmHistory}
                 color="#00FFFF"
                 unit="RPM"
-                domain={[0, 1000]}
+                domain={[0, 1500]}
               />
             </div>
           </div>
         </div>
 
-        {/* Right Column: Controls & Simulated AI Alerts */}
+        {/* Right Column: Controls & Insights */}
         <div className="xl:col-span-4 flex flex-col gap-6">
           <ControlPanel 
             isRunning={isRunning}
+            isManualMode={isManualMode}
             onToggle={toggleRunning}
+            onToggleMode={() => setIsManualMode(!isManualMode)}
             onEmergencyStop={emergencyStop}
             connectionStatus={connectionStatus}
+            targetRpm={targetRpmManual}
+            targetTemp={targetTempManual}
+            setTargetRpm={setTargetRpmManual}
+            setTargetTemp={setTargetTempManual}
           />
           
-          <div className="flex-grow min-h-[300px]">
+          <div className="grid grid-cols-1 gap-6 flex-grow">
             <AlertPanel 
               alerts={alerts}
               isGenerating={isAiProcessing}
             />
+            <AuditLog logs={auditLog} />
           </div>
         </div>
 
       </div>
 
-      {/* Footer / Status Bar */}
+      {/* Footer */}
       <footer className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
         <div className="flex gap-6">
-          <span>MEM: 24.1GB/128GB</span>
-          <span>LATENCY: 14ms (MOCK)</span>
-          <span>MODE: EDUCATIONAL PROTOTYPE</span>
+          <span>LATENCY: 12ms</span>
+          <span>SYSTEM_HEALTH: 98.4%</span>
+          <span>MODE: {isManualMode ? 'MANUAL_OVERRIDE' : 'AUTO_OPTIMIZATION'}</span>
         </div>
         <div className="flex items-center gap-2">
           <span>OPERATOR: TECH_USER_42</span>

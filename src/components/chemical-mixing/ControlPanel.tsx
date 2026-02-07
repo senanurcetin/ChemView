@@ -2,75 +2,125 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Power, CircleStop, TriangleAlert, Settings2, Activity } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
+import { Label } from '@/components/ui/label';
+import { Power, CircleStop, TriangleAlert, Settings2, Cpu, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ControlPanelProps {
   isRunning: boolean;
+  isManualMode: boolean;
   onToggle: () => void;
+  onToggleMode: () => void;
   onEmergencyStop: () => void;
   connectionStatus: "Connected" | "Disconnected" | "Connecting";
+  targetRpm: number;
+  targetTemp: number;
+  setTargetRpm: (val: number) => void;
+  setTargetTemp: (val: number) => void;
 }
 
 export function ControlPanel({ 
   isRunning, 
+  isManualMode,
   onToggle, 
+  onToggleMode,
   onEmergencyStop, 
-  connectionStatus 
+  connectionStatus,
+  targetRpm,
+  targetTemp,
+  setTargetRpm,
+  setTargetTemp
 }: ControlPanelProps) {
   return (
-    <div className="flex flex-col gap-4 h-full">
+    <div className="flex flex-col gap-4">
+      {/* Primary Power Actions */}
       <div className="grid grid-cols-2 gap-4">
         <Button 
           variant={isRunning ? "secondary" : "default"}
           size="lg"
           onClick={onToggle}
           className={cn(
-            "h-20 text-lg font-bold gap-3 transition-all duration-300",
+            "h-16 text-sm font-bold gap-3 transition-all duration-300",
             !isRunning && "bg-primary text-primary-foreground glow-primary hover:bg-primary/90",
             isRunning && "bg-zinc-800 text-zinc-300 border border-zinc-700"
           )}
         >
-          {isRunning ? <CircleStop className="w-6 h-6" /> : <Power className="w-6 h-6" />}
-          {isRunning ? "STOP SYSTEM" : "START MIXER"}
+          {isRunning ? <CircleStop className="w-5 h-5" /> : <Power className="w-5 h-5" />}
+          {isRunning ? "STOP" : "START"}
         </Button>
 
         <Button 
           variant="destructive"
           size="lg"
           onClick={onEmergencyStop}
-          className="h-20 text-lg font-bold gap-3 glow-destructive border-2 border-red-500/20"
+          className="h-16 text-sm font-bold gap-3 glow-destructive border-2 border-red-500/20"
         >
-          <TriangleAlert className="w-6 h-6" />
+          <TriangleAlert className="w-5 h-5" />
           E-STOP
         </Button>
       </div>
 
-      <div className="hmi-panel flex flex-col gap-3 flex-grow bg-zinc-900/50">
-        <div className="flex items-center justify-between">
+      {/* Mode Control & Configuration */}
+      <div className="hmi-panel flex flex-col gap-6 bg-zinc-950/50 border-white/5">
+        <div className="flex items-center justify-between border-b border-white/5 pb-4">
           <div className="flex items-center gap-2">
-            <Settings2 className="w-4 h-4 text-primary" />
-            <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">System Status</span>
+            <Cpu className={cn("w-4 h-4", !isManualMode ? "text-primary" : "text-zinc-500")} />
+            <Label className="text-[10px] font-bold uppercase tracking-widest cursor-pointer">
+              Control Mode: {isManualMode ? "Manual" : "Auto"}
+            </Label>
           </div>
-          <div className="flex items-center gap-2">
-            <div className={cn(
-              "w-2 h-2 rounded-full",
-              connectionStatus === "Connected" ? "bg-primary animate-pulse" : "bg-red-500"
-            )} />
-            <span className="text-[10px] font-mono uppercase tracking-tighter text-muted-foreground">
-              {connectionStatus}: 192.168.1.50:502
-            </span>
+          <Switch 
+            checked={isManualMode} 
+            onCheckedChange={onToggleMode}
+            className="data-[state=checked]:bg-primary"
+          />
+        </div>
+
+        {/* Manual Override Sliders */}
+        <div className={cn(
+          "space-y-6 transition-opacity duration-300",
+          !isManualMode ? "opacity-30 pointer-events-none" : "opacity-100"
+        )}>
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <span className="text-[10px] text-muted-foreground uppercase font-bold">Target Speed</span>
+              <span className="text-xs font-mono text-primary font-bold">{targetRpm} RPM</span>
+            </div>
+            <Slider 
+              value={[targetRpm]} 
+              min={0} 
+              max={1500} 
+              step={10} 
+              onValueChange={(vals) => setTargetRpm(vals[0])}
+              className="[&_[role=slider]]:bg-primary"
+            />
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <span className="text-[10px] text-muted-foreground uppercase font-bold">Target Heat</span>
+              <span className="text-xs font-mono text-primary font-bold">{targetTemp.toFixed(1)} °C</span>
+            </div>
+            <Slider 
+              value={[targetTemp]} 
+              min={20} 
+              max={100} 
+              step={0.5} 
+              onValueChange={(vals) => setTargetTemp(vals[0])}
+              className="[&_[role=slider]]:bg-primary"
+            />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mt-auto">
-          <div className="p-3 bg-black/40 rounded border border-white/5">
-            <div className="text-[10px] text-muted-foreground uppercase">Mode</div>
-            <div className="text-sm font-bold text-primary">AUTO (MODBUS)</div>
-          </div>
-          <div className="p-3 bg-black/40 rounded border border-white/5">
-            <div className="text-[10px] text-muted-foreground uppercase">Cycle Time</div>
-            <div className="text-sm font-bold text-primary">1000ms</div>
+        <div className="pt-4 border-t border-white/5">
+          <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <SlidersHorizontal className="w-3 h-3" />
+              <span>WRITES: MODBUS_TCP_W</span>
+            </div>
+            <span>STATUS: {connectionStatus}</span>
           </div>
         </div>
       </div>
