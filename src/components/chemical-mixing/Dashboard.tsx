@@ -7,15 +7,13 @@ import { ControlPanel } from './ControlPanel';
 import { StatusDisplay } from './StatusDisplay';
 import { AlertPanel } from './AlertPanel';
 import { AuditLog } from './AuditLog';
+import { CommunicationLog } from './CommunicationLog';
+import { NetworkStats } from './NetworkStats';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, Wifi, WifiOff } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { cn } from '@/lib/utils';
 
-/**
- * @typedef {Object} DataHistory
- * @property {string} time - Formatted timestamp (HH:mm:ss)
- * @property {number} value - The numerical sensor value
- */
 interface DataHistory {
   time: string;
   value: number;
@@ -28,13 +26,13 @@ interface LogEntry {
   level: 'low' | 'medium' | 'high';
 }
 
-/**
- * Dashboard Component
- * 
- * The central controller for the ChemView HMI. It manages the simulated Modbus polling
- * cycle, maintains sensor history for charts, executes the simulated AI alerting logic,
- * and handles manual control overrides and safety interlocks.
- */
+interface TrafficEntry {
+  id: string;
+  timestamp: string;
+  direction: 'RX' | 'TX';
+  frame: string;
+}
+
 export function Dashboard() {
   const { toast } = useToast();
 
@@ -63,15 +61,55 @@ export function Dashboard() {
   const [auditLog, setAuditLog] = useState<LogEntry[]>([]);
   const [isAiProcessing, setIsAiProcessing] = useState(false);
 
-  /**
-   * Modbus Simulation Service - State Update Logic
-   * 
-   * Simulates the physical dynamics of a mixing tank.
-   * Auto Mode: Uses pre-defined operational setpoints with random fluctuation.
-   * Manual Mode: Ramps towards user-defined setpoints from sliders.
-   * Heating: Temperature trends up if heater is on, cools down if off.
-   */
+  // Network & Protocol Simulation
+  const [rxActive, setRxActive] = useState(false);
+  const [txActive, setTxActive] = useState(false);
+  const [packetCount, setPacketCount] = useState(0);
+  const [latency, setLatency] = useState(15.2);
+  const [trafficLogs, setTrafficLogs] = useState<TrafficEntry[]>([]);
+
+  const generateModbusFrame = (direction: 'RX' | 'TX', type: 'read' | 'write') => {
+    const header = "00 01 00 00 00";
+    const unitId = "01";
+    const fc = type === 'read' ? '03' : '06';
+    const payload = Array.from({ length: 4 }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0').toUpperCase()).join(' ');
+    return `${header} 06 ${unitId} ${fc} ${payload}`;
+  };
+
+  const triggerTx = useCallback((type: 'read' | 'write' = 'write') => {
+    setTxActive(true);
+    setPacketCount(p => p + 1);
+    setTrafficLogs(prev => [
+      ...prev,
+      {
+        id: Math.random().toString(36).substr(2, 9),
+        timestamp: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        direction: 'TX',
+        frame: generateModbusFrame('TX', type)
+      }
+    ].slice(-30));
+    setTimeout(() => setTxActive(false), 150);
+  }, []);
+
+  const triggerRx = useCallback(() => {
+    setRxActive(true);
+    setPacketCount(p => p + 1);
+    setLatency(12 + Math.random() * 6);
+    setTrafficLogs(prev => [
+      ...prev,
+      {
+        id: Math.random().toString(36).substr(2, 9),
+        timestamp: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        direction: 'RX',
+        frame: generateModbusFrame('RX', 'read')
+      }
+    ].slice(-30));
+    setTimeout(() => setRxActive(false), 150);
+  }, []);
+
   const tick = useCallback(() => {
+    triggerRx();
+
     // RPM Dynamics
     if (!isRunning) {
       setRpm(prev => Math.max(0, prev - 15));
@@ -82,16 +120,14 @@ export function Dashboard() {
       setRpm(prev => prev + (targetRpm - prev) * 0.1);
     }
 
-    // Temperature Dynamics (Physics)
+    // Temperature Dynamics
     if (isHeaterOn) {
-      // Heating up
       setTemp(prev => {
         const target = isManualMode ? targetTempManual : 75;
-        const heatRate = 0.15; // Degrees per tick
+        const heatRate = 0.15;
         return prev < target ? prev + heatRate : prev + (Math.random() - 0.5) * 0.1;
       });
     } else {
-      // Ambient cooling down to 22.0°C
       setTemp(prev => prev > 22.0 ? prev - 0.05 : prev + (Math.random() - 0.5) * 0.02);
     }
 
@@ -99,16 +135,13 @@ export function Dashboard() {
     const targetPh = 7.2 + Math.random() * 0.4;
     setPh(prev => prev + (targetPh - prev) * 0.05);
     
-    // Auto Valve simulation (only if not manually controlled and interlocks allow)
     if (!isManualMode && Math.random() > 0.98 && !isRunning && rpm < 5) {
       setValveOpen(v => !v);
+      triggerTx('write');
     }
 
-  }, [isRunning, isManualMode, isHeaterOn, targetRpmManual, targetTempManual, rpm]);
+  }, [isRunning, isManualMode, isHeaterOn, targetRpmManual, targetTempManual, rpm, triggerRx, triggerTx]);
 
-  /**
-   * Polling Cycle Logic
-   */
   useEffect(() => {
     const interval = setInterval(() => {
       tick();
@@ -130,9 +163,6 @@ export function Dashboard() {
     return () => clearInterval(interval);
   }, [tick, rpm, temp]);
 
-  /**
-   * Simulated Intelligence Logic
-   */
   const checkAlerts = useCallback(() => {
     setIsAiProcessing(true);
     
@@ -141,10 +171,10 @@ export function Dashboard() {
       let urgency: 'low' | 'medium' | 'high' = 'low';
 
       if (temp > 85) {
-        newAlertMessage = "⚠️ AI Insight: High temperature warning. Safety protocols suggest cooling cycle.";
+        newAlertMessage = "⚠️ AI Insight: Overheating detected in Reactor B7. Recommend cooling cycle.";
         urgency = 'high';
       } else if (rpm < 100 && isRunning) {
-        newAlertMessage = "⚠️ AI Insight: Low speed detected while active. Potential motor strain.";
+        newAlertMessage = "⚠️ AI Insight: Mixer efficiency low. Check motor load.";
         urgency = 'medium';
       } else {
         newAlertMessage = "✅ AI Analysis: System operating within optimal parameters.";
@@ -187,7 +217,7 @@ export function Dashboard() {
     return () => clearInterval(timer);
   }, [checkAlerts]);
 
-  // Actions with Safety Interlocks
+  // Actions
   const toggleRunning = () => {
     if (!isRunning && valveOpen) {
       toast({
@@ -200,6 +230,7 @@ export function Dashboard() {
 
     const newState = !isRunning;
     setIsRunning(newState);
+    triggerTx('write');
     setAuditLog(log => [
       {
         id: Math.random().toString(36).substr(2, 9),
@@ -222,6 +253,7 @@ export function Dashboard() {
     }
     const newState = !valveOpen;
     setValveOpen(newState);
+    triggerTx('write');
     setAuditLog(log => [
       {
         id: Math.random().toString(36).substr(2, 9),
@@ -237,6 +269,7 @@ export function Dashboard() {
     setIsRunning(false);
     setIsHeaterOn(false);
     setRpm(0);
+    triggerTx('write');
     setAuditLog(log => [
       {
         id: Math.random().toString(36).substr(2, 9),
@@ -278,6 +311,22 @@ export function Dashboard() {
           <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest mt-1">Industrial Control System // Digital Twin Prototype</p>
         </div>
         <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 bg-zinc-900/50 px-4 py-2 rounded-md border border-white/5">
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-tighter">RX</span>
+              <div className={cn(
+                "w-2 h-2 rounded-full transition-all duration-75",
+                rxActive ? "bg-primary shadow-[0_0_8px_#00FFFF]" : "bg-zinc-800"
+              )} />
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-tighter">TX</span>
+              <div className={cn(
+                "w-2 h-2 rounded-full transition-all duration-75",
+                txActive ? "bg-orange-500 shadow-[0_0_8px_#F97316]" : "bg-zinc-800"
+              )} />
+            </div>
+          </div>
           <Button 
             variant="outline" 
             size="sm" 
@@ -288,8 +337,8 @@ export function Dashboard() {
           </Button>
           <div className="flex flex-col items-end">
              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_#00FFFF]" />
-                <span className="text-xs font-mono text-primary font-bold uppercase">Modbus Active</span>
+                <Wifi className="w-3 h-3 text-primary animate-pulse" />
+                <span className="text-xs font-mono text-primary font-bold uppercase">Gateway Active</span>
              </div>
              <span className="text-[10px] text-muted-foreground font-mono">192.168.1.50:502</span>
           </div>
@@ -308,7 +357,7 @@ export function Dashboard() {
           />
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-grow">
-            <div className="hmi-panel flex items-center justify-center min-h-[450px]">
+            <div className="hmi-panel flex flex-col items-center justify-center min-h-[450px]">
               <TankSimulation 
                 rpm={rpm}
                 isRunning={isRunning}
@@ -333,27 +382,47 @@ export function Dashboard() {
                 unit="RPM"
                 domain={[0, 1500]}
               />
+              <CommunicationLog logs={trafficLogs} />
             </div>
           </div>
         </div>
 
         <div className="xl:col-span-4 flex flex-col gap-6">
-          <ControlPanel 
-            isRunning={isRunning}
-            isManualMode={isManualMode}
-            onToggle={toggleRunning}
-            onToggleMode={() => setIsManualMode(!isManualMode)}
-            onEmergencyStop={emergencyStop}
-            connectionStatus={connectionStatus}
-            targetRpm={targetRpmManual}
-            targetTemp={targetTempManual}
-            setTargetRpm={setTargetRpmManual}
-            setTargetTemp={setTargetTempManual}
-            valveOpen={valveOpen}
-            onToggleValve={toggleValve}
-            isHeaterOn={isHeaterOn}
-            onToggleHeater={() => setIsHeaterOn(!isHeaterOn)}
-          />
+          <div className="grid grid-cols-1 gap-4">
+            <NetworkStats 
+              packetCount={packetCount}
+              latency={latency}
+              errorRate={0.0}
+            />
+            <ControlPanel 
+              isRunning={isRunning}
+              isManualMode={isManualMode}
+              onToggle={toggleRunning}
+              onToggleMode={() => {
+                setIsManualMode(!isManualMode);
+                triggerTx('write');
+              }}
+              onEmergencyStop={emergencyStop}
+              connectionStatus={connectionStatus}
+              targetRpm={targetRpmManual}
+              targetTemp={targetTempManual}
+              setTargetRpm={(val) => {
+                setTargetRpmManual(val);
+                triggerTx('write');
+              }}
+              setTargetTemp={(val) => {
+                setTargetTempManual(val);
+                triggerTx('write');
+              }}
+              valveOpen={valveOpen}
+              onToggleValve={toggleValve}
+              isHeaterOn={isHeaterOn}
+              onToggleHeater={() => {
+                setIsHeaterOn(!isHeaterOn);
+                triggerTx('write');
+              }}
+            />
+          </div>
           
           <div className="grid grid-cols-1 gap-6 flex-grow">
             <AlertPanel 
@@ -367,7 +436,7 @@ export function Dashboard() {
 
       <footer className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
         <div className="flex gap-6">
-          <span>LATENCY: 12ms</span>
+          <span>LATENCY: {latency.toFixed(1)}ms</span>
           <span>SYSTEM_HEALTH: 98.4%</span>
           <span>MODE: {isManualMode ? 'MANUAL_OVERRIDE' : 'AUTO_OPTIMIZATION'}</span>
         </div>
