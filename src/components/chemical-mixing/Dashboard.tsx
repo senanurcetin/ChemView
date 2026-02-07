@@ -9,6 +9,7 @@ import { AlertPanel } from './AlertPanel';
 import { AuditLog } from './AuditLog';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 
 /**
  * @typedef {Object} DataHistory
@@ -32,12 +33,15 @@ interface LogEntry {
  * 
  * The central controller for the ChemView HMI. It manages the simulated Modbus polling
  * cycle, maintains sensor history for charts, executes the simulated AI alerting logic,
- * and handles manual control overrides.
+ * and handles manual control overrides and safety interlocks.
  */
 export function Dashboard() {
+  const { toast } = useToast();
+
   // System State
   const [isRunning, setIsRunning] = useState(false);
   const [isManualMode, setIsManualMode] = useState(false);
+  const [isHeaterOn, setIsHeaterOn] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<"Connected" | "Disconnected" | "Connecting">("Connected");
   
   // Sensors & Setpoints
@@ -65,41 +69,45 @@ export function Dashboard() {
    * Simulates the physical dynamics of a mixing tank.
    * Auto Mode: Uses pre-defined operational setpoints with random fluctuation.
    * Manual Mode: Ramps towards user-defined setpoints from sliders.
+   * Heating: Temperature trends up if heater is on, cools down if off.
    */
   const tick = useCallback(() => {
+    // RPM Dynamics
     if (!isRunning) {
       setRpm(prev => Math.max(0, prev - 15));
-      setTemp(prev => Math.max(22, prev - 0.05));
-      setPh(prev => prev + (Math.random() - 0.5) * 0.01);
-      return;
+    } else {
+      const targetRpm = isManualMode 
+        ? targetRpmManual 
+        : (450 + Math.random() * 50);
+      setRpm(prev => prev + (targetRpm - prev) * 0.1);
     }
 
-    // Determine target based on mode
-    const targetRpm = isManualMode 
-      ? targetRpmManual 
-      : (450 + Math.random() * 50);
-    
-    const targetTemp = isManualMode 
-      ? targetTempManual 
-      : (65 + Math.random() * 2);
+    // Temperature Dynamics (Physics)
+    if (isHeaterOn) {
+      // Heating up
+      setTemp(prev => {
+        const target = isManualMode ? targetTempManual : 75;
+        const heatRate = 0.15; // Degrees per tick
+        return prev < target ? prev + heatRate : prev + (Math.random() - 0.5) * 0.1;
+      });
+    } else {
+      // Ambient cooling down to 22.0°C
+      setTemp(prev => prev > 22.0 ? prev - 0.05 : prev + (Math.random() - 0.5) * 0.02);
+    }
 
+    // pH Dynamics
     const targetPh = 7.2 + Math.random() * 0.4;
-
-    // Smooth state transitions (linear interpolation simulation)
-    setRpm(prev => prev + (targetRpm - prev) * 0.1);
-    setTemp(prev => prev + (targetTemp - prev) * 0.02);
     setPh(prev => prev + (targetPh - prev) * 0.05);
     
-    // Random valve activity simulation
-    if (Math.random() > 0.95) setValveOpen(v => !v);
+    // Auto Valve simulation (only if not manually controlled and interlocks allow)
+    if (!isManualMode && Math.random() > 0.98 && !isRunning && rpm < 5) {
+      setValveOpen(v => !v);
+    }
 
-  }, [isRunning, isManualMode, targetRpmManual, targetTempManual]);
+  }, [isRunning, isManualMode, isHeaterOn, targetRpmManual, targetTempManual, rpm]);
 
   /**
    * Polling Cycle Logic
-   * 
-   * Emulates a Modbus TCP/IP polling cycle by fetching "register" data every 1000ms.
-   * Updates trend history for the last 60 seconds.
    */
   useEffect(() => {
     const interval = setInterval(() => {
@@ -123,10 +131,7 @@ export function Dashboard() {
   }, [tick, rpm, temp]);
 
   /**
-   * Simulated Intelligence Logic (Mock AI Mode)
-   * 
-   * Analyzes current system state against operational thresholds to generate
-   * specific, actionable insights and logs them to the Audit Log.
+   * Simulated Intelligence Logic
    */
   const checkAlerts = useCallback(() => {
     setIsAiProcessing(true);
@@ -135,11 +140,11 @@ export function Dashboard() {
       let newAlertMessage = "";
       let urgency: 'low' | 'medium' | 'high' = 'low';
 
-      if (temp > 80) {
-        newAlertMessage = "⚠️ AI Insight: Overheating detected in Reactor B7. Recommend cooling cycle.";
+      if (temp > 85) {
+        newAlertMessage = "⚠️ AI Insight: High temperature warning. Safety protocols suggest cooling cycle.";
         urgency = 'high';
-      } else if (rpm < 100 && valveOpen && isRunning) {
-        newAlertMessage = "⚠️ AI Insight: Mixer efficiency low. Check motor load.";
+      } else if (rpm < 100 && isRunning) {
+        newAlertMessage = "⚠️ AI Insight: Low speed detected while active. Potential motor strain.";
         urgency = 'medium';
       } else {
         newAlertMessage = "✅ AI Analysis: System operating within optimal parameters.";
@@ -149,7 +154,6 @@ export function Dashboard() {
       setAlerts(prev => {
         if (prev.length > 0 && prev[0].data.alertMessage === newAlertMessage) return prev;
         
-        // Add significant events to Audit Log
         if (urgency !== 'low') {
           setAuditLog(log => [
             {
@@ -174,7 +178,7 @@ export function Dashboard() {
 
       setIsAiProcessing(false);
     }, 800);
-  }, [rpm, temp, valveOpen, isRunning]);
+  }, [rpm, temp, isRunning]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -183,14 +187,46 @@ export function Dashboard() {
     return () => clearInterval(timer);
   }, [checkAlerts]);
 
+  // Actions with Safety Interlocks
   const toggleRunning = () => {
+    if (!isRunning && valveOpen) {
+      toast({
+        variant: "destructive",
+        title: "Interlock Active",
+        description: "⛔ Mixer cannot be started while Discharge Valve is OPEN.",
+      });
+      return;
+    }
+
     const newState = !isRunning;
     setIsRunning(newState);
     setAuditLog(log => [
       {
         id: Math.random().toString(36).substr(2, 9),
         timestamp: new Date().toLocaleTimeString(),
-        message: `System ${newState ? 'STARTED' : 'STOPPED'} by Operator`,
+        message: `Mixer ${newState ? 'STARTED' : 'STOPPED'} by Operator`,
+        level: 'low'
+      },
+      ...log
+    ].slice(0, 50));
+  };
+
+  const toggleValve = () => {
+    if (isRunning || rpm > 5) {
+      toast({
+        variant: "destructive",
+        title: "Interlock Active",
+        description: "⛔ Valve cannot be opened while Mixer is RUNNING.",
+      });
+      return;
+    }
+    const newState = !valveOpen;
+    setValveOpen(newState);
+    setAuditLog(log => [
+      {
+        id: Math.random().toString(36).substr(2, 9),
+        timestamp: new Date().toLocaleTimeString(),
+        message: `Valve ${newState ? 'OPENED' : 'CLOSED'} by Operator`,
         level: 'low'
       },
       ...log
@@ -199,8 +235,8 @@ export function Dashboard() {
 
   const emergencyStop = () => {
     setIsRunning(false);
+    setIsHeaterOn(false);
     setRpm(0);
-    setValveOpen(false);
     setAuditLog(log => [
       {
         id: Math.random().toString(36).substr(2, 9),
@@ -236,7 +272,6 @@ export function Dashboard() {
 
   return (
     <div className="flex flex-col gap-6 p-6 lg:p-10 max-w-[1600px] mx-auto min-h-screen">
-      {/* Header Section */}
       <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/10 pb-6">
         <div>
           <h1 className="text-4xl font-bold tracking-tighter text-primary">CHEMVIEW <span className="text-white font-light">HMI 4.0</span></h1>
@@ -261,16 +296,15 @@ export function Dashboard() {
         </div>
       </header>
 
-      {/* Main Grid Layout */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         
-        {/* Left Column: Visuals & History */}
         <div className="xl:col-span-8 flex flex-col gap-6">
           <StatusDisplay 
             mixingSpeed={rpm}
             temperature={temp}
             ph={ph}
             valveOpen={valveOpen}
+            isHeaterOn={isHeaterOn}
           />
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-grow">
@@ -280,6 +314,7 @@ export function Dashboard() {
                 isRunning={isRunning}
                 temperature={temp}
                 ph={ph}
+                isHeaterOn={isHeaterOn}
               />
             </div>
             
@@ -302,7 +337,6 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* Right Column: Controls & Insights */}
         <div className="xl:col-span-4 flex flex-col gap-6">
           <ControlPanel 
             isRunning={isRunning}
@@ -315,6 +349,10 @@ export function Dashboard() {
             targetTemp={targetTempManual}
             setTargetRpm={setTargetRpmManual}
             setTargetTemp={setTargetTempManual}
+            valveOpen={valveOpen}
+            onToggleValve={toggleValve}
+            isHeaterOn={isHeaterOn}
+            onToggleHeater={() => setIsHeaterOn(!isHeaterOn)}
           />
           
           <div className="grid grid-cols-1 gap-6 flex-grow">
@@ -325,10 +363,8 @@ export function Dashboard() {
             <AuditLog logs={auditLog} />
           </div>
         </div>
-
       </div>
 
-      {/* Footer */}
       <footer className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
         <div className="flex gap-6">
           <span>LATENCY: 12ms</span>
