@@ -1,52 +1,45 @@
-# ChemView | Industrial Mixing HMI & Control System
+# ChemView | Open Source IIoT Digital Twin HMI
 
-ChemView is a futuristic, high-end Human-Machine Interface (HMI) for monitoring and controlling industrial chemical mixing tanks. It serves as a **Digital Twin Prototype**, demonstrating real-time data ingestion, animated physical simulations, manual control overrides, and event auditing.
+ChemView is a futuristic, high-end Human-Machine Interface (HMI) for monitoring and controlling industrial chemical mixing tanks. It serves as a **high-fidelity Digital Twin Prototype**, demonstrating real-time data ingestion, animated physical simulations, and industrial safety interlocks.
 
 ![ChemView HMI](https://picsum.photos/seed/hmi-control/1200/600)
 
 ## 🚀 Overview
 
-This project is an educational prototype for building industrial control systems with modern web tech. It simulates a **Modbus TCP/IP** environment where an operator can monitor sensor telemetry and actively override system setpoints.
+This project is an educational prototype for building industrial control systems with modern web technologies. It simulates a **Modbus TCP/IP** environment where an operator can monitor telemetry and actively override system setpoints.
 
-## 🏗️ Architecture
+### Core Architecture
+- **Physical Simulation Engine:** Deterministic polling cycle (1000ms) with thermal and rotational inertia modeling.
+- **Protocol Layer:** Simulated Modbus TCP frames (RX/TX) for telemetry and state changes.
+- **Safety System:** Hard-coded industrial interlocks (Valve/Mixer) to prevent operational hazards.
+- **Frontend:** Next.js 15, Tailwind CSS, and Recharts for high-frequency time-series visualization.
 
-- **Framework:** [Next.js 15 (App Router)](https://nextjs.org/)
-- **Styling:** Tailwind CSS with a "Cyberpunk HMI" aesthetic.
-- **Components:** Shadcn UI for high-fidelity control widgets (Sliders, Switches, Tabs).
-- **Visualization:** Recharts for high-frequency time-series data.
-- **Simulation Engine:** A deterministic polling engine simulating physical dynamics and linear interpolation for "smooth" sensor transitions.
+## ✨ Features
 
-## ✨ Advanced Features
-
-- **Full Control System:** Switch between **Auto** and **Manual Override** modes. Adjust Target RPM and Temperature via interactive industrial sliders.
-- **Visual Tank Simulation:** CSS-animated schematic showing liquid levels, agitation bubbles, and mixer blades synchronized to real-time RPM.
-- **System Event Audit Log:** A persistent history of operational events, alerts, and operator interventions.
-- **Data Export:** Instant CSV export of current reactor telemetry (RPM and Temp trends) for offline analysis.
-- **Simulated Intelligence:** AI-driven operational insights that monitor thresholds and suggest corrective actions.
+- **Full Control System:** Switch between **Auto** and **Manual Override** modes.
+- **Safety Interlocks:** Automated blocks that prevent valve discharge while mixing.
+- **Live Communication Log:** Real-time hex-format protocol traffic visualization.
+- **Trend Analysis:** Last 60 seconds of sensor data with industrial threshold alerts.
+- **Responsive HMI:** Optimized for fixed-viewport control panels (Single Viewport layout).
 
 ## 🛠️ Getting Started
 
-### Prerequisites
-
-- Node.js 20.x or later
-- npm or yarn
-
-### Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/chemview-hmi.git
-   ```
-2. Install dependencies:
+1. **Install dependencies:**
    ```bash
    npm install
    ```
-3. Run the development server:
+
+2. **Run the development HMI:**
    ```bash
    npm run dev
    ```
-4. Open [http://localhost:9002](http://localhost:9002).
+
+3. **Open:** [http://localhost:9002](http://localhost:9002)
+
+## 📝 Disclaimer
+
+This is a **Simulation/Educational Prototype**. It does not connect to physical PLCs or real industrial hardware out of the box. It is designed to demonstrate HMI design principles and state management in complex industrial interfaces.
 
 ## 📝 License
 
-MIT License. Built for educational purposes as a demonstration of high-performance React-based industrial interfaces.
+Distributed under the MIT License.

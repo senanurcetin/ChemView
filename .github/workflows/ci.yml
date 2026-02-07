@@ -25,5 +25,4 @@ jobs:
     - name: Build production bundle
       run: npm run build
       env:
-        # Mock environment variables for build if necessary
         NEXT_PUBLIC_APP_MODE: production

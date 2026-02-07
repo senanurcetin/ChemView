@@ -4,13 +4,14 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 
 /**
- * @interface TankSimulationProps
- * @property {number} rpm - Current mixer rotations per minute
- * @property {number} temperature - Current liquid temperature (Celsius)
- * @property {number} ph - Current pH level
- * @property {boolean} isRunning - System operational state
- * @property {boolean} isHeaterOn - Heater operational state
- * @property {number} [liquidLevel=65] - Tank fill percentage (0-100)
+ * TankSimulation Component
+ * 
+ * Provides a high-fidelity visual digital twin of the mixing reactor.
+ * 
+ * Features:
+ * - Dynamic SVG heating coil with state-based glow.
+ * - CSS-animated mixer blades with speed synchronized to RPM.
+ * - Procedural bubbles and surface agitation based on motor load.
  */
 interface TankSimulationProps {
   rpm: number;
@@ -21,16 +22,6 @@ interface TankSimulationProps {
   liquidLevel?: number;
 }
 
-/**
- * TankSimulation Component
- * 
- * Provides a high-fidelity CSS-based visual simulation of the mixing reactor.
- * Features:
- * - Adaptive Mixer Rotation: Animation speed scales with simulated RPM.
- * - Dynamic Liquid Dynamics: Wave agitation and bubble generation based on mixer state.
- * - Heating Coil Visual: Glows orange/red when heating is active.
- * - HMI Overlay: Real-time RPM readout within the visual context.
- */
 export function TankSimulation({
   rpm,
   isRunning,
@@ -38,39 +29,39 @@ export function TankSimulation({
   liquidLevel = 65
 }: TankSimulationProps) {
   // Rotate speed mapping: RPM 0-1000 -> duration 5s - 0.2s
-  const rotationDuration = isRunning && rpm > 0 ? Math.max(0.2, 5 - (rpm / 200)) : 0;
+  const rotationDuration = isRunning && rpm > 0 ? Math.max(0.1, 4 - (rpm / 300)) : 0;
   
   return (
-    <div className="relative w-full h-[400px] flex items-center justify-center p-8 bg-black/20 rounded-xl border border-primary/10 overflow-hidden">
+    <div className="relative w-full h-full min-h-[300px] flex items-center justify-center bg-black/20 rounded-xl border border-primary/5 overflow-hidden">
       {/* Tank Container */}
-      <div className="relative w-64 h-80 border-4 border-gray-600 rounded-b-3xl overflow-hidden bg-gray-900/50 shadow-inner">
+      <div className="relative w-48 h-64 border-2 border-gray-600 rounded-b-2xl overflow-hidden bg-gray-900/30">
         
-        {/* Liquid Level */}
+        {/* Liquid Layer */}
         <div 
-          className="absolute bottom-0 left-0 w-full bg-primary/20 transition-all duration-1000 ease-in-out"
+          className="absolute bottom-0 left-0 w-full bg-primary/10 transition-all duration-1000 ease-in-out"
           style={{ height: `${liquidLevel}%` }}
         >
-          {/* Animated Wave Top */}
+          {/* Surface Animation */}
           <div 
             className={cn(
-              "absolute -top-4 left-0 w-[200%] h-8 bg-primary/30 blur-sm rounded-[40%]",
+              "absolute -top-3 left-0 w-[200%] h-6 bg-primary/20 blur-sm rounded-[40%]",
               isRunning && "animate-liquid"
             )}
           />
           
-          {/* Bubbles if running - Density increases with RPM */}
-          {isRunning && rpm > 100 && (
+          {/* Procedural Bubbles */}
+          {isRunning && rpm > 50 && (
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-               {[...Array(8)].map((_, i) => (
+               {[...Array(6)].map((_, i) => (
                  <div 
                    key={i}
-                   className="absolute bg-white/10 rounded-full animate-pulse"
+                   className="absolute bg-white/5 rounded-full animate-pulse"
                    style={{
-                     width: `${Math.random() * 8 + 4}px`,
-                     height: `${Math.random() * 8 + 4}px`,
+                     width: `${Math.random() * 4 + 2}px`,
+                     height: `${Math.random() * 4 + 2}px`,
                      left: `${Math.random() * 100}%`,
                      bottom: `${Math.random() * 100}%`,
-                     animationDelay: `${i * 0.5}s`,
+                     animationDelay: `${i * 0.4}s`,
                      animationDuration: `${Math.random() * 2 + 1}s`
                    }}
                  />
@@ -79,51 +70,41 @@ export function TankSimulation({
           )}
         </div>
 
-        {/* Heating Coil Visual (Spiral pipe at the bottom) */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-48 h-12 z-0">
-          <svg viewBox="0 0 200 60" className="w-full h-full opacity-60">
+        {/* Heating Coil Visual */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-40 h-8">
+          <svg viewBox="0 0 200 60" className="w-full h-full opacity-40">
             <path 
               d="M10,30 Q20,10 30,30 T50,30 T70,30 T90,30 T110,30 T130,30 T150,30 T170,30 T190,30" 
               fill="none" 
-              stroke={isHeaterOn ? "#ff4500" : "#444"} 
-              strokeWidth="6"
-              className={cn(
-                "transition-colors duration-1000 ease-in-out",
-                isHeaterOn && "animate-pulse"
-              )}
-              style={{
-                filter: isHeaterOn ? 'drop-shadow(0 0 8px #ff4500)' : 'none'
-              }}
+              stroke={isHeaterOn ? "#ff4500" : "#333"} 
+              strokeWidth="4"
+              className={cn("transition-colors duration-1000", isHeaterOn && "animate-pulse")}
+              style={{ filter: isHeaterOn ? 'drop-shadow(0 0 5px #ff4500)' : 'none' }}
             />
           </svg>
         </div>
 
-        {/* Mixer Shaft & Blades */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-64 bg-gray-700 z-10 shadow-lg">
+        {/* Mixer Logic */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-52 bg-gray-700 z-10">
           <div 
-            className="absolute bottom-12 left-1/2 -translate-x-1/2"
+            className="absolute bottom-10 left-1/2 -translate-x-1/2"
             style={{ 
               animation: rotationDuration > 0 ? `spin ${rotationDuration}s linear infinite` : 'none' 
             }}
           >
-            <div className="relative w-32 h-4 bg-gray-500 rounded-full flex items-center justify-between border border-gray-600">
-              <div className="w-8 h-4 bg-gray-400 rounded-sm -ml-2 skew-x-12" />
-              <div className="w-8 h-4 bg-gray-400 rounded-sm -mr-2 -skew-x-12" />
+            <div className="relative w-24 h-2 bg-gray-500 rounded-full flex items-center justify-between">
+              <div className="w-6 h-3 bg-gray-400 -ml-1 skew-x-12" />
+              <div className="w-6 h-3 bg-gray-400 -mr-1 -skew-x-12" />
             </div>
-            {/* Center Bearing Hub */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-gray-300 rounded-full border border-gray-600" />
           </div>
         </div>
       </div>
-
-      {/* Tank Structural Support Brackets */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[340px] border-l border-r border-gray-700 pointer-events-none opacity-40" />
       
-      {/* Contextual RPM Gauge */}
-      <div className="absolute top-4 right-4 text-right bg-zinc-900/40 p-2 rounded border border-white/5 backdrop-blur-sm">
-        <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Reactor Load</div>
-        <div className="text-2xl font-bold text-primary tabular-nums">
-          {rpm.toFixed(0)} <span className="text-sm font-normal text-muted-foreground">RPM</span>
+      {/* HUD Overlay */}
+      <div className="absolute top-2 right-2 text-right bg-black/40 p-1.5 rounded border border-white/5">
+        <div className="text-[7px] uppercase text-zinc-500 font-bold">Mixer RPM</div>
+        <div className="text-sm font-bold text-primary tabular-nums">
+          {rpm.toFixed(0)}
         </div>
       </div>
     </div>

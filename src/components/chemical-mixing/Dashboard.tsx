@@ -36,11 +36,15 @@ interface TrafficEntry {
 /**
  * Dashboard Component
  * 
- * The main orchestrator for the ChemView HMI. Manages physical simulation dynamics,
- * control state, industrial protocol traffic, and event auditing.
+ * The main orchestrator for the ChemView HMI. 
  * 
- * Polling Logic: Runs on a 1000ms interval simulating a Modbus TCP/IP master
- * reading data from a remote slave.
+ * Polling Logic: 
+ * Runs on a 1000ms interval (tick) simulating a Modbus TCP/IP polling cycle.
+ * Each tick updates physical sensors using linear interpolation to simulate 
+ * inertia (rotational and thermal).
+ * 
+ * Safety Logic: 
+ * Implements hard interlocks between the mixer motor and the discharge valve.
  */
 export function Dashboard() {
   const { toast } = useToast();
@@ -77,6 +81,9 @@ export function Dashboard() {
   const [latency, setLatency] = useState(15.2);
   const [trafficLogs, setTrafficLogs] = useState<TrafficEntry[]>([]);
 
+  /**
+   * Simulates raw Modbus TCP/IP ADU frames
+   */
   const generateModbusFrame = (direction: 'RX' | 'TX', type: 'read' | 'write') => {
     const header = "00 01 00 00 00";
     const unitId = "01";
@@ -96,7 +103,7 @@ export function Dashboard() {
         direction: 'TX',
         frame: generateModbusFrame('TX', type)
       }
-    ].slice(-30));
+    ].slice(-50));
     setTimeout(() => setTxActive(false), 150);
   }, []);
 
@@ -112,14 +119,17 @@ export function Dashboard() {
         direction: 'RX',
         frame: generateModbusFrame('RX', 'read')
       }
-    ].slice(-30));
+    ].slice(-50));
     setTimeout(() => setRxActive(false), 150);
   }, []);
 
+  /**
+   * The core physical simulation loop
+   */
   const tick = useCallback(() => {
     triggerRx();
 
-    // RPM Dynamics: Simulating rotational inertia
+    // RPM Dynamics: Rotational inertia modeling
     if (!isRunning) {
       setRpm(prev => Math.max(0, prev - 15));
     } else {
@@ -129,7 +139,7 @@ export function Dashboard() {
       setRpm(prev => prev + (targetRpm - prev) * 0.1);
     }
 
-    // Temperature Dynamics: Simulating thermal inertia
+    // Temperature Dynamics: Thermal inertia and heater logic
     if (isHeaterOn) {
       setTemp(prev => {
         const target = isManualMode ? targetTempManual : 75;
@@ -140,7 +150,7 @@ export function Dashboard() {
       setTemp(prev => prev > 22.0 ? prev - 0.05 : prev + (Math.random() - 0.5) * 0.02);
     }
 
-    // pH Dynamics
+    // pH Dynamics: Slow stochastic drift
     const targetPh = 7.2 + Math.random() * 0.4;
     setPh(prev => prev + (targetPh - prev) * 0.05);
 
@@ -167,6 +177,9 @@ export function Dashboard() {
     return () => clearInterval(interval);
   }, [tick, rpm, temp]);
 
+  /**
+   * Simulated Intelligence for predictive alerting
+   */
   const checkAlerts = useCallback(() => {
     setIsAiProcessing(true);
     
@@ -247,12 +260,12 @@ export function Dashboard() {
   };
 
   const toggleValve = () => {
-    // Safety check: unlock if RPM is essentially zero
+    // Safety check: allow toggle if RPM is essentially zero
     if (isRunning || rpm >= 1) {
       toast({
         variant: "destructive",
         title: "Action Denied",
-        description: "⛔ Mixer is still rotating. Wait for 0 RPM before discharging.",
+        description: "⛔ Safety Lock: Wait for 0 RPM before discharging.",
       });
       return;
     }
@@ -323,55 +336,43 @@ export function Dashboard() {
     document.body.removeChild(link);
   };
 
-  // Status bar calculations
   const systemState = isRunning && rpm > 10 ? "MIXING" : isHeaterOn ? "HEATING" : "IDLE";
   const interlockActive = (isRunning || rpm >= 1 || valveOpen) ? "ACTIVE" : "INACTIVE";
 
   return (
-    <div className="flex flex-col gap-6 p-6 lg:p-10 max-w-[1600px] mx-auto min-h-screen">
-      <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/10 pb-6">
+    <div className="flex flex-col h-screen overflow-hidden p-4 lg:p-6 max-w-[1800px] mx-auto bg-[#222222]">
+      <header className="flex items-center justify-between border-b border-white/10 pb-4 mb-4 shrink-0">
         <div>
-          <h1 className="text-4xl font-bold tracking-tighter text-primary">CHEMVIEW <span className="text-white font-light">HMI 4.0</span></h1>
-          <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest mt-1">Industrial Control System // Digital Twin Prototype</p>
+          <h1 className="text-2xl font-bold tracking-tighter text-primary">CHEMVIEW <span className="text-white font-light">HMI 1.0</span></h1>
+          <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Industrial Digital Twin Prototype</p>
         </div>
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-4 bg-zinc-900/50 px-4 py-2 rounded-md border border-white/5">
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-tighter">RX</span>
-              <div className={cn(
-                "w-2 h-2 rounded-full transition-all duration-75",
-                rxActive ? "bg-primary shadow-[0_0_8px_#00FFFF]" : "bg-zinc-800"
-              )} />
+          <div className="flex items-center gap-3 bg-zinc-900/50 px-3 py-1.5 rounded-md border border-white/5">
+            <div className="flex flex-col items-center">
+              <span className="text-[7px] font-bold text-zinc-500 uppercase">RX</span>
+              <div className={cn("w-1.5 h-1.5 rounded-full transition-all", rxActive ? "bg-primary glow-primary" : "bg-zinc-800")} />
             </div>
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-tighter">TX</span>
-              <div className={cn(
-                "w-2 h-2 rounded-full transition-all duration-75",
-                txActive ? "bg-orange-500 shadow-[0_0_8px_#F97316]" : "bg-zinc-800"
-              )} />
+            <div className="flex flex-col items-center">
+              <span className="text-[7px] font-bold text-zinc-500 uppercase">TX</span>
+              <div className={cn("w-1.5 h-1.5 rounded-full transition-all", txActive ? "bg-orange-500 shadow-orange-500" : "bg-zinc-800")} />
             </div>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={exportToCsv}
-            className="border-primary/20 hover:border-primary/50 text-xs font-mono gap-2"
-          >
+          <Button variant="outline" size="sm" onClick={exportToCsv} className="h-8 text-[10px] font-mono gap-2 border-white/10">
             <Download className="w-3 h-3" /> EXPORT CSV
           </Button>
           <div className="flex flex-col items-end">
              <div className="flex items-center gap-2">
-                <Wifi className="w-3 h-3 text-primary animate-pulse" />
-                <span className="text-xs font-mono text-primary font-bold uppercase">Gateway Active</span>
+                <Wifi className="w-3 h-3 text-primary" />
+                <span className="text-[10px] font-mono text-primary font-bold uppercase">Gateway Active</span>
              </div>
-             <span className="text-[10px] text-muted-foreground font-mono">192.168.1.50:502</span>
+             <span className="text-[9px] text-muted-foreground font-mono">192.168.1.50:502</span>
           </div>
         </div>
       </header>
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-        
-        <div className="xl:col-span-8 flex flex-col gap-6">
+      <div className="grid grid-cols-12 gap-4 flex-grow overflow-hidden">
+        {/* Left Column: Telemetry & Visualization */}
+        <div className="col-span-8 flex flex-col gap-4 overflow-hidden">
           <StatusDisplay 
             mixingSpeed={rpm}
             temperature={temp}
@@ -380,8 +381,8 @@ export function Dashboard() {
             isHeaterOn={isHeaterOn}
           />
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-grow">
-            <div className="hmi-panel flex flex-col items-center justify-center min-h-[450px]">
+          <div className="grid grid-cols-2 gap-4 flex-grow overflow-hidden">
+            <div className="hmi-panel flex flex-col items-center justify-center p-4">
               <TankSimulation 
                 rpm={rpm}
                 isRunning={isRunning}
@@ -391,88 +392,59 @@ export function Dashboard() {
               />
             </div>
             
-            <div className="flex flex-col gap-6">
-              <TrendChart 
-                title="Temperature Trend"
-                data={tempHistory}
-                color="#00FFFF"
-                unit="°C"
-                domain={[20, 100]}
-              />
-              <TrendChart 
-                title="Mixer Speed Trend"
-                data={rpmHistory}
-                color="#00FFFF"
-                unit="RPM"
-                domain={[0, 1500]}
-              />
-              <CommunicationLog logs={trafficLogs} />
+            <div className="flex flex-col gap-4 overflow-hidden">
+              <TrendChart title="Temperature" data={tempHistory} color="#00FFFF" unit="°C" domain={[20, 100]} />
+              <TrendChart title="Mixer Speed" data={rpmHistory} color="#00FFFF" unit="RPM" domain={[0, 1500]} />
+              <div className="flex-grow overflow-hidden">
+                <CommunicationLog logs={trafficLogs} />
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="xl:col-span-4 flex flex-col gap-6">
-          <div className="grid grid-cols-1 gap-4">
-            <NetworkStats 
-              packetCount={packetCount}
-              latency={latency}
-              errorRate={0.0}
-            />
-            <ControlPanel 
-              isRunning={isRunning}
-              isManualMode={isManualMode}
-              onToggle={toggleRunning}
-              onToggleMode={() => {
-                setIsManualMode(!isManualMode);
-                triggerTx('write');
-              }}
-              onEmergencyStop={emergencyStop}
-              connectionStatus={connectionStatus}
-              targetRpm={targetRpmManual}
-              targetTemp={targetTempManual}
-              currentRpm={rpm}
-              setTargetRpm={(val) => {
-                setTargetRpmManual(val);
-                triggerTx('write');
-              }}
-              setTargetTemp={(val) => {
-                setTargetTempManual(val);
-                triggerTx('write');
-              }}
-              valveOpen={valveOpen}
-              onToggleValve={toggleValve}
-              isHeaterOn={isHeaterOn}
-              onToggleHeater={toggleHeater}
-            />
-          </div>
+        {/* Right Column: Controls & Intelligence */}
+        <div className="col-span-4 flex flex-col gap-4 overflow-hidden">
+          <NetworkStats packetCount={packetCount} latency={latency} errorRate={0.0} />
           
-          <div className="grid grid-cols-1 gap-6 flex-grow">
-            <AlertPanel 
-              alerts={alerts}
-              isGenerating={isAiProcessing}
-            />
+          <ControlPanel 
+            isRunning={isRunning}
+            isManualMode={isManualMode}
+            onToggle={toggleRunning}
+            onToggleMode={() => { setIsManualMode(!isManualMode); triggerTx('write'); }}
+            onEmergencyStop={emergencyStop}
+            connectionStatus={connectionStatus}
+            targetRpm={targetRpmManual}
+            targetTemp={targetTempManual}
+            currentRpm={rpm}
+            setTargetRpm={(val) => { setTargetRpmManual(val); triggerTx('write'); }}
+            setTargetTemp={(val) => { setTargetTempManual(val); triggerTx('write'); }}
+            valveOpen={valveOpen}
+            onToggleValve={toggleValve}
+            isHeaterOn={isHeaterOn}
+            onToggleHeater={toggleHeater}
+          />
+          
+          <div className="flex-grow grid grid-rows-2 gap-4 overflow-hidden">
+            <AlertPanel alerts={alerts} isGenerating={isAiProcessing} />
             <AuditLog logs={auditLog} />
           </div>
         </div>
       </div>
 
-      <footer className="mt-auto pt-6 border-t border-white/5 flex flex-col gap-4">
-        <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
-          <div className="flex gap-6">
+      <footer className="mt-4 pt-3 border-t border-white/5 shrink-0 flex flex-col gap-2">
+        <div className="flex items-center justify-between text-[8px] font-mono text-muted-foreground uppercase tracking-widest">
+          <div className="flex gap-4">
             <span>LATENCY: {latency.toFixed(1)}ms</span>
-            <span>SYSTEM_HEALTH: 98.4%</span>
-            <span>MODE: {isManualMode ? 'MANUAL_OVERRIDE' : 'AUTO_OPTIMIZATION'}</span>
+            <span>HEALTH: 99.8%</span>
+            <span>BUFFER: {trafficLogs.length}/50</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span>OPERATOR: TECH_USER_42</span>
-            <div className="w-2 h-2 rounded-full bg-green-500" />
-          </div>
+          <span>OPERATOR: TECH_USER_42</span>
         </div>
-        <div className="bg-zinc-900/50 p-2 rounded border border-white/5 text-[9px] font-mono text-zinc-500 flex gap-6 uppercase">
-          <span>SYSTEM STATE: {systemState}</span>
+        <div className="bg-zinc-900/50 p-1.5 rounded border border-white/5 text-[8px] font-mono text-zinc-500 flex gap-4 uppercase">
+          <span>STATE: {systemState}</span>
           <span>INTERLOCK: {interlockActive}</span>
           <span>HEATER: {isHeaterOn ? "ON" : "OFF"}</span>
-          <span>RPM_STABILITY: {rpm < 1 ? "STABLE" : "ROTATING"}</span>
+          <span>LOCK: {rpm < 1 ? "READY" : "BUSY"}</span>
         </div>
       </footer>
     </div>
