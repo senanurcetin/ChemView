@@ -17,9 +17,10 @@ This project is an educational prototype for building industrial control systems
 ## ✨ Features
 
 - **Full Control System:** Switch between **Auto** and **Manual Override** modes.
-- **Safety Interlocks:** Automated blocks that prevent valve discharge while mixing.
-- **Live Communication Log:** Real-time hex-format protocol traffic visualization.
-- **Trend Analysis:** Last 60 seconds of sensor data with industrial threshold alerts.
+- **Safety Interlocks:** Automated blocks that prevent valve discharge while mixing (RPM < 1 check).
+- **Heating System:** Integrated thermal dynamics with visual glowing coil simulation.
+- **Live Communication Log:** Real-time hex-format protocol traffic visualization (Modbus TCP/IP).
+- **Trend Analysis:** Real-time charts for temperature and speed telemetry.
 - **Responsive HMI:** Optimized for fixed-viewport control panels (Single Viewport layout).
 
 ## 🛠️ Getting Started
@@ -42,4 +43,4 @@ This is a **Simulation/Educational Prototype**. It does not connect to physical 
 
 ## 📝 License
 
-Distributed under the MIT License.
+Distributed under the MIT License. See `LICENSE` for more information.
