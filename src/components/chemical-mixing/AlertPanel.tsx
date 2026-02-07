@@ -1,7 +1,6 @@
 "use client"
 
 import React from 'react';
-import { IntelligentAlertOutput } from '@/ai/flows/intelligent-alert-generation';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AlertCircle, AlertTriangle, Info, BrainCircuit } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -9,7 +8,10 @@ import { cn } from '@/lib/utils';
 interface Alert {
   id: string;
   timestamp: string;
-  data: IntelligentAlertOutput;
+  data: {
+    alertMessage: string;
+    urgencyLevel: 'low' | 'medium' | 'high';
+  };
 }
 
 interface AlertPanelProps {
@@ -23,11 +25,11 @@ export function AlertPanel({ alerts, isGenerating }: AlertPanelProps) {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <BrainCircuit className="w-5 h-5 text-primary" />
-          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-primary">GenAI Intelligence</h3>
+          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Operational Insights</h3>
         </div>
         {isGenerating && (
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-primary animate-pulse">ANALYZING...</span>
+            <span className="text-[10px] text-primary animate-pulse uppercase">Simulating...</span>
           </div>
         )}
       </div>

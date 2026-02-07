@@ -6,13 +6,23 @@ import { TrendChart } from './TrendChart';
 import { ControlPanel } from './ControlPanel';
 import { StatusDisplay } from './StatusDisplay';
 import { AlertPanel } from './AlertPanel';
-import { generateIntelligentAlert, IntelligentAlertInput, IntelligentAlertOutput } from '@/ai/flows/intelligent-alert-generation';
 
+/**
+ * @typedef {Object} DataHistory
+ * @property {string} time - Formatted timestamp (HH:mm:ss)
+ * @property {number} value - The numerical sensor value
+ */
 interface DataHistory {
   time: string;
   value: number;
 }
 
+/**
+ * Dashboard Component
+ * 
+ * The central controller for the ChemView HMI. It manages the simulated Modbus polling
+ * cycle, maintains sensor history for charts, and executes the simulated AI alerting logic.
+ */
 export function Dashboard() {
   // System State
   const [isRunning, setIsRunning] = useState(false);
@@ -33,10 +43,13 @@ export function Dashboard() {
   const [alerts, setAlerts] = useState<any[]>([]);
   const [isAiProcessing, setIsAiProcessing] = useState(false);
 
-  // Polling Refs
-  const pollingRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Simulation Logic
+  /**
+   * Modbus Simulation Service - State Update Logic
+   * 
+   * Simulates the physical dynamics of a mixing tank.
+   * When running: RPM and Temperature ramp up towards setpoints.
+   * When stopped: RPM decays and Temperature cools towards ambient.
+   */
   const tick = useCallback(() => {
     if (!isRunning) {
       setRpm(prev => Math.max(0, prev - 15));
@@ -45,21 +58,27 @@ export function Dashboard() {
       return;
     }
 
-    // Target values
+    // Targeted simulated setpoints
     const targetRpm = 450 + Math.random() * 50;
     const targetTemp = 65 + Math.random() * 2;
     const targetPh = 7.2 + Math.random() * 0.4;
 
+    // Smooth state transitions (linear interpolation simulation)
     setRpm(prev => prev + (targetRpm - prev) * 0.1);
     setTemp(prev => prev + (targetTemp - prev) * 0.02);
     setPh(prev => prev + (targetPh - prev) * 0.05);
     
-    // Periodically flip valve
+    // Random valve activity simulation
     if (Math.random() > 0.95) setValveOpen(v => !v);
 
   }, [isRunning]);
 
-  // Update Charts & History
+  /**
+   * Polling Cycle Logic
+   * 
+   * Emulates a Modbus TCP/IP polling cycle by fetching "register" data every 1000ms.
+   * This interval updates the local state and pushes data to the historical trend buffers.
+   */
   useEffect(() => {
     const interval = setInterval(() => {
       tick();
@@ -69,7 +88,7 @@ export function Dashboard() {
 
       setRpmHistory(prev => {
         const next = [...prev, { time: timeStr, value: rpm }];
-        return next.slice(-60);
+        return next.slice(-60); // Keep last 60 seconds
       });
 
       setTempHistory(prev => {
@@ -93,60 +112,57 @@ export function Dashboard() {
     return () => clearInterval(interval);
   }, [tick, rpm, temp, ph, valveOpen]);
 
-  // GenAI Alert Generation
-  const checkAlerts = useCallback(async () => {
-    if (stateLog.length < 5 || isAiProcessing) return;
-
+  /**
+   * Simulated Intelligence Logic (Mock AI Mode)
+   * 
+   * Analyzes current system state against operational thresholds to generate
+   * specific, actionable insights for the operator without external API dependencies.
+   */
+  const checkAlerts = useCallback(() => {
     setIsAiProcessing(true);
-    try {
-      const input: IntelligentAlertInput = {
-        mixingSpeedRpm: rpm,
-        temperatureCelsius: temp,
-        pHLevel: ph,
-        valveStatus: valveOpen ? "open" : "closed",
-        pastStates: stateLog.slice(-5),
-        temperatureThreshold: 60,
-        rpmThreshold: 100,
-        phUpperThreshold: 8.5,
-        phLowerThreshold: 6.0
-      };
+    
+    // Artificial delay to simulate processing time
+    setTimeout(() => {
+      let newAlertMessage = "";
+      let urgency: 'low' | 'medium' | 'high' = 'low';
 
-      const result = await generateIntelligentAlert(input);
-      
-      // Only add if it's a non-empty alert message
-      if (result.alertMessage && result.alertMessage.length > 5) {
-        setAlerts(prev => {
-          // Prevent exact duplicate spam
-          if (prev.length > 0 && prev[0].data.alertMessage === result.alertMessage) return prev;
-          
-          return [{
-            id: Math.random().toString(36).substr(2, 9),
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            data: result
-          }, ...prev].slice(0, 10);
-        });
+      if (temp > 80) {
+        newAlertMessage = "⚠️ AI Insight: Overheating detected in Reactor B7. Recommend cooling cycle.";
+        urgency = 'high';
+      } else if (rpm < 100 && valveOpen && isRunning) {
+        newAlertMessage = "⚠️ AI Insight: Mixer efficiency low. Check motor load.";
+        urgency = 'medium';
+      } else {
+        newAlertMessage = "✅ AI Analysis: System operating within optimal parameters.";
+        urgency = 'low';
       }
-    } catch (error) {
-      console.error("AI Alert Generation failed", error);
-    } finally {
-      setIsAiProcessing(false);
-    }
-  }, [rpm, temp, ph, valveOpen, stateLog, isAiProcessing]);
 
-  // Run AI check every 10 seconds or when thresholds crossed
+      // Only add if it's a priority message (high/medium) or to refresh the "optimal" status
+      setAlerts(prev => {
+        // Prevent exact duplicate spam
+        if (prev.length > 0 && prev[0].data.alertMessage === newAlertMessage) return prev;
+        
+        return [{
+          id: Math.random().toString(36).substr(2, 9),
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          data: {
+            alertMessage: newAlertMessage,
+            urgencyLevel: urgency
+          }
+        }, ...prev].slice(0, 5);
+      });
+
+      setIsAiProcessing(false);
+    }, 800);
+  }, [rpm, temp, valveOpen, isRunning]);
+
+  // Run AI analysis check periodically
   useEffect(() => {
     const timer = setInterval(() => {
       checkAlerts();
-    }, 10000);
+    }, 5000);
     return () => clearInterval(timer);
   }, [checkAlerts]);
-
-  // Threshold-based trigger (faster than timer)
-  useEffect(() => {
-    if (temp > 75 || (isRunning && rpm < 50)) {
-       checkAlerts();
-    }
-  }, [temp, rpm, isRunning, checkAlerts]);
 
   const toggleRunning = () => setIsRunning(!isRunning);
   const emergencyStop = () => {
@@ -161,7 +177,7 @@ export function Dashboard() {
       <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/10 pb-6">
         <div>
           <h1 className="text-4xl font-bold tracking-tighter text-primary">CHEMVIEW <span className="text-white font-light">HMI 4.0</span></h1>
-          <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest mt-1">Chemical Mixing Management System // v2.4.1</p>
+          <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest mt-1">Chemical Mixing Management System // Open Source Prototype</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="text-right">
@@ -172,9 +188,9 @@ export function Dashboard() {
           <div className="flex flex-col items-end">
              <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_#00FFFF]" />
-                <span className="text-xs font-mono text-primary font-bold">MODBUS POLLING ACTIVE</span>
+                <span className="text-xs font-mono text-primary font-bold">SIMULATED MODBUS ACTIVE</span>
              </div>
-             <span className="text-[10px] text-muted-foreground font-mono">CYCLE: 1000MS // PORT: 502</span>
+             <span className="text-[10px] text-muted-foreground font-mono">POLLING: 1000MS // PORT: 502</span>
           </div>
         </div>
       </header>
@@ -220,7 +236,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* Right Column: Controls & AI Alerts */}
+        {/* Right Column: Controls & Simulated AI Alerts */}
         <div className="xl:col-span-4 flex flex-col gap-6">
           <ControlPanel 
             isRunning={isRunning}
@@ -243,8 +259,8 @@ export function Dashboard() {
       <footer className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
         <div className="flex gap-6">
           <span>MEM: 24.1GB/128GB</span>
-          <span>LATENCY: 14ms</span>
-          <span>ENCRYPTION: AES-256</span>
+          <span>LATENCY: 14ms (MOCK)</span>
+          <span>MODE: EDUCATIONAL PROTOTYPE</span>
         </div>
         <div className="flex items-center gap-2">
           <span>OPERATOR: TECH_USER_42</span>

@@ -3,14 +3,31 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
+/**
+ * @interface TankSimulationProps
+ * @property {number} rpm - Current mixer rotations per minute
+ * @property {number} temperature - Current liquid temperature (Celsius)
+ * @property {number} ph - Current pH level
+ * @property {boolean} isRunning - System operational state
+ * @property {number} [liquidLevel=65] - Tank fill percentage (0-100)
+ */
 interface TankSimulationProps {
   rpm: number;
   temperature: number;
   ph: number;
   isRunning: boolean;
-  liquidLevel?: number; // 0 to 100
+  liquidLevel?: number;
 }
 
+/**
+ * TankSimulation Component
+ * 
+ * Provides a high-fidelity CSS-based visual simulation of the mixing reactor.
+ * Features:
+ * - Adaptive Mixer Rotation: Animation speed scales with simulated RPM.
+ * - Dynamic Liquid Dynamics: Wave agitation and bubble generation based on mixer state.
+ * - HMI Overlay: Real-time RPM readout within the visual context.
+ */
 export function TankSimulation({
   rpm,
   isRunning,
@@ -36,7 +53,7 @@ export function TankSimulation({
             )}
           />
           
-          {/* Bubbles if running */}
+          {/* Bubbles if running - Density increases with RPM */}
           {isRunning && rpm > 100 && (
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                {[...Array(6)].map((_, i) => (
@@ -57,9 +74,8 @@ export function TankSimulation({
           )}
         </div>
 
-        {/* Mixer Shaft */}
+        {/* Mixer Shaft & Blades */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-64 bg-gray-700 z-10">
-          {/* Mixer Blades */}
           <div 
             className="absolute bottom-12 left-1/2 -translate-x-1/2"
             style={{ 
@@ -70,16 +86,16 @@ export function TankSimulation({
               <div className="w-8 h-4 bg-gray-400 rounded-sm -ml-2 skew-x-12" />
               <div className="w-8 h-4 bg-gray-400 rounded-sm -mr-2 -skew-x-12" />
             </div>
-            {/* Center bolt */}
+            {/* Center Bearing Hub */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-gray-300 rounded-full border border-gray-600" />
           </div>
         </div>
       </div>
 
-      {/* Tank Support Brackets */}
+      {/* Tank Structural Support Brackets */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[340px] border-l border-r border-gray-700 pointer-events-none" />
       
-      {/* RPM Gauge Overlay */}
+      {/* Contextual RPM Gauge */}
       <div className="absolute top-4 right-4 text-right">
         <div className="text-xs uppercase tracking-widest text-muted-foreground">Mixer Speed</div>
         <div className="text-2xl font-bold text-primary tabular-nums">
