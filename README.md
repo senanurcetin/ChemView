@@ -2,7 +2,8 @@
 
 ChemView is a futuristic, high-end Human-Machine Interface (HMI) for monitoring and controlling industrial chemical mixing tanks. It serves as a **high-fidelity Digital Twin Prototype**, demonstrating real-time data ingestion, animated physical simulations, and industrial safety interlocks.
 
-![ChemView HMI](https://picsum.photos/seed/hmi-control/1200/600)
+![ChemView HMI](https://picsum.photos/seed/hmi-control/1200/600)<img width="1841" height="1241" alt="image" src="https://github.com/user-attachments/assets/5c3d9ad0-08a0-442d-a7e1-a5c06e9c76ef" />
+
 
 ## 🚀 Overview
 
