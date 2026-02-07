@@ -1,6 +1,7 @@
 {
   "name": "chemview-hmi",
   "version": "1.0.0",
+  "description": "Industrial IoT Gateway Simulator with Next.js, Modbus TCP Polling, and Safety Interlocks.",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 9002",

@@ -13,8 +13,7 @@ import {
   SlidersHorizontal, 
   Flame, 
   Database,
-  Lock,
-  Unlock
+  Lock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -60,7 +59,7 @@ export function ControlPanel({
   onToggleHeater
 }: ControlPanelProps) {
   // Safety Interlocks
-  const valveLocked = isRunning || currentRpm > 5;
+  const valveLocked = isRunning || currentRpm >= 1;
   const mixerLocked = valveOpen;
 
   return (
@@ -79,7 +78,7 @@ export function ControlPanel({
                     "h-16 w-full text-sm font-bold gap-3 transition-all duration-300",
                     !isRunning && "bg-primary text-primary-foreground glow-primary hover:bg-primary/90",
                     isRunning && "bg-zinc-800 text-zinc-300 border border-zinc-700",
-                    mixerLocked && "opacity-50 cursor-not-allowed"
+                    mixerLocked && "opacity-50"
                   )}
                 >
                   {mixerLocked ? <Lock className="w-5 h-5 text-red-500" /> : isRunning ? <CircleStop className="w-5 h-5" /> : <Power className="w-5 h-5" />}
@@ -142,9 +141,7 @@ export function ControlPanel({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div 
-                  onClick={() => {
-                    if (valveLocked) onToggleValve(); // Triggers the warning toast logic in parent if clicked while disabled
-                  }}
+                  onClick={onToggleValve}
                   className={cn(
                     "p-3 border rounded-md bg-zinc-900/30 flex flex-col gap-3 transition-colors cursor-pointer",
                     valveLocked ? "border-red-500/20 opacity-50" : "border-white/5"
@@ -158,9 +155,9 @@ export function ControlPanel({
                       {valveLocked && <Lock className="w-3 h-3 text-red-500" />}
                       <Switch 
                         checked={valveOpen} 
-                        disabled={valveLocked}
-                        onCheckedChange={onToggleValve}
-                        className="data-[state=checked]:bg-primary"
+                        // Keep interactive so the click triggers the warning toast in parent
+                        onCheckedChange={() => onToggleValve()}
+                        className="data-[state=checked]:bg-primary pointer-events-none"
                       />
                    </div>
                 </div>

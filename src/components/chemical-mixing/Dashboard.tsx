@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { TankSimulation } from './TankSimulation';
 import { TrendChart } from './TrendChart';
 import { ControlPanel } from './ControlPanel';
@@ -10,7 +10,7 @@ import { AuditLog } from './AuditLog';
 import { CommunicationLog } from './CommunicationLog';
 import { NetworkStats } from './NetworkStats';
 import { Button } from '@/components/ui/button';
-import { Download, Wifi, WifiOff } from 'lucide-react';
+import { Download, Wifi } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { cn } from '@/lib/utils';
 
@@ -38,6 +38,9 @@ interface TrafficEntry {
  * 
  * The main orchestrator for the ChemView HMI. Manages physical simulation dynamics,
  * control state, industrial protocol traffic, and event auditing.
+ * 
+ * Polling Logic: Runs on a 1000ms interval simulating a Modbus TCP/IP master
+ * reading data from a remote slave.
  */
 export function Dashboard() {
   const { toast } = useToast();
@@ -46,7 +49,7 @@ export function Dashboard() {
   const [isRunning, setIsRunning] = useState(false);
   const [isManualMode, setIsManualMode] = useState(false);
   const [isHeaterOn, setIsHeaterOn] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<"Connected" | "Disconnected" | "Connecting">("Connected");
+  const [connectionStatus] = useState<"Connected" | "Disconnected" | "Connecting">("Connected");
   
   // Sensors & Setpoints
   const [rpm, setRpm] = useState(0);
@@ -77,7 +80,6 @@ export function Dashboard() {
   const generateModbusFrame = (direction: 'RX' | 'TX', type: 'read' | 'write') => {
     const header = "00 01 00 00 00";
     const unitId = "01";
-    // FC 03 for Read Holding Registers, FC 05 for Write Single Coil
     const fc = type === 'read' ? '03' : '05';
     const payload = Array.from({ length: 4 }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0').toUpperCase()).join(' ');
     return `${header} 06 ${unitId} ${fc} ${payload}`;
@@ -117,7 +119,7 @@ export function Dashboard() {
   const tick = useCallback(() => {
     triggerRx();
 
-    // RPM Dynamics
+    // RPM Dynamics: Simulating rotational inertia
     if (!isRunning) {
       setRpm(prev => Math.max(0, prev - 15));
     } else {
@@ -127,7 +129,7 @@ export function Dashboard() {
       setRpm(prev => prev + (targetRpm - prev) * 0.1);
     }
 
-    // Temperature Dynamics
+    // Temperature Dynamics: Simulating thermal inertia
     if (isHeaterOn) {
       setTemp(prev => {
         const target = isManualMode ? targetTempManual : 75;
@@ -141,14 +143,8 @@ export function Dashboard() {
     // pH Dynamics
     const targetPh = 7.2 + Math.random() * 0.4;
     setPh(prev => prev + (targetPh - prev) * 0.05);
-    
-    // Auto Valve simulation (only if not in manual mode)
-    if (!isManualMode && Math.random() > 0.99 && !isRunning && rpm < 5) {
-      setValveOpen(v => !v);
-      triggerTx('write');
-    }
 
-  }, [isRunning, isManualMode, isHeaterOn, targetRpmManual, targetTempManual, rpm, triggerRx, triggerTx]);
+  }, [isRunning, isManualMode, isHeaterOn, targetRpmManual, targetTempManual, triggerRx]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -178,10 +174,10 @@ export function Dashboard() {
       let newAlertMessage = "";
       let urgency: 'low' | 'medium' | 'high' = 'low';
 
-      if (temp > 85) {
+      if (temp > 80) {
         newAlertMessage = "⚠️ AI Insight: Overheating detected in Reactor B7. Recommend cooling cycle.";
         urgency = 'high';
-      } else if (rpm < 100 && isRunning) {
+      } else if (rpm < 100 && isRunning && valveOpen) {
         newAlertMessage = "⚠️ AI Insight: Mixer efficiency low. Check motor load.";
         urgency = 'medium';
       } else {
@@ -216,7 +212,7 @@ export function Dashboard() {
 
       setIsAiProcessing(false);
     }, 800);
-  }, [rpm, temp, isRunning]);
+  }, [rpm, temp, isRunning, valveOpen]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -251,12 +247,12 @@ export function Dashboard() {
   };
 
   const toggleValve = () => {
-    // Stricter Interlock: RPM must be near zero
-    if (isRunning || rpm > 5) {
+    // Safety check: unlock if RPM is essentially zero
+    if (isRunning || rpm >= 1) {
       toast({
         variant: "destructive",
-        title: "Safety Lock Active",
-        description: "⛔ Wait for Mixer to fully stop (0 RPM) before discharging.",
+        title: "Action Denied",
+        description: "⛔ Mixer is still rotating. Wait for 0 RPM before discharging.",
       });
       return;
     }
@@ -326,6 +322,10 @@ export function Dashboard() {
     link.click();
     document.body.removeChild(link);
   };
+
+  // Status bar calculations
+  const systemState = isRunning && rpm > 10 ? "MIXING" : isHeaterOn ? "HEATING" : "IDLE";
+  const interlockActive = (isRunning || rpm >= 1 || valveOpen) ? "ACTIVE" : "INACTIVE";
 
   return (
     <div className="flex flex-col gap-6 p-6 lg:p-10 max-w-[1600px] mx-auto min-h-screen">
@@ -456,15 +456,23 @@ export function Dashboard() {
         </div>
       </div>
 
-      <footer className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
-        <div className="flex gap-6">
-          <span>LATENCY: {latency.toFixed(1)}ms</span>
-          <span>SYSTEM_HEALTH: 98.4%</span>
-          <span>MODE: {isManualMode ? 'MANUAL_OVERRIDE' : 'AUTO_OPTIMIZATION'}</span>
+      <footer className="mt-auto pt-6 border-t border-white/5 flex flex-col gap-4">
+        <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
+          <div className="flex gap-6">
+            <span>LATENCY: {latency.toFixed(1)}ms</span>
+            <span>SYSTEM_HEALTH: 98.4%</span>
+            <span>MODE: {isManualMode ? 'MANUAL_OVERRIDE' : 'AUTO_OPTIMIZATION'}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span>OPERATOR: TECH_USER_42</span>
+            <div className="w-2 h-2 rounded-full bg-green-500" />
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span>OPERATOR: TECH_USER_42</span>
-          <div className="w-2 h-2 rounded-full bg-green-500" />
+        <div className="bg-zinc-900/50 p-2 rounded border border-white/5 text-[9px] font-mono text-zinc-500 flex gap-6 uppercase">
+          <span>SYSTEM STATE: {systemState}</span>
+          <span>INTERLOCK: {interlockActive}</span>
+          <span>HEATER: {isHeaterOn ? "ON" : "OFF"}</span>
+          <span>RPM_STABILITY: {rpm < 1 ? "STABLE" : "ROTATING"}</span>
         </div>
       </footer>
     </div>
