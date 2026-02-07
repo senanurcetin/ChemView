@@ -33,6 +33,7 @@ interface ControlPanelProps {
   connectionStatus: "Connected" | "Disconnected" | "Connecting";
   targetRpm: number;
   targetTemp: number;
+  currentRpm: number;
   setTargetRpm: (val: number) => void;
   setTargetTemp: (val: number) => void;
   valveOpen: boolean;
@@ -50,6 +51,7 @@ export function ControlPanel({
   connectionStatus,
   targetRpm,
   targetTemp,
+  currentRpm,
   setTargetRpm,
   setTargetTemp,
   valveOpen,
@@ -57,8 +59,8 @@ export function ControlPanel({
   isHeaterOn,
   onToggleHeater
 }: ControlPanelProps) {
-  // Interlock logic for UI states
-  const valveLocked = isRunning;
+  // Safety Interlocks
+  const valveLocked = isRunning || currentRpm > 5;
   const mixerLocked = valveOpen;
 
   return (
@@ -139,10 +141,15 @@ export function ControlPanel({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className={cn(
-                  "p-3 border rounded-md bg-zinc-900/30 flex flex-col gap-3 transition-colors",
-                  valveLocked ? "border-red-500/20" : "border-white/5"
-                )}>
+                <div 
+                  onClick={() => {
+                    if (valveLocked) onToggleValve(); // Triggers the warning toast logic in parent if clicked while disabled
+                  }}
+                  className={cn(
+                    "p-3 border rounded-md bg-zinc-900/30 flex flex-col gap-3 transition-colors cursor-pointer",
+                    valveLocked ? "border-red-500/20 opacity-50" : "border-white/5"
+                  )}
+                >
                    <div className="flex items-center justify-between">
                       <Database className={cn("w-4 h-4", valveOpen ? "text-primary" : "text-zinc-600")} />
                       <span className="text-[9px] font-bold text-muted-foreground uppercase">Valve</span>
@@ -151,6 +158,7 @@ export function ControlPanel({
                       {valveLocked && <Lock className="w-3 h-3 text-red-500" />}
                       <Switch 
                         checked={valveOpen} 
+                        disabled={valveLocked}
                         onCheckedChange={onToggleValve}
                         className="data-[state=checked]:bg-primary"
                       />
@@ -159,7 +167,7 @@ export function ControlPanel({
               </TooltipTrigger>
               {valveLocked && (
                 <TooltipContent className="bg-zinc-900 border-red-500/50 text-red-400">
-                  <p className="text-[10px] font-bold uppercase">Valve Locked: Stop mixer first</p>
+                  <p className="text-[10px] font-bold uppercase">Safety Lock: Mixer must be at 0 RPM</p>
                 </TooltipContent>
               )}
             </Tooltip>

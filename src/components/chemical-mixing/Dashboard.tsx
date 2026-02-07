@@ -33,6 +33,12 @@ interface TrafficEntry {
   frame: string;
 }
 
+/**
+ * Dashboard Component
+ * 
+ * The main orchestrator for the ChemView HMI. Manages physical simulation dynamics,
+ * control state, industrial protocol traffic, and event auditing.
+ */
 export function Dashboard() {
   const { toast } = useToast();
 
@@ -71,7 +77,8 @@ export function Dashboard() {
   const generateModbusFrame = (direction: 'RX' | 'TX', type: 'read' | 'write') => {
     const header = "00 01 00 00 00";
     const unitId = "01";
-    const fc = type === 'read' ? '03' : '06';
+    // FC 03 for Read Holding Registers, FC 05 for Write Single Coil
+    const fc = type === 'read' ? '03' : '05';
     const payload = Array.from({ length: 4 }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0').toUpperCase()).join(' ');
     return `${header} 06 ${unitId} ${fc} ${payload}`;
   };
@@ -135,7 +142,8 @@ export function Dashboard() {
     const targetPh = 7.2 + Math.random() * 0.4;
     setPh(prev => prev + (targetPh - prev) * 0.05);
     
-    if (!isManualMode && Math.random() > 0.98 && !isRunning && rpm < 5) {
+    // Auto Valve simulation (only if not in manual mode)
+    if (!isManualMode && Math.random() > 0.99 && !isRunning && rpm < 5) {
       setValveOpen(v => !v);
       triggerTx('write');
     }
@@ -235,7 +243,7 @@ export function Dashboard() {
       {
         id: Math.random().toString(36).substr(2, 9),
         timestamp: new Date().toLocaleTimeString(),
-        message: `Mixer ${newState ? 'STARTED' : 'STOPPED'} by Operator`,
+        message: `INFO: Mixer ${newState ? 'STARTED' : 'STOPPED'} by Operator`,
         level: 'low'
       },
       ...log
@@ -243,11 +251,12 @@ export function Dashboard() {
   };
 
   const toggleValve = () => {
+    // Stricter Interlock: RPM must be near zero
     if (isRunning || rpm > 5) {
       toast({
         variant: "destructive",
-        title: "Interlock Active",
-        description: "⛔ Valve cannot be opened while Mixer is RUNNING.",
+        title: "Safety Lock Active",
+        description: "⛔ Wait for Mixer to fully stop (0 RPM) before discharging.",
       });
       return;
     }
@@ -258,7 +267,22 @@ export function Dashboard() {
       {
         id: Math.random().toString(36).substr(2, 9),
         timestamp: new Date().toLocaleTimeString(),
-        message: `Valve ${newState ? 'OPENED' : 'CLOSED'} by Operator`,
+        message: `INFO: Discharge Valve ${newState ? 'OPENED' : 'CLOSED'} by Operator`,
+        level: 'low'
+      },
+      ...log
+    ].slice(0, 50));
+  };
+
+  const toggleHeater = () => {
+    const newState = !isHeaterOn;
+    setIsHeaterOn(newState);
+    triggerTx('write');
+    setAuditLog(log => [
+      {
+        id: Math.random().toString(36).substr(2, 9),
+        timestamp: new Date().toLocaleTimeString(),
+        message: `INFO: Heater System ${newState ? 'ACTIVATED' : 'DEACTIVATED'} - Setpoint: ${targetTempManual.toFixed(1)}°C`,
         level: 'low'
       },
       ...log
@@ -274,7 +298,7 @@ export function Dashboard() {
       {
         id: Math.random().toString(36).substr(2, 9),
         timestamp: new Date().toLocaleTimeString(),
-        message: "EMERGENCY STOP TRIGGERED",
+        message: "EMERGENCY STOP TRIGGERED BY OPERATOR",
         level: 'high'
       },
       ...log
@@ -406,6 +430,7 @@ export function Dashboard() {
               connectionStatus={connectionStatus}
               targetRpm={targetRpmManual}
               targetTemp={targetTempManual}
+              currentRpm={rpm}
               setTargetRpm={(val) => {
                 setTargetRpmManual(val);
                 triggerTx('write');
@@ -417,10 +442,7 @@ export function Dashboard() {
               valveOpen={valveOpen}
               onToggleValve={toggleValve}
               isHeaterOn={isHeaterOn}
-              onToggleHeater={() => {
-                setIsHeaterOn(!isHeaterOn);
-                triggerTx('write');
-              }}
+              onToggleHeater={toggleHeater}
             />
           </div>
           
