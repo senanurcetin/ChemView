@@ -4,6 +4,8 @@ ChemView is an open-source industrial HMI and digital twin prototype for a chemi
 
 ![ChemView interface](https://github.com/user-attachments/assets/5c3d9ad0-08a0-442d-a7e1-a5c06e9c76ef)
 
+Demo: [YouTube walkthrough](https://www.youtube.com/watch?v=GJgmsIAXbrk)
+
 ## What it does
 
 - Simulates a mixing tank process with live telemetry.
