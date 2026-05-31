@@ -6,6 +6,8 @@ ChemView is an open-source industrial HMI and digital twin prototype for a chemi
 
 Demo: [YouTube walkthrough](https://www.youtube.com/watch?v=GJgmsIAXbrk)
 
+Portfolio role: `archive proof`
+
 ## What it does
 
 - Simulates a mixing tank process with live telemetry.
@@ -34,7 +36,7 @@ The app runs on `http://localhost:9002`.
 
 ## Portfolio note
 
-ChemView is a simulation-focused public repo. It is meant to show industrial UX, state modeling, and operator-centered front-end architecture rather than production PLC integration.
+ChemView is archive proof for industrial UX, state modeling, and operator-centered front-end architecture rather than production PLC integration.
 
 ## License
 
