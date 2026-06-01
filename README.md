@@ -8,6 +8,10 @@ Demo: [YouTube walkthrough](https://www.youtube.com/watch?v=GJgmsIAXbrk)
 
 Portfolio role: `archive proof`
 
+## Why it sits in supporting evidence
+
+ChemView is kept as supporting evidence for industrial UX, HMI state modeling, and telemetry interface design. It strengthens the portfolio visually and product-wise, but it is not meant to compete with the lead case studies for Data + AI roles.
+
 ## What it does
 
 - Simulates a mixing tank process with live telemetry.
