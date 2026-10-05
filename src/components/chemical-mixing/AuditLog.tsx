@@ -5,6 +5,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { History, ShieldCheck, ShieldAlert, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+const formatClock = (iso: string) =>
+  new Date(iso).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
 interface LogEntry {
   id: string;
   timestamp: string;
@@ -45,7 +48,7 @@ export function AuditLog({ logs }: AuditLogProps) {
                   <Icon className={cn("w-3 h-3 mt-1", color)} />
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-[9px] font-mono text-muted-foreground">{log.timestamp}</span>
+                      <span className="text-[9px] font-mono text-muted-foreground">{formatClock(log.timestamp)}</span>
                       <span className={cn("text-[9px] font-bold uppercase tracking-tighter", color)}>
                         {log.level}
                       </span>

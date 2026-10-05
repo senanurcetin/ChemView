@@ -5,19 +5,15 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { AlertCircle, AlertTriangle, Info, BrainCircuit } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface Alert {
-  id: string;
-  timestamp: string;
-  data: {
-    alertMessage: string;
-    urgencyLevel: 'low' | 'medium' | 'high';
-  };
-}
+import type { Alert } from '@/server/sim/types';
 
 interface AlertPanelProps {
   alerts: Alert[];
   isGenerating: boolean;
 }
+
+const formatTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
 export function AlertPanel({ alerts, isGenerating }: AlertPanelProps) {
   return (
@@ -29,7 +25,7 @@ export function AlertPanel({ alerts, isGenerating }: AlertPanelProps) {
         </div>
         {isGenerating && (
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-primary animate-pulse uppercase">Simulating...</span>
+            <span className="text-[10px] text-primary animate-pulse uppercase">Analyzing...</span>
           </div>
         )}
       </div>
@@ -47,10 +43,10 @@ export function AlertPanel({ alerts, isGenerating }: AlertPanelProps) {
             </div>
           ) : (
             alerts.map((alert) => {
-              const Icon = alert.data.urgencyLevel === 'high' ? AlertTriangle : AlertCircle;
-              const color = alert.data.urgencyLevel === 'high' 
+              const Icon = alert.urgency === 'high' ? AlertTriangle : AlertCircle;
+              const color = alert.urgency === 'high' 
                 ? 'text-red-500 border-red-500/20 bg-red-500/5' 
-                : alert.data.urgencyLevel === 'medium'
+                : alert.urgency === 'medium'
                 ? 'text-orange-500 border-orange-500/20 bg-orange-500/5'
                 : 'text-cyan-500 border-cyan-500/20 bg-cyan-500/5';
 
@@ -66,15 +62,18 @@ export function AlertPanel({ alerts, isGenerating }: AlertPanelProps) {
                     <div className="flex items-center gap-2">
                       <Icon className="w-4 h-4" />
                       <span className="text-[10px] font-bold uppercase tracking-wider">
-                        {alert.data.urgencyLevel} PRIORITY
+                        {alert.urgency} PRIORITY
+                      </span>
+                      <span className="text-[9px] font-mono px-1 rounded border border-current/30 opacity-70">
+                        {alert.source === 'ai' ? 'AI' : 'RULE'}
                       </span>
                     </div>
                     <span className="text-[10px] font-mono text-muted-foreground">
-                      {alert.timestamp}
+                      {formatTime(alert.timestamp)}
                     </span>
                   </div>
                   <p className="text-xs leading-relaxed font-medium">
-                    {alert.data.alertMessage}
+                    {alert.message}
                   </p>
                 </div>
               );

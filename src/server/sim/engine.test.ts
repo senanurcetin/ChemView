@@ -142,3 +142,22 @@ describe('commandSchema', () => {
     expect(commandSchema.safeParse({ type: 'nope' }).success).toBe(false);
   });
 });
+
+describe('rule alerts', () => {
+  it('raises a nominal alert on the first tick and does not repeat it', () => {
+    const e = new Engine({ seed: 1 });
+    e.tick();
+    e.tick();
+    const { alerts } = e.getSnapshot();
+    expect(alerts).toHaveLength(1);
+    expect(alerts[0]).toMatchObject({ source: 'rule', urgency: 'low' });
+  });
+
+  it('flags overheating with a high alert and an audit entry', async () => {
+    const { evaluateRules } = await import('./alerts');
+    expect(evaluateRules(base({ temp: 81 }))).toMatchObject({ key: 'temp-high', urgency: 'high' });
+    expect(evaluateRules(base({ ph: 5.5 }))).toMatchObject({ key: 'ph-range', urgency: 'medium' });
+    expect(evaluateRules(base({ valveOpen: true, level: 0 }))).toMatchObject({ key: 'tank-empty' });
+    expect(evaluateRules(base())).toBeNull();
+  });
+});

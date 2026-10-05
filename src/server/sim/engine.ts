@@ -1,7 +1,10 @@
+import { evaluateRules, NOMINAL_MESSAGE } from './alerts';
 import { applyCommand } from './interlocks';
 import { commandFrame, readRequestFrame, readResponseFrame } from './modbus';
 import { createRng, type Rng } from './rng';
+import { initialState } from './state';
 import type {
+  Alert,
   AuditEntry,
   Command,
   CommandResult,
@@ -11,23 +14,10 @@ import type {
   TrafficEntry,
 } from './types';
 
+export { initialState };
 export const TICK_MS = 1000;
 const LOG_LIMIT = 50;
-
-export function initialState(): SimState {
-  return {
-    isRunning: false,
-    isManualMode: false,
-    isHeaterOn: false,
-    valveOpen: false,
-    rpm: 0,
-    temp: 24.5,
-    ph: 7.0,
-    level: 65,
-    targetRpmManual: 500,
-    targetTempManual: 60,
-  };
-}
+const ALERT_LIMIT = 5;
 
 /**
  * Advances the physical model by one polling tick (1 s).
@@ -84,6 +74,8 @@ export class Engine {
   private network: NetworkCounters = { packetCount: 0, latencyMs: 15.2, errorCount: 0 };
   private traffic: TrafficEntry[] = [];
   private audit: AuditEntry[] = [];
+  private alerts: Alert[] = [];
+  private lastAlertKey: string | null = null;
   private listeners = new Set<Listener>();
   private timer: ReturnType<typeof setInterval> | null = null;
 
@@ -104,6 +96,29 @@ export class Engine {
     ].slice(-LOG_LIMIT);
   }
 
+  private pushAudit(entry: Omit<AuditEntry, 'id' | 'timestamp'>) {
+    this.audit = [
+      { id: this.nextId(), timestamp: this.now().toISOString(), ...entry },
+      ...this.audit,
+    ].slice(0, LOG_LIMIT);
+  }
+
+  /** Raises a rule alert only when the active condition changes (edge-triggered). */
+  private evaluateAlerts() {
+    const rule = evaluateRules(this.state);
+    const key = rule?.key ?? 'nominal';
+    if (key === this.lastAlertKey) return;
+    this.lastAlertKey = key;
+
+    const message = rule?.message ?? NOMINAL_MESSAGE;
+    const urgency = rule?.urgency ?? 'low';
+    this.alerts = [
+      { id: this.nextId(), timestamp: this.now().toISOString(), source: 'rule' as const, message, urgency },
+      ...this.alerts,
+    ].slice(0, ALERT_LIMIT);
+    if (urgency !== 'low') this.pushAudit({ message, level: urgency });
+  }
+
   /** Runs one polling cycle: master read request, slave response, physics step. */
   tick(): Snapshot {
     this.state = step(this.state, this.rng);
@@ -111,6 +126,7 @@ export class Engine {
     this.pushTraffic('TX', readRequestFrame(txId));
     this.network.latencyMs = 12 + this.rng() * 6;
     this.pushTraffic('RX', readResponseFrame(txId, this.state));
+    this.evaluateAlerts();
     return this.emit();
   }
 
@@ -119,12 +135,7 @@ export class Engine {
     if (!result.ok) return result;
     this.state = result.state;
     if (result.wrote) this.pushTraffic('TX', commandFrame(++this.txId, cmd));
-    if (result.audit) {
-      this.audit = [
-        { id: this.nextId(), timestamp: this.now().toISOString(), ...result.audit },
-        ...this.audit,
-      ].slice(0, LOG_LIMIT);
-    }
+    if (result.audit) this.pushAudit(result.audit);
     this.emit();
     return result;
   }
@@ -137,6 +148,7 @@ export class Engine {
       network: { ...this.network },
       traffic: this.traffic,
       audit: this.audit,
+      alerts: this.alerts,
     };
   }
 

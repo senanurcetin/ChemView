@@ -4,6 +4,9 @@ import React, { useEffect, useRef } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Terminal } from 'lucide-react';
 
+const formatClock = (iso: string) =>
+  new Date(iso).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
 interface TrafficEntry {
   id: string;
   timestamp: string;
@@ -38,7 +41,7 @@ export function CommunicationLog({ logs }: CommunicationLogProps) {
         <div className="space-y-1 py-1">
           {logs.map((log) => (
             <div key={log.id} className="text-[10px] flex gap-3 whitespace-nowrap">
-              <span className="text-zinc-600">[{log.timestamp}]</span>
+              <span className="text-zinc-600">[{formatClock(log.timestamp)}]</span>
               <span className={log.direction === 'TX' ? 'text-orange-500' : 'text-primary'}>
                 {log.direction === 'TX' ? 'SEND >' : 'RECV <'}
               </span>

@@ -54,6 +54,15 @@ export interface NetworkCounters {
   errorCount: number;
 }
 
+export interface Alert {
+  id: string;
+  timestamp: string;
+  /** `rule` = deterministic safety alarm, `ai` = Genkit-generated commentary. */
+  source: 'rule' | 'ai';
+  message: string;
+  urgency: Level;
+}
+
 /** One telemetry message pushed to clients every tick. */
 export interface Snapshot {
   seq: number;
@@ -62,4 +71,5 @@ export interface Snapshot {
   network: NetworkCounters;
   traffic: TrafficEntry[];
   audit: AuditEntry[];
+  alerts: Alert[];
 }
