@@ -100,7 +100,7 @@ export function Dashboard() {
       {
         id: Math.random().toString(36).substr(2, 9),
         timestamp: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-        direction: 'TX',
+        direction: 'TX' as const,
         frame: generateModbusFrame('TX', type)
       }
     ].slice(-50));
@@ -116,7 +116,7 @@ export function Dashboard() {
       {
         id: Math.random().toString(36).substr(2, 9),
         timestamp: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-        direction: 'RX',
+        direction: 'RX' as const,
         frame: generateModbusFrame('RX', 'read')
       }
     ].slice(-50));
@@ -253,7 +253,7 @@ export function Dashboard() {
         id: Math.random().toString(36).substr(2, 9),
         timestamp: new Date().toLocaleTimeString(),
         message: `INFO: Mixer ${newState ? 'STARTED' : 'STOPPED'} by Operator`,
-        level: 'low'
+        level: 'low' as const
       },
       ...log
     ].slice(0, 50));
@@ -277,7 +277,7 @@ export function Dashboard() {
         id: Math.random().toString(36).substr(2, 9),
         timestamp: new Date().toLocaleTimeString(),
         message: `INFO: Discharge Valve ${newState ? 'OPENED' : 'CLOSED'} by Operator`,
-        level: 'low'
+        level: 'low' as const
       },
       ...log
     ].slice(0, 50));
@@ -292,7 +292,7 @@ export function Dashboard() {
         id: Math.random().toString(36).substr(2, 9),
         timestamp: new Date().toLocaleTimeString(),
         message: `INFO: Heater System ${newState ? 'ACTIVATED' : 'DEACTIVATED'} - Setpoint: ${targetTempManual.toFixed(1)}°C`,
-        level: 'low'
+        level: 'low' as const
       },
       ...log
     ].slice(0, 50));
@@ -308,7 +308,7 @@ export function Dashboard() {
         id: Math.random().toString(36).substr(2, 9),
         timestamp: new Date().toLocaleTimeString(),
         message: "EMERGENCY STOP TRIGGERED BY OPERATOR",
-        level: 'high'
+        level: 'high' as const
       },
       ...log
     ].slice(0, 50));
