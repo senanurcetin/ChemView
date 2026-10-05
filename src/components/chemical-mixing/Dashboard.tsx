@@ -97,25 +97,9 @@ export function Dashboard() {
     return () => Object.values(timers).forEach(clearTimeout);
   }, []);
 
+  // Server-side export: the last hour of persisted samples, not just the 60 s on screen.
   const exportToCsv = () => {
-    const csvRows = [
-      ["Timestamp", "RPM", "Temperature (°C)"],
-      ...rpmHistory.map((item, idx) => [
-        item.time,
-        item.value.toFixed(2),
-        tempHistory[idx]?.value.toFixed(2) || "0"
-      ])
-    ];
-
-    const csvContent = "data:text/csv;charset=utf-8,"
-      + csvRows.map(e => e.join(",")).join("\n");
-
-    const link = document.createElement("a");
-    link.setAttribute("href", encodeURI(csvContent));
-    link.setAttribute("download", `reactor_logs_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    window.location.href = '/api/export';
   };
 
   const { rpm, temp, ph, valveOpen, isRunning, isHeaterOn, isManualMode } = state;

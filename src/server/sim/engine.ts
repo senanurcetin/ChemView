@@ -4,6 +4,7 @@ import { applyCommand } from './interlocks';
 import { commandFrame, readRequestFrame, readResponseFrame } from './modbus';
 import { createRng, type Rng } from './rng';
 import { initialState } from './state';
+import { getStore, toSample, type Store } from '../store';
 import type {
   Alert,
   AuditEntry,
@@ -19,6 +20,8 @@ export { initialState };
 export const TICK_MS = 1000;
 const LOG_LIMIT = 50;
 const ALERT_LIMIT = 5;
+/** Persist one telemetry sample every N ticks (5 s at the 1 s tick). */
+export const TELEMETRY_EVERY = 5;
 
 /**
  * Advances the physical model by one polling tick (1 s).
@@ -59,6 +62,8 @@ export interface EngineOptions {
   now?: () => Date;
   /** Optional LLM commentary layered on top of the rule alarms. */
   commentator?: Commentator;
+  /** Optional persistence; writes are best-effort and never block or break a tick. */
+  store?: Store;
 }
 
 type Listener = (snapshot: Snapshot) => void;
@@ -80,6 +85,9 @@ export class Engine {
   private alerts: Alert[] = [];
   private lastAlertKey: string | null = null;
   private readonly commentator?: Commentator;
+  private readonly store?: Store;
+  private readonly runId = Date.now().toString(36);
+  private tickCount = 0;
   private listeners = new Set<Listener>();
   private timer: ReturnType<typeof setInterval> | null = null;
 
@@ -87,10 +95,23 @@ export class Engine {
     this.rng = options.rng ?? createRng(options.seed ?? Date.now());
     this.now = options.now ?? (() => new Date());
     this.commentator = options.commentator;
+    this.store = options.store;
   }
 
   private nextId(): string {
-    return `e${++this.idCounter}`;
+    return `${this.runId}-${++this.idCounter}`;
+  }
+
+  private persist(write: (store: Store) => Promise<void>) {
+    if (!this.store) return;
+    write(this.store).catch((error) =>
+      console.warn('[store] write failed:', error instanceof Error ? error.message : error),
+    );
+  }
+
+  /** Seeds the audit trail from the store after a restart (newest first). */
+  hydrate(audit: AuditEntry[]) {
+    if (this.audit.length === 0) this.audit = audit.slice(0, LOG_LIMIT);
   }
 
   private pushTraffic(direction: 'RX' | 'TX', frame: string) {
@@ -102,10 +123,14 @@ export class Engine {
   }
 
   private pushAudit(entry: Omit<AuditEntry, 'id' | 'timestamp'>) {
-    this.audit = [
-      { id: this.nextId(), timestamp: this.now().toISOString(), ...entry },
-      ...this.audit,
-    ].slice(0, LOG_LIMIT);
+    const full: AuditEntry = { id: this.nextId(), timestamp: this.now().toISOString(), ...entry };
+    this.audit = [full, ...this.audit].slice(0, LOG_LIMIT);
+    this.persist((store) => store.saveAudit(full));
+  }
+
+  private pushAlert(alert: Alert) {
+    this.alerts = [alert, ...this.alerts].slice(0, ALERT_LIMIT);
+    this.persist((store) => store.saveAlert(alert));
   }
 
   /** Raises a rule alert only when the active condition changes (edge-triggered). */
@@ -117,10 +142,7 @@ export class Engine {
 
     const message = rule?.message ?? NOMINAL_MESSAGE;
     const urgency = rule?.urgency ?? 'low';
-    this.alerts = [
-      { id: this.nextId(), timestamp: this.now().toISOString(), source: 'rule' as const, message, urgency },
-      ...this.alerts,
-    ].slice(0, ALERT_LIMIT);
+    this.pushAlert({ id: this.nextId(), timestamp: this.now().toISOString(), source: 'rule', message, urgency });
     if (urgency !== 'low') this.pushAudit({ message, level: urgency });
   }
 
@@ -132,7 +154,12 @@ export class Engine {
     this.network.latencyMs = 12 + this.rng() * 6;
     this.pushTraffic('RX', readResponseFrame(txId, this.state));
     this.evaluateAlerts();
-    this.commentator?.record(this.state, this.now().toISOString());
+    const ts = this.now().toISOString();
+    this.commentator?.record(this.state, ts);
+    if (++this.tickCount % TELEMETRY_EVERY === 0) {
+      const sample = toSample(this.state, ts);
+      this.persist((store) => store.saveTelemetry(sample));
+    }
     void this.runCommentary();
     return this.emit();
   }
@@ -145,16 +172,13 @@ export class Engine {
     if (commentator.busy) this.emit(); // let clients show "Analyzing..."
     const result = await pending;
     if (result) {
-      this.alerts = [
-        {
-          id: this.nextId(),
-          timestamp: this.now().toISOString(),
-          source: 'ai' as const,
-          message: result.message,
-          urgency: result.urgency,
-        },
-        ...this.alerts,
-      ].slice(0, ALERT_LIMIT);
+      this.pushAlert({
+        id: this.nextId(),
+        timestamp: this.now().toISOString(),
+        source: 'ai',
+        message: result.message,
+        urgency: result.urgency,
+      });
     }
     this.emit();
   }
@@ -209,7 +233,15 @@ const globalForEngine = globalThis as unknown as { __chemviewEngine?: Engine };
 
 /** Process-wide singleton (survives Next.js dev hot reloads). */
 export function getEngine(): Engine {
-  return (globalForEngine.__chemviewEngine ??= new Engine({ commentator: createCommentator() }));
+  if (!globalForEngine.__chemviewEngine) {
+    const engine = new Engine({ commentator: createCommentator(), store: getStore() });
+    globalForEngine.__chemviewEngine = engine;
+    getStore()
+      .recentAudit(LOG_LIMIT)
+      .then((audit) => engine.hydrate(audit))
+      .catch(() => {});
+  }
+  return globalForEngine.__chemviewEngine;
 }
 
 /** LLM commentary is enabled only when a Gemini key is configured. */
