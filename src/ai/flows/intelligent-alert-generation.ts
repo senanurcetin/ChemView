@@ -10,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import {THRESHOLDS} from '@/server/sim/thresholds';
 
 const IntelligentAlertInputSchema = z.object({
   mixingSpeedRpm: z.number().describe('The current mixing speed in RPM.'),
@@ -23,10 +24,10 @@ const IntelligentAlertInputSchema = z.object({
     valveStatus: z.string().describe('Past status of the valve (open or closed).'),
     timestamp: z.string().describe('Timestamp of the past state.'),
   })).describe('An array of past sensor states.'),
-  temperatureThreshold: z.number().default(50).describe('The threshold in degrees Celsius above which a temperature alert should be triggered'),
-  rpmThreshold: z.number().default(100).describe('The threshold in RPM below which a mixing speed alert should be triggered'),
-  phUpperThreshold: z.number().default(8).describe('The upper pH threshold, above which a pH alert should be triggered'),
-  phLowerThreshold: z.number().default(6).describe('The lower pH threshold, below which a pH alert should be triggered'),
+  temperatureThreshold: z.number().default(THRESHOLDS.temperatureCelsius).describe('The threshold in degrees Celsius above which a temperature alert should be triggered'),
+  rpmThreshold: z.number().default(THRESHOLDS.rpmLow).describe('The threshold in RPM below which a mixing speed alert should be triggered'),
+  phUpperThreshold: z.number().default(THRESHOLDS.phUpper).describe('The upper pH threshold, above which a pH alert should be triggered'),
+  phLowerThreshold: z.number().default(THRESHOLDS.phLower).describe('The lower pH threshold, below which a pH alert should be triggered'),
 });
 
 export type IntelligentAlertInput = z.infer<typeof IntelligentAlertInputSchema>;
@@ -46,7 +47,7 @@ const intelligentAlertPrompt = ai.definePrompt({
   name: 'intelligentAlertPrompt',
   input: { schema: IntelligentAlertInputSchema },
   output: { schema: IntelligentAlertOutputSchema },
-  prompt: `You are an intelligent alerting system for a chemical mixing tank. Analyze the real-time sensor data, considering past states and defined thresholds, to generate specific and actionable alerts for the operator. Provide context and recommendations in the alert message.
+  prompt: `You are an intelligent alerting system for a chemical mixing tank. Analyze the real-time sensor data, considering past states and defined thresholds, to generate specific and actionable alerts for the operator. Hard safety alarms are raised separately by deterministic rules; your role is the trend-aware interpretation. Provide context and a concrete recommendation in at most two sentences.
 
 Current Sensor Data:
 - Mixing Speed: {{mixingSpeedRpm}} RPM

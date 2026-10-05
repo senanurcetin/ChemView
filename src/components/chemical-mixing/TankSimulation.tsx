@@ -22,6 +22,16 @@ interface TankSimulationProps {
   liquidLevel?: number;
 }
 
+// Fixed bubble layout so re-renders (every telemetry tick) don't make them jump around.
+const BUBBLES = [
+  { size: 4, left: 12, bottom: 20, duration: 1.8 },
+  { size: 3, left: 30, bottom: 55, duration: 2.4 },
+  { size: 5, left: 48, bottom: 12, duration: 1.4 },
+  { size: 2, left: 63, bottom: 70, duration: 2.9 },
+  { size: 4, left: 78, bottom: 35, duration: 2.1 },
+  { size: 3, left: 90, bottom: 60, duration: 1.6 },
+];
+
 export function TankSimulation({
   rpm,
   isRunning,
@@ -52,17 +62,17 @@ export function TankSimulation({
           {/* Procedural Bubbles */}
           {isRunning && rpm > 50 && (
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-               {[...Array(6)].map((_, i) => (
-                 <div 
+               {BUBBLES.map((bubble, i) => (
+                 <div
                    key={i}
                    className="absolute bg-white/5 rounded-full animate-pulse"
                    style={{
-                     width: `${Math.random() * 4 + 2}px`,
-                     height: `${Math.random() * 4 + 2}px`,
-                     left: `${Math.random() * 100}%`,
-                     bottom: `${Math.random() * 100}%`,
+                     width: `${bubble.size}px`,
+                     height: `${bubble.size}px`,
+                     left: `${bubble.left}%`,
+                     bottom: `${bubble.bottom}%`,
                      animationDelay: `${i * 0.4}s`,
-                     animationDuration: `${Math.random() * 2 + 1}s`
+                     animationDuration: `${bubble.duration}s`
                    }}
                  />
                ))}

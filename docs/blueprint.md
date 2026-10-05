@@ -1,3 +1,5 @@
+> Original design brief. The implemented architecture (server-side engine, SSE, hybrid alerting, persistence) is described in [architecture.md](architecture.md).
+
 # **App Name**: ChemView
 
 ## Core Features:
