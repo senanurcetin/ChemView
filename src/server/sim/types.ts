@@ -72,4 +72,6 @@ export interface Snapshot {
   traffic: TrafficEntry[];
   audit: AuditEntry[];
   alerts: Alert[];
+  /** True while an LLM commentary request is in flight. */
+  aiBusy: boolean;
 }

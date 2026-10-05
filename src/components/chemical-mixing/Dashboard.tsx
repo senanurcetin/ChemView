@@ -216,7 +216,7 @@ export function Dashboard() {
           />
 
           <div className="flex-grow grid grid-rows-2 gap-4 overflow-hidden">
-            <AlertPanel alerts={alerts} isGenerating={false} />
+            <AlertPanel alerts={alerts} isGenerating={snapshot?.aiBusy ?? false} />
             <AuditLog logs={audit} />
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { evaluateRules, NOMINAL_MESSAGE } from './alerts';
+import { Commentator } from './commentary';
 import { applyCommand } from './interlocks';
 import { commandFrame, readRequestFrame, readResponseFrame } from './modbus';
 import { createRng, type Rng } from './rng';
@@ -56,6 +57,8 @@ export interface EngineOptions {
   seed?: number;
   rng?: Rng;
   now?: () => Date;
+  /** Optional LLM commentary layered on top of the rule alarms. */
+  commentator?: Commentator;
 }
 
 type Listener = (snapshot: Snapshot) => void;
@@ -76,12 +79,14 @@ export class Engine {
   private audit: AuditEntry[] = [];
   private alerts: Alert[] = [];
   private lastAlertKey: string | null = null;
+  private readonly commentator?: Commentator;
   private listeners = new Set<Listener>();
   private timer: ReturnType<typeof setInterval> | null = null;
 
   constructor(options: EngineOptions = {}) {
     this.rng = options.rng ?? createRng(options.seed ?? Date.now());
     this.now = options.now ?? (() => new Date());
+    this.commentator = options.commentator;
   }
 
   private nextId(): string {
@@ -127,7 +132,31 @@ export class Engine {
     this.network.latencyMs = 12 + this.rng() * 6;
     this.pushTraffic('RX', readResponseFrame(txId, this.state));
     this.evaluateAlerts();
+    this.commentator?.record(this.state, this.now().toISOString());
+    void this.runCommentary();
     return this.emit();
+  }
+
+  /** Fire-and-forget: the LLM never blocks the tick, and its failure changes nothing. */
+  private async runCommentary() {
+    const commentator = this.commentator;
+    if (!commentator || commentator.busy) return;
+    const pending = commentator.maybeComment(this.state);
+    if (commentator.busy) this.emit(); // let clients show "Analyzing..."
+    const result = await pending;
+    if (result) {
+      this.alerts = [
+        {
+          id: this.nextId(),
+          timestamp: this.now().toISOString(),
+          source: 'ai' as const,
+          message: result.message,
+          urgency: result.urgency,
+        },
+        ...this.alerts,
+      ].slice(0, ALERT_LIMIT);
+    }
+    this.emit();
   }
 
   command(cmd: Command): CommandResult {
@@ -149,6 +178,7 @@ export class Engine {
       traffic: this.traffic,
       audit: this.audit,
       alerts: this.alerts,
+      aiBusy: this.commentator?.busy ?? false,
     };
   }
 
@@ -179,5 +209,17 @@ const globalForEngine = globalThis as unknown as { __chemviewEngine?: Engine };
 
 /** Process-wide singleton (survives Next.js dev hot reloads). */
 export function getEngine(): Engine {
-  return (globalForEngine.__chemviewEngine ??= new Engine());
+  return (globalForEngine.__chemviewEngine ??= new Engine({ commentator: createCommentator() }));
+}
+
+/** LLM commentary is enabled only when a Gemini key is configured. */
+function createCommentator(): Commentator | undefined {
+  if (!process.env.GEMINI_API_KEY && !process.env.GOOGLE_API_KEY) return undefined;
+  return new Commentator({
+    // Lazy import keeps the genkit runtime out of unit tests and cold starts without a key.
+    generate: async (input) => {
+      const { generateIntelligentAlert } = await import('@/ai/flows/intelligent-alert-generation');
+      return generateIntelligentAlert(input);
+    },
+  });
 }
