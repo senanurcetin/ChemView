@@ -43,9 +43,15 @@
 
 /* Custom HMI animations */
 @keyframes liquidWave {
-  0% { transform: translateX(-50%) skewY(-2deg); }
-  50% { transform: translateX(-50%) skewY(2deg); }
-  100% { transform: translateX(-50%) skewY(-2deg); }
+  0% {
+    transform: translateX(-50%) skewY(-2deg);
+  }
+  50% {
+    transform: translateX(-50%) skewY(2deg);
+  }
+  100% {
+    transform: translateX(-50%) skewY(-2deg);
+  }
 }
 
 .animate-liquid {
@@ -66,9 +72,9 @@
 }
 
 .text-cyan {
-  color: #00FFFF;
+  color: #00ffff;
 }
 
 .text-accent-red {
-  color: #FF4500;
+  color: #ff4500;
 }

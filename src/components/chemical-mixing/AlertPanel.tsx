@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import React from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -21,7 +21,9 @@ export function AlertPanel({ alerts, isGenerating }: AlertPanelProps) {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <BrainCircuit className="w-5 h-5 text-primary" />
-          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Operational Insights</h3>
+          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
+            Operational Insights
+          </h3>
         </div>
         {isGenerating && (
           <div className="flex items-center gap-2">
@@ -44,18 +46,19 @@ export function AlertPanel({ alerts, isGenerating }: AlertPanelProps) {
           ) : (
             alerts.map((alert) => {
               const Icon = alert.urgency === 'high' ? AlertTriangle : AlertCircle;
-              const color = alert.urgency === 'high' 
-                ? 'text-red-500 border-red-500/20 bg-red-500/5' 
-                : alert.urgency === 'medium'
-                ? 'text-orange-500 border-orange-500/20 bg-orange-500/5'
-                : 'text-cyan-500 border-cyan-500/20 bg-cyan-500/5';
+              const color =
+                alert.urgency === 'high'
+                  ? 'text-red-500 border-red-500/20 bg-red-500/5'
+                  : alert.urgency === 'medium'
+                    ? 'text-orange-500 border-orange-500/20 bg-orange-500/5'
+                    : 'text-cyan-500 border-cyan-500/20 bg-cyan-500/5';
 
               return (
-                <div 
-                  key={alert.id} 
+                <div
+                  key={alert.id}
                   className={cn(
-                    "p-3 border rounded-md transition-all animate-in fade-in slide-in-from-right-2",
-                    color
+                    'p-3 border rounded-md transition-all animate-in fade-in slide-in-from-right-2',
+                    color,
                   )}
                 >
                   <div className="flex items-center justify-between mb-1">
@@ -72,9 +75,7 @@ export function AlertPanel({ alerts, isGenerating }: AlertPanelProps) {
                       {formatTime(alert.timestamp)}
                     </span>
                   </div>
-                  <p className="text-xs leading-relaxed font-medium">
-                    {alert.message}
-                  </p>
+                  <p className="text-xs leading-relaxed font-medium">{alert.message}</p>
                 </div>
               );
             })

@@ -49,7 +49,8 @@ export class MemoryStore implements Store {
 
   async saveTelemetry(sample: TelemetrySample) {
     this.samples.push(sample);
-    if (this.samples.length > this.maxSamples) this.samples.splice(0, this.samples.length - this.maxSamples);
+    if (this.samples.length > this.maxSamples)
+      this.samples.splice(0, this.samples.length - this.maxSamples);
   }
 
   async saveAlert() {
@@ -71,8 +72,14 @@ export class MemoryStore implements Store {
 }
 
 /** Firestore when FIREBASE_* env vars are present, otherwise {@link MemoryStore}. */
-export async function createStore(env: Record<string, string | undefined> = process.env): Promise<Store> {
-  const { FIREBASE_PROJECT_ID: projectId, FIREBASE_CLIENT_EMAIL: clientEmail, FIREBASE_PRIVATE_KEY: key } = env;
+export async function createStore(
+  env: Record<string, string | undefined> = process.env,
+): Promise<Store> {
+  const {
+    FIREBASE_PROJECT_ID: projectId,
+    FIREBASE_CLIENT_EMAIL: clientEmail,
+    FIREBASE_PRIVATE_KEY: key,
+  } = env;
   if (!projectId || !clientEmail || !key) return new MemoryStore();
   const { FirestoreStore } = await import('./firestore-store');
   return new FirestoreStore({ projectId, clientEmail, privateKey: key.replace(/\\n/g, '\n') });
@@ -107,7 +114,10 @@ const globalForStore = globalThis as unknown as { __chemviewStore?: Store };
 export function getStore(): Store {
   return (globalForStore.__chemviewStore ??= new LazyStore(
     createStore().catch((error) => {
-      console.warn('[store] falling back to memory:', error instanceof Error ? error.message : error);
+      console.warn(
+        '[store] falling back to memory:',
+        error instanceof Error ? error.message : error,
+      );
       return new MemoryStore();
     }),
   ));
