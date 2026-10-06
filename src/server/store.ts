@@ -17,7 +17,7 @@ export interface Store {
   saveTelemetry(sample: TelemetrySample): Promise<void>;
   saveAlert(alert: Alert): Promise<void>;
   saveAudit(entry: AuditEntry): Promise<void>;
-  /** Samples with `from <= ts <= to`, oldest first. */
+  /** Samples with `from <= ts <= to`, oldest first; at most `limit` of them (the oldest in range). */
   history(range: { from: string; to: string; limit?: number }): Promise<TelemetrySample[]>;
   /** Most recent audit entries, newest first. */
   recentAudit(limit: number): Promise<AuditEntry[]>;
@@ -63,11 +63,14 @@ export class MemoryStore implements Store {
   }
 
   async history({ from, to, limit = 5000 }: { from: string; to: string; limit?: number }) {
-    return this.samples.filter((s) => s.ts >= from && s.ts <= to).slice(-limit);
+    return this.samples
+      .filter((s) => s.ts >= from && s.ts <= to)
+      .sort((a, b) => a.ts.localeCompare(b.ts))
+      .slice(0, limit);
   }
 
   async recentAudit(limit: number) {
-    return this.audit.slice(0, limit);
+    return [...this.audit].sort((a, b) => b.timestamp.localeCompare(a.timestamp)).slice(0, limit);
   }
 }
 

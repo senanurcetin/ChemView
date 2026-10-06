@@ -45,9 +45,11 @@ Safety alarms are deterministic and raised on the tick the condition appears. Ge
 
 - `apphosting.yaml` sets `maxInstances: 1`. The engine is in-process state, so scaling out needs the plant state moved into shared storage first.
 - The simulation pauses when no client is connected.
-- Firestore needs a service account: set `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` (keep `\n` escapes in the key). The Firestore adapter is a thin wrapper that has not been exercised against a live project in CI.
+- Firestore needs a service account: set `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` (keep `\n` escapes in the key). The Firestore adapter is verified against the Firestore **emulator** (`npm run test:firestore`, run in CI), not against a live project.
 - Authentication is opt-in and minimal: set `OPERATOR_TOKEN` and `POST /api/command` requires `Authorization: Bearer <token>` (E-STOP stays open on purpose). It is meant for scripts and server-to-server calls. The browser dashboard sends no token, so with the token set its other controls are rejected with 401; put the UI behind your platform's access control (and do not ship the token to the client). Read endpoints (`/api/stream`, `/api/history`, `/api/export`) are not token protected.
 
 ## Tests
+
+`npm run test:firestore` runs the shared Store contract suite (`src/server/store.contract.test.ts`) against the Firestore emulator (needs Java 11+); plain `npm test` runs the same suite for the in-memory store and skips the Firestore cases.
 
 `npm test` covers the physics (including determinism via the seeded RNG), every interlock, the Modbus frame encoding, the engine, the commentary guards (with a mocked LLM), the stores, history/CSV parsing and the rate limiter.

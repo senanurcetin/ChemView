@@ -12,7 +12,8 @@
     "test": "vitest run",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "genkit:dev": "genkit start -- npx tsx src/ai/dev.ts"
+    "genkit:dev": "genkit start -- npx tsx src/ai/dev.ts",
+    "test:firestore": "firebase emulators:exec --only firestore --project chemview-test \"vitest run src/server/store.contract.test.ts\""
   },
   "dependencies": {
     "@genkit-ai/google-genai": "^1.42.0",
@@ -45,6 +46,7 @@
     "@types/react-dom": "^19.2.1",
     "eslint": "^8.57.1",
     "eslint-config-next": "^15.5.27",
+    "firebase-tools": "^15.32.1",
     "genkit-cli": "^1.43.0",
     "postcss": "^8",
     "prettier": "^3.9.9",
