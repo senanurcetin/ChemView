@@ -46,7 +46,7 @@ Safety alarms are deterministic and raised on the tick the condition appears. Ge
 - `apphosting.yaml` sets `maxInstances: 1`. The engine is in-process state, so scaling out needs the plant state moved into shared storage first.
 - The simulation pauses when no client is connected.
 - Firestore needs a service account: set `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` (keep `\n` escapes in the key). The Firestore adapter is a thin wrapper that has not been exercised against a live project in CI.
-- There is no authentication on the API. Put it behind your platform's access control before exposing it.
+- Authentication is opt-in and minimal: set `OPERATOR_TOKEN` and `POST /api/command` requires `Authorization: Bearer <token>` (E-STOP stays open on purpose). It is meant for scripts and server-to-server calls. The browser dashboard sends no token, so with the token set its other controls are rejected with 401; put the UI behind your platform's access control (and do not ship the token to the client). Read endpoints (`/api/stream`, `/api/history`, `/api/export`) are not token protected.
 
 ## Tests
 
