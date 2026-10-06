@@ -28,7 +28,7 @@ There is still no real PLC: the Modbus layer is a deterministic simulation, not 
 - TypeScript, Tailwind CSS, shadcn/ui, Recharts
 - Genkit and Gemini for AI-assisted alert commentary
 - Firebase Admin (Firestore) for optional persistence
-- Vitest for unit tests
+- Vitest for unit tests, Playwright for end-to-end smoke tests
 
 ## Local setup
 
@@ -40,7 +40,8 @@ npm run dev
 
 The app runs on `http://localhost:9002`. Without any keys it works fully, using rule alarms and the in-memory store.
 
-Quality checks (also run in CI): `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`.
+Quality checks (also run in CI): `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test`, `npm run build`.
+Extra suites: `npm run test:firestore` (Store contract tests against the Firestore emulator, needs Java) and `npm run test:e2e` (Playwright smoke tests; set `PLAYWRIGHT_CHROMIUM_PATH` to use a preinstalled Chromium, otherwise run `npx playwright install chromium` once).
 
 See [docs/architecture.md](docs/architecture.md) for how the pieces fit together.
 

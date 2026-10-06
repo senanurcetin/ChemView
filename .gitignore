@@ -38,3 +38,7 @@ next-env.d.ts
 firestore-debug.log
 *-debug.log
 .firebase/
+
+# Playwright
+test-results/
+playwright-report/

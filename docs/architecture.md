@@ -52,4 +52,6 @@ Safety alarms are deterministic and raised on the tick the condition appears. Ge
 
 `npm run test:firestore` runs the shared Store contract suite (`src/server/store.contract.test.ts`) against the Firestore emulator (needs Java 11+); plain `npm test` runs the same suite for the in-memory store and skips the Firestore cases.
 
+`npm run test:e2e` drives the real built app in Chromium: connection, starting the mixer, the discharge interlock toast, E-STOP and trend persistence across a reload. The simulation is one shared server state, so these tests run serially and reset the plant first.
+
 `npm test` covers the physics (including determinism via the seeded RNG), every interlock, the Modbus frame encoding, the engine, the commentary guards (with a mocked LLM), the stores, history/CSV parsing and the rate limiter.
