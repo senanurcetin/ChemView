@@ -17,11 +17,7 @@ const READ_COUNT = 4;
 const hex = (n: number, width: number) =>
   Math.max(0, Math.round(n)).toString(16).toUpperCase().padStart(width, '0').slice(-width);
 
-const bytes = (...parts: string[]) =>
-  parts
-    .join('')
-    .match(/.{2}/g)!
-    .join(' ');
+const bytes = (...parts: string[]) => parts.join('').match(/.{2}/g)!.join(' ');
 
 const mbap = (txId: number, length: number) => `${hex(txId & 0xffff, 4)}0000${hex(length, 4)}`;
 

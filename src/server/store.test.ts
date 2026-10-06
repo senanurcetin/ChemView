@@ -11,12 +11,23 @@ const sample = (ts: string) => toSample(initialState(), ts);
 describe('MemoryStore', () => {
   it('returns samples in range, oldest first, honoring limit', async () => {
     const store = new MemoryStore();
-    for (const ts of ['2026-01-01T00:00:00.000Z', '2026-01-01T00:00:05.000Z', '2026-01-01T00:00:10.000Z']) {
+    for (const ts of [
+      '2026-01-01T00:00:00.000Z',
+      '2026-01-01T00:00:05.000Z',
+      '2026-01-01T00:00:10.000Z',
+    ]) {
       await store.saveTelemetry(sample(ts));
     }
-    const all = await store.history({ from: '2026-01-01T00:00:00.000Z', to: '2026-01-01T00:00:10.000Z' });
+    const all = await store.history({
+      from: '2026-01-01T00:00:00.000Z',
+      to: '2026-01-01T00:00:10.000Z',
+    });
     expect(all.map((s) => s.ts.slice(17, 19))).toEqual(['00', '05', '10']);
-    const some = await store.history({ from: '2026-01-01T00:00:05.000Z', to: '2026-01-01T00:00:10.000Z', limit: 1 });
+    const some = await store.history({
+      from: '2026-01-01T00:00:05.000Z',
+      to: '2026-01-01T00:00:10.000Z',
+      limit: 1,
+    });
     expect(some).toHaveLength(1);
   });
 
@@ -46,7 +57,9 @@ describe('Engine persistence', () => {
       const samples = await store.history({ from: '0000', to: '9999' });
       expect(samples).toHaveLength(2);
     });
-    expect((await store.recentAudit(5)).map((e) => e.message)).toContain('INFO: Mixer STARTED by Operator');
+    expect((await store.recentAudit(5)).map((e) => e.message)).toContain(
+      'INFO: Mixer STARTED by Operator',
+    );
   });
 
   it('a failing store never breaks the tick', async () => {
@@ -81,16 +94,25 @@ describe('history query + csv', () => {
   const now = new Date('2026-01-01T12:00:00Z');
   it('defaults to the last hour', () => {
     const q = parseHistoryQuery(new URLSearchParams(), now);
-    expect(q).toMatchObject({ ok: true, to: '2026-01-01T12:00:00.000Z', from: '2026-01-01T11:00:00.000Z', limit: 1000 });
+    expect(q).toMatchObject({
+      ok: true,
+      to: '2026-01-01T12:00:00.000Z',
+      from: '2026-01-01T11:00:00.000Z',
+      limit: 1000,
+    });
   });
   it('rejects bad input', () => {
     expect(parseHistoryQuery(new URLSearchParams('from=nope'), now).ok).toBe(false);
     expect(parseHistoryQuery(new URLSearchParams('limit=99999'), now).ok).toBe(false);
-    expect(parseHistoryQuery(new URLSearchParams('from=2026-02-01&to=2026-01-01'), now).ok).toBe(false);
+    expect(parseHistoryQuery(new URLSearchParams('from=2026-02-01&to=2026-01-01'), now).ok).toBe(
+      false,
+    );
   });
   it('renders a header and one row per sample', () => {
     const csv = telemetryToCsv([sample('2026-01-01T00:00:00.000Z')]);
-    expect(csv.split('\n')[0]).toBe('timestamp,rpm,temperature_c,ph,level_pct,mixer_running,heater_on,valve_open');
+    expect(csv.split('\n')[0]).toBe(
+      'timestamp,rpm,temperature_c,ph,level_pct,mixer_running,heater_on,valve_open',
+    );
     expect(csv.split('\n')[1]).toBe('2026-01-01T00:00:00.000Z,0.00,24.50,7.000,65,0,0,0');
   });
 });

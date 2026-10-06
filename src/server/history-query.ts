@@ -19,7 +19,8 @@ export function parseHistoryQuery(params: URLSearchParams, now = new Date()) {
     to: params.get('to') ?? undefined,
     limit: params.get('limit') ?? undefined,
   });
-  if (!parsed.success) return { ok: false as const, error: parsed.error.issues[0]?.message ?? 'Invalid query.' };
+  if (!parsed.success)
+    return { ok: false as const, error: parsed.error.issues[0]?.message ?? 'Invalid query.' };
   const to = parsed.data.to ?? now.toISOString();
   const from = parsed.data.from ?? new Date(Date.parse(to) - 3_600_000).toISOString();
   if (from > to) return { ok: false as const, error: '`from` must not be after `to`.' };

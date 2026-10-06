@@ -8,26 +8,44 @@
  * - IntelligentAlertOutput - The return type for the generateIntelligentAlert function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-import {THRESHOLDS} from '@/server/sim/thresholds';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
+import { THRESHOLDS } from '@/server/sim/thresholds';
 
 const IntelligentAlertInputSchema = z.object({
   mixingSpeedRpm: z.number().describe('The current mixing speed in RPM.'),
   temperatureCelsius: z.number().describe('The current temperature in degrees Celsius.'),
   pHLevel: z.number().describe('The current pH level.'),
   valveStatus: z.string().describe('The current status of the valve (open or closed).'),
-  pastStates: z.array(z.object({
-    mixingSpeedRpm: z.number().describe('Past mixing speed in RPM.'),
-    temperatureCelsius: z.number().describe('Past temperature in degrees Celsius.'),
-    pHLevel: z.number().describe('Past pH level.'),
-    valveStatus: z.string().describe('Past status of the valve (open or closed).'),
-    timestamp: z.string().describe('Timestamp of the past state.'),
-  })).describe('An array of past sensor states.'),
-  temperatureThreshold: z.number().default(THRESHOLDS.temperatureCelsius).describe('The threshold in degrees Celsius above which a temperature alert should be triggered'),
-  rpmThreshold: z.number().default(THRESHOLDS.rpmLow).describe('The threshold in RPM below which a mixing speed alert should be triggered'),
-  phUpperThreshold: z.number().default(THRESHOLDS.phUpper).describe('The upper pH threshold, above which a pH alert should be triggered'),
-  phLowerThreshold: z.number().default(THRESHOLDS.phLower).describe('The lower pH threshold, below which a pH alert should be triggered'),
+  pastStates: z
+    .array(
+      z.object({
+        mixingSpeedRpm: z.number().describe('Past mixing speed in RPM.'),
+        temperatureCelsius: z.number().describe('Past temperature in degrees Celsius.'),
+        pHLevel: z.number().describe('Past pH level.'),
+        valveStatus: z.string().describe('Past status of the valve (open or closed).'),
+        timestamp: z.string().describe('Timestamp of the past state.'),
+      }),
+    )
+    .describe('An array of past sensor states.'),
+  temperatureThreshold: z
+    .number()
+    .default(THRESHOLDS.temperatureCelsius)
+    .describe(
+      'The threshold in degrees Celsius above which a temperature alert should be triggered',
+    ),
+  rpmThreshold: z
+    .number()
+    .default(THRESHOLDS.rpmLow)
+    .describe('The threshold in RPM below which a mixing speed alert should be triggered'),
+  phUpperThreshold: z
+    .number()
+    .default(THRESHOLDS.phUpper)
+    .describe('The upper pH threshold, above which a pH alert should be triggered'),
+  phLowerThreshold: z
+    .number()
+    .default(THRESHOLDS.phLower)
+    .describe('The lower pH threshold, below which a pH alert should be triggered'),
 });
 
 export type IntelligentAlertInput = z.infer<typeof IntelligentAlertInputSchema>;
@@ -39,7 +57,9 @@ const IntelligentAlertOutputSchema = z.object({
 
 export type IntelligentAlertOutput = z.infer<typeof IntelligentAlertOutputSchema>;
 
-export async function generateIntelligentAlert(input: IntelligentAlertInput): Promise<IntelligentAlertOutput> {
+export async function generateIntelligentAlert(
+  input: IntelligentAlertInput,
+): Promise<IntelligentAlertOutput> {
   return intelligentAlertFlow(input);
 }
 
@@ -83,5 +103,5 @@ const intelligentAlertFlow = ai.defineFlow(
   async (input) => {
     const { output } = await intelligentAlertPrompt(input);
     return output!;
-  }
+  },
 );

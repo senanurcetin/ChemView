@@ -54,20 +54,28 @@ describe('interlocks', () => {
   });
 
   it('denies valve changes while running or still spinning', () => {
-    expect(applyCommand(base({ isRunning: true }), { type: 'set_valve', open: true }).ok).toBe(false);
+    expect(applyCommand(base({ isRunning: true }), { type: 'set_valve', open: true }).ok).toBe(
+      false,
+    );
     expect(applyCommand(base({ rpm: 3 }), { type: 'set_valve', open: true }).ok).toBe(false);
     expect(applyCommand(base({ rpm: 0 }), { type: 'set_valve', open: true }).ok).toBe(true);
   });
 
   it('E-STOP stops mixer and heater, zeroes RPM and logs a high-level audit entry', () => {
-    const r = applyCommand(base({ isRunning: true, isHeaterOn: true, rpm: 480 }), { type: 'estop' });
+    const r = applyCommand(base({ isRunning: true, isHeaterOn: true, rpm: 480 }), {
+      type: 'estop',
+    });
     expect(r.state).toMatchObject({ isRunning: false, isHeaterOn: false, rpm: 0 });
     expect(r.audit?.level).toBe('high');
   });
 
   it('clamps setpoints to the allowed range', () => {
-    expect(applyCommand(base(), { type: 'set_rpm_setpoint', value: 9999 }).state.targetRpmManual).toBe(1500);
-    expect(applyCommand(base(), { type: 'set_temp_setpoint', value: -5 }).state.targetTempManual).toBe(20);
+    expect(
+      applyCommand(base(), { type: 'set_rpm_setpoint', value: 9999 }).state.targetRpmManual,
+    ).toBe(1500);
+    expect(
+      applyCommand(base(), { type: 'set_temp_setpoint', value: -5 }).state.targetTempManual,
+    ).toBe(20);
   });
 
   it('is idempotent for commands that change nothing', () => {
@@ -90,8 +98,12 @@ describe('modbus frames', () => {
 
   it('encodes coil and register writes', () => {
     expect(commandFrame(3, { type: 'start' })).toBe('00 03 00 00 00 06 01 05 00 00 FF 00');
-    expect(commandFrame(4, { type: 'set_valve', open: false })).toBe('00 04 00 00 00 06 01 05 00 02 00 00');
-    expect(commandFrame(5, { type: 'set_rpm_setpoint', value: 500 })).toBe('00 05 00 00 00 06 01 06 00 0A 01 F4');
+    expect(commandFrame(4, { type: 'set_valve', open: false })).toBe(
+      '00 04 00 00 00 06 01 05 00 02 00 00',
+    );
+    expect(commandFrame(5, { type: 'set_rpm_setpoint', value: 500 })).toBe(
+      '00 05 00 00 00 06 01 06 00 0A 01 F4',
+    );
   });
 });
 
@@ -138,7 +150,9 @@ describe('commandSchema', () => {
   it('accepts valid commands and rejects malformed ones', () => {
     expect(commandSchema.safeParse({ type: 'set_valve', open: true }).success).toBe(true);
     expect(commandSchema.safeParse({ type: 'set_valve' }).success).toBe(false);
-    expect(commandSchema.safeParse({ type: 'set_rpm_setpoint', value: Infinity }).success).toBe(false);
+    expect(commandSchema.safeParse({ type: 'set_rpm_setpoint', value: Infinity }).success).toBe(
+      false,
+    );
     expect(commandSchema.safeParse({ type: 'nope' }).success).toBe(false);
   });
 });

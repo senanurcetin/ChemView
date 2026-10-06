@@ -1,14 +1,14 @@
-"use client"
+'use client';
 
 import React from 'react';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer 
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
 } from 'recharts';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
@@ -37,29 +37,26 @@ export function TrendChart({ title, data, color, unit, domain }: TrendChartProps
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
-            <XAxis 
-              dataKey="time" 
-              hide={true} 
-            />
-            <YAxis 
-              domain={domain || ['auto', 'auto']} 
-              fontSize={10} 
-              tick={{ fill: '#666' }} 
+            <XAxis dataKey="time" hide={true} />
+            <YAxis
+              domain={domain || ['auto', 'auto']}
+              fontSize={10}
+              tick={{ fill: '#666' }}
               axisLine={false}
               tickLine={false}
               unit={unit}
             />
-            <Tooltip 
+            <Tooltip
               contentStyle={{ backgroundColor: '#111', borderColor: '#333', fontSize: '12px' }}
               itemStyle={{ color: color }}
               labelStyle={{ display: 'none' }}
               formatter={(value: number) => [`${value.toFixed(2)} ${unit}`, title]}
             />
-            <Line 
-              type="monotone" 
-              dataKey="value" 
-              stroke={color} 
-              strokeWidth={2} 
+            <Line
+              type="monotone"
+              dataKey="value"
+              stroke={color}
+              strokeWidth={2}
               dot={false}
               isAnimationActive={false}
             />

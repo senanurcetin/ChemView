@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { TankSimulation } from './TankSimulation';
@@ -11,7 +11,7 @@ import { CommunicationLog } from './CommunicationLog';
 import { NetworkStats } from './NetworkStats';
 import { Button } from '@/components/ui/button';
 import { Download, Wifi, WifiOff } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from '@/hooks/use-toast';
 import { useTelemetry } from '@/hooks/use-telemetry';
 import { cn } from '@/lib/utils';
 import { GATEWAY_ADDRESS, OPERATOR_ID } from '@/lib/config';
@@ -73,8 +73,8 @@ export function Dashboard() {
       const outcome = await sendCommand(command);
       if (!outcome.ok) {
         toast({
-          variant: "destructive",
-          title: command.type === 'start' ? "Interlock Active" : "Action Denied",
+          variant: 'destructive',
+          title: command.type === 'start' ? 'Interlock Active' : 'Action Denied',
           description: `⛔ ${outcome.reason ?? 'Command rejected.'}`,
         });
       }
@@ -103,8 +103,8 @@ export function Dashboard() {
   };
 
   const { rpm, temp, ph, valveOpen, isRunning, isHeaterOn, isManualMode } = state;
-  const systemState = isRunning && rpm > 10 ? "MIXING" : isHeaterOn ? "HEATING" : "IDLE";
-  const interlockActive = (isRunning || rpm >= 1 || valveOpen) ? "ACTIVE" : "INACTIVE";
+  const systemState = isRunning && rpm > 10 ? 'MIXING' : isHeaterOn ? 'HEATING' : 'IDLE';
+  const interlockActive = isRunning || rpm >= 1 || valveOpen ? 'ACTIVE' : 'INACTIVE';
   const errorRate = network.packetCount > 0 ? (network.errorCount / network.packetCount) * 100 : 0;
   const health = (100 - errorRate).toFixed(1);
   const connected = status === 'Connected';
@@ -113,33 +113,59 @@ export function Dashboard() {
     <div className="flex flex-col h-screen overflow-hidden p-4 lg:p-6 max-w-[1800px] mx-auto bg-[#222222]">
       <header className="flex items-center justify-between border-b border-white/10 pb-4 mb-4 shrink-0">
         <div>
-          <h1 className="text-2xl font-bold tracking-tighter text-primary">CHEMVIEW <span className="text-white font-light">HMI 1.0</span></h1>
-          <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Industrial Digital Twin Prototype</p>
+          <h1 className="text-2xl font-bold tracking-tighter text-primary">
+            CHEMVIEW <span className="text-white font-light">HMI 1.0</span>
+          </h1>
+          <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
+            Industrial Digital Twin Prototype
+          </p>
         </div>
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3 bg-zinc-900/50 px-3 py-1.5 rounded-md border border-white/5">
             <div className="flex flex-col items-center">
               <span className="text-[7px] font-bold text-zinc-500 uppercase">RX</span>
-              <div className={cn("w-1.5 h-1.5 rounded-full transition-all", rxActive ? "bg-primary glow-primary" : "bg-zinc-800")} />
+              <div
+                className={cn(
+                  'w-1.5 h-1.5 rounded-full transition-all',
+                  rxActive ? 'bg-primary glow-primary' : 'bg-zinc-800',
+                )}
+              />
             </div>
             <div className="flex flex-col items-center">
               <span className="text-[7px] font-bold text-zinc-500 uppercase">TX</span>
-              <div className={cn("w-1.5 h-1.5 rounded-full transition-all", txActive ? "bg-orange-500 shadow-orange-500" : "bg-zinc-800")} />
+              <div
+                className={cn(
+                  'w-1.5 h-1.5 rounded-full transition-all',
+                  txActive ? 'bg-orange-500 shadow-orange-500' : 'bg-zinc-800',
+                )}
+              />
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={exportToCsv} className="h-8 text-[10px] font-mono gap-2 border-white/10">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportToCsv}
+            className="h-8 text-[10px] font-mono gap-2 border-white/10"
+          >
             <Download className="w-3 h-3" /> EXPORT CSV
           </Button>
           <div className="flex flex-col items-end">
-             <div className="flex items-center gap-2">
-                {connected
-                  ? <Wifi className="w-3 h-3 text-primary" />
-                  : <WifiOff className="w-3 h-3 text-destructive" />}
-                <span className={cn("text-[10px] font-mono font-bold uppercase", connected ? "text-primary" : "text-destructive")}>
-                  {connected ? 'Gateway Active' : `Gateway ${status}`}
-                </span>
-             </div>
-             <span className="text-[9px] text-muted-foreground font-mono">{GATEWAY_ADDRESS}</span>
+            <div className="flex items-center gap-2">
+              {connected ? (
+                <Wifi className="w-3 h-3 text-primary" />
+              ) : (
+                <WifiOff className="w-3 h-3 text-destructive" />
+              )}
+              <span
+                className={cn(
+                  'text-[10px] font-mono font-bold uppercase',
+                  connected ? 'text-primary' : 'text-destructive',
+                )}
+              >
+                {connected ? 'Gateway Active' : `Gateway ${status}`}
+              </span>
+            </div>
+            <span className="text-[9px] text-muted-foreground font-mono">{GATEWAY_ADDRESS}</span>
           </div>
         </div>
       </header>
@@ -168,8 +194,20 @@ export function Dashboard() {
             </div>
 
             <div className="flex flex-col gap-4 overflow-hidden">
-              <TrendChart title="Temperature" data={tempHistory} color="#00FFFF" unit="°C" domain={[20, 100]} />
-              <TrendChart title="Mixer Speed" data={rpmHistory} color="#00FFFF" unit="RPM" domain={[0, 1500]} />
+              <TrendChart
+                title="Temperature"
+                data={tempHistory}
+                color="#00FFFF"
+                unit="°C"
+                domain={[20, 100]}
+              />
+              <TrendChart
+                title="Mixer Speed"
+                data={rpmHistory}
+                color="#00FFFF"
+                unit="RPM"
+                domain={[0, 1500]}
+              />
               <div className="flex-grow overflow-hidden">
                 <CommunicationLog logs={traffic} />
               </div>
@@ -179,7 +217,11 @@ export function Dashboard() {
 
         {/* Right Column: Controls & Intelligence */}
         <div className="col-span-4 flex flex-col gap-4 overflow-hidden">
-          <NetworkStats packetCount={network.packetCount} latency={network.latencyMs} errorRate={errorRate} />
+          <NetworkStats
+            packetCount={network.packetCount}
+            latency={network.latencyMs}
+            errorRate={errorRate}
+          />
 
           <ControlPanel
             isRunning={isRunning}
@@ -191,8 +233,14 @@ export function Dashboard() {
             targetRpm={rpmSetpoint}
             targetTemp={tempSetpoint}
             currentRpm={rpm}
-            setTargetRpm={(value) => { setRpmSetpoint(value); sendSetpoint({ type: 'set_rpm_setpoint', value }); }}
-            setTargetTemp={(value) => { setTempSetpoint(value); sendSetpoint({ type: 'set_temp_setpoint', value }); }}
+            setTargetRpm={(value) => {
+              setRpmSetpoint(value);
+              sendSetpoint({ type: 'set_rpm_setpoint', value });
+            }}
+            setTargetTemp={(value) => {
+              setTempSetpoint(value);
+              sendSetpoint({ type: 'set_temp_setpoint', value });
+            }}
             valveOpen={valveOpen}
             onToggleValve={() => run({ type: 'set_valve', open: !valveOpen })}
             isHeaterOn={isHeaterOn}
@@ -218,8 +266,8 @@ export function Dashboard() {
         <div className="bg-zinc-900/50 p-1.5 rounded border border-white/5 text-[8px] font-mono text-zinc-500 flex gap-4 uppercase">
           <span>STATE: {systemState}</span>
           <span>INTERLOCK: {interlockActive}</span>
-          <span>HEATER: {isHeaterOn ? "ON" : "OFF"}</span>
-          <span>LOCK: {rpm < 1 ? "READY" : "BUSY"}</span>
+          <span>HEATER: {isHeaterOn ? 'ON' : 'OFF'}</span>
+          <span>LOCK: {rpm < 1 ? 'READY' : 'BUSY'}</span>
         </div>
       </footer>
     </div>

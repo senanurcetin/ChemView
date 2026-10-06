@@ -17,7 +17,7 @@ export interface Store {
   saveTelemetry(sample: TelemetrySample): Promise<void>;
   saveAlert(alert: Alert): Promise<void>;
   saveAudit(entry: AuditEntry): Promise<void>;
-  /** Samples with `from <= ts <= to`, oldest first. */
+  /** Samples with `from <= ts <= to`, oldest first; at most `limit` of them (the oldest in range). */
   history(range: { from: string; to: string; limit?: number }): Promise<TelemetrySample[]>;
   /** Most recent audit entries, newest first. */
   recentAudit(limit: number): Promise<AuditEntry[]>;
@@ -49,7 +49,8 @@ export class MemoryStore implements Store {
 
   async saveTelemetry(sample: TelemetrySample) {
     this.samples.push(sample);
-    if (this.samples.length > this.maxSamples) this.samples.splice(0, this.samples.length - this.maxSamples);
+    if (this.samples.length > this.maxSamples)
+      this.samples.splice(0, this.samples.length - this.maxSamples);
   }
 
   async saveAlert() {
@@ -62,17 +63,26 @@ export class MemoryStore implements Store {
   }
 
   async history({ from, to, limit = 5000 }: { from: string; to: string; limit?: number }) {
-    return this.samples.filter((s) => s.ts >= from && s.ts <= to).slice(-limit);
+    return this.samples
+      .filter((s) => s.ts >= from && s.ts <= to)
+      .sort((a, b) => a.ts.localeCompare(b.ts))
+      .slice(0, limit);
   }
 
   async recentAudit(limit: number) {
-    return this.audit.slice(0, limit);
+    return [...this.audit].sort((a, b) => b.timestamp.localeCompare(a.timestamp)).slice(0, limit);
   }
 }
 
 /** Firestore when FIREBASE_* env vars are present, otherwise {@link MemoryStore}. */
-export async function createStore(env: Record<string, string | undefined> = process.env): Promise<Store> {
-  const { FIREBASE_PROJECT_ID: projectId, FIREBASE_CLIENT_EMAIL: clientEmail, FIREBASE_PRIVATE_KEY: key } = env;
+export async function createStore(
+  env: Record<string, string | undefined> = process.env,
+): Promise<Store> {
+  const {
+    FIREBASE_PROJECT_ID: projectId,
+    FIREBASE_CLIENT_EMAIL: clientEmail,
+    FIREBASE_PRIVATE_KEY: key,
+  } = env;
   if (!projectId || !clientEmail || !key) return new MemoryStore();
   const { FirestoreStore } = await import('./firestore-store');
   return new FirestoreStore({ projectId, clientEmail, privateKey: key.replace(/\\n/g, '\n') });
@@ -107,7 +117,10 @@ const globalForStore = globalThis as unknown as { __chemviewStore?: Store };
 export function getStore(): Store {
   return (globalForStore.__chemviewStore ??= new LazyStore(
     createStore().catch((error) => {
-      console.warn('[store] falling back to memory:', error instanceof Error ? error.message : error);
+      console.warn(
+        '[store] falling back to memory:',
+        error instanceof Error ? error.message : error,
+      );
       return new MemoryStore();
     }),
   ));

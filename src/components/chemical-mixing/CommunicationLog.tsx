@@ -1,11 +1,16 @@
-"use client"
+'use client';
 
 import React, { useEffect, useRef } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Terminal } from 'lucide-react';
 
 const formatClock = (iso: string) =>
-  new Date(iso).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  new Date(iso).toLocaleTimeString([], {
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
 
 interface TrafficEntry {
   id: string;
@@ -34,7 +39,9 @@ export function CommunicationLog({ logs }: CommunicationLogProps) {
     <div className="hmi-panel bg-black border-primary/20 flex flex-col h-[200px] font-mono">
       <div className="flex items-center gap-2 mb-2 border-b border-primary/10 pb-2">
         <Terminal className="w-3 h-3 text-primary" />
-        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Live Protocol Traffic (Modbus TCP/IP)</h3>
+        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
+          Live Protocol Traffic (Modbus TCP/IP)
+        </h3>
       </div>
 
       <ScrollArea className="flex-grow" ref={scrollRef}>
