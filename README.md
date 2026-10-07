@@ -4,7 +4,7 @@ ChemView is an open-source industrial HMI and digital twin prototype for a chemi
 
 ![ChemView HMI while mixing: heater on, discharge valve locked by the interlock](docs/assets/chemview-dashboard.png)
 
-Demo: [YouTube walkthrough](https://www.youtube.com/watch?v=GJgmsIAXbrk)
+Portfolio case study: [senanur-cetin.vercel.app/projects/chemview](https://senanur-cetin.vercel.app/projects/chemview)
 
 Portfolio role: `archive proof`
 
