@@ -1,5 +1,7 @@
 # ChemView — Industrial HMI & Mixing-Process Digital Twin
 
+**Reviewer quick brief:** [Project scope, inspectable evidence and limitations](docs/hiring-summary.md).
+
 [![Repository](https://img.shields.io/badge/source-GitHub-181717?logo=github)](https://github.com/senanurcetin/ChemView)
 
 **Next.js · TypeScript · Simulated Modbus · Safety interlocks · SSE · Optional Gemini**
