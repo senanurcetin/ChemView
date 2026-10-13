@@ -110,7 +110,8 @@ export function Dashboard() {
       : isHeaterOn
         ? 'HEATING'
         : 'IDLE';
-  const interlockActive = state.estopLatched || isRunning || rpm >= 1 || valveOpen ? 'ACTIVE' : 'INACTIVE';
+  const interlockActive =
+    state.estopLatched || isRunning || rpm >= 1 || valveOpen ? 'ACTIVE' : 'INACTIVE';
   const errorRate = network.packetCount > 0 ? (network.errorCount / network.packetCount) * 100 : 0;
   const health = (100 - errorRate).toFixed(1);
   const connected = status === 'Connected';
