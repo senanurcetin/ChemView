@@ -4,7 +4,7 @@ description: Verify and repair ChemView server-side mixing-process simulation in
 user-invocable: true
 disable-model-invocation: true
 include-custom-instructions: true
-tools: ["read", "search", "edit", "execute"]
+tools: ['read', 'search', 'edit', 'execute']
 ---
 
 # Mission

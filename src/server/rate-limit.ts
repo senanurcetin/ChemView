@@ -13,9 +13,14 @@ export class RateLimiter {
     private readonly now: () => number = Date.now,
     private readonly maxKeys = 1000,
   ) {
-    if (!Number.isSafeInteger(limit) || limit <= 0
-      || !Number.isFinite(windowMs) || windowMs <= 0
-      || !Number.isSafeInteger(maxKeys) || maxKeys <= 0) {
+    if (
+      !Number.isSafeInteger(limit) ||
+      limit <= 0 ||
+      !Number.isFinite(windowMs) ||
+      windowMs <= 0 ||
+      !Number.isSafeInteger(maxKeys) ||
+      maxKeys <= 0
+    ) {
       throw new RangeError('Rate limiter limits and windows must be positive finite values');
     }
   }

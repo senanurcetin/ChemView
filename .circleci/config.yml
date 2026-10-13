@@ -9,7 +9,7 @@ jobs:
     resource_class: medium
     working_directory: ~/project
     environment:
-      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_TELEMETRY_DISABLED: '1'
     steps:
       - checkout
       - restore_cache:

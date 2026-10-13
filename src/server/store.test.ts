@@ -163,5 +163,4 @@ describe('RateLimiter', () => {
     expect(() => new RateLimiter(1, 0)).toThrow(RangeError);
     expect(() => new RateLimiter(1, 1000, Date.now, 0)).toThrow(RangeError);
   });
-
 });
