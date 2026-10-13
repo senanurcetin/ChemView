@@ -23,4 +23,14 @@ describe('authorizeCommand', () => {
     expect(authorizeCommand('estop', null, 's3cret').ok).toBe(true);
     expect(authorizeCommand('estop', 'Bearer wrong', 's3cret').ok).toBe(true);
   });
+
+  it('requires operator authorization for reset while allowing E-STOP without a token', () => {
+    expect(authorizeCommand('reset_estop', null, 's3cret')).toMatchObject({
+      ok: false,
+      status: 401,
+    });
+    expect(authorizeCommand('reset_estop', 'Bearer wrong', 's3cret').ok).toBe(false);
+    expect(authorizeCommand('reset_estop', 'Bearer s3cret', 's3cret').ok).toBe(true);
+    expect(authorizeCommand('reset_estop', null, undefined).ok).toBe(true);
+  });
 });
