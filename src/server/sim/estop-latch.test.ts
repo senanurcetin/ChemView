@@ -54,7 +54,7 @@ describe('latched emergency stop — simulation only', () => {
 
   it('records reset on the simulated wire and validates its command schema', () => {
     expect(commandSchema.safeParse({ type: 'reset_estop' }).success).toBe(true);
-    expect(commandSchema.safeParse({ type: 'reset_estop', on: true }).success).toBe(true);
+    expect(commandSchema.safeParse({ type: 'reset_estop', on: true }).success).toBe(false);
     expect(commandFrame(2, { type: 'reset_estop' })).toBe('00 02 00 00 00 06 01 05 00 04 00 00');
   });
 });
