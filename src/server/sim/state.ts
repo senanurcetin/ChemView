@@ -3,6 +3,7 @@ import type { SimState } from './types';
 export function initialState(): SimState {
   return {
     isRunning: false,
+    estopLatched: false,
     isManualMode: false,
     isHeaterOn: false,
     valveOpen: false,
