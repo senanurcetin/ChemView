@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import React from 'react';
 import { Network, Activity, Clock, ShieldAlert } from 'lucide-react';
@@ -14,9 +14,11 @@ export function NetworkStats({ packetCount, latency, errorRate }: NetworkStatsPr
     <div className="hmi-panel bg-zinc-950/50 border-white/5 p-3 flex flex-col gap-3">
       <div className="flex items-center gap-2 border-b border-white/5 pb-2">
         <Network className="w-3 h-3 text-primary" />
-        <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Gateway Diagnostics</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
+          Gateway Diagnostics
+        </span>
       </div>
-      
+
       <div className="grid grid-cols-3 gap-2">
         <div className="flex flex-col">
           <span className="text-[8px] text-muted-foreground uppercase font-bold">Packets</span>

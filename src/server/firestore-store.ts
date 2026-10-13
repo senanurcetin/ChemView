@@ -5,8 +5,9 @@ import type { Alert, AuditEntry } from './sim/types';
 
 interface Credentials {
   projectId: string;
-  clientEmail: string;
-  privateKey: string;
+  /** Omit both for the Firestore emulator (FIRESTORE_EMULATOR_HOST), which needs no credentials. */
+  clientEmail?: string;
+  privateKey?: string;
 }
 
 /** Firestore-backed store. Collections: `telemetry`, `alerts`, `audit` (doc id = entry id). */
@@ -15,7 +16,14 @@ export class FirestoreStore implements Store {
   private readonly db: Firestore;
 
   constructor(credentials: Credentials) {
-    const app = getApps()[0] ?? initializeApp({ credential: cert(credentials) });
+    const { projectId, clientEmail, privateKey } = credentials;
+    const app =
+      getApps()[0] ??
+      initializeApp(
+        clientEmail && privateKey
+          ? { projectId, credential: cert({ projectId, clientEmail, privateKey }) }
+          : { projectId },
+      );
     this.db = getFirestore(app);
   }
 

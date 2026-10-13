@@ -142,7 +142,13 @@ export class Engine {
 
     const message = rule?.message ?? NOMINAL_MESSAGE;
     const urgency = rule?.urgency ?? 'low';
-    this.pushAlert({ id: this.nextId(), timestamp: this.now().toISOString(), source: 'rule', message, urgency });
+    this.pushAlert({
+      id: this.nextId(),
+      timestamp: this.now().toISOString(),
+      source: 'rule',
+      message,
+      urgency,
+    });
     if (urgency !== 'low') this.pushAudit({ message, level: urgency });
   }
 

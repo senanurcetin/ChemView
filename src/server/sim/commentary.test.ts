@@ -20,7 +20,13 @@ describe('triggerKey', () => {
 describe('Commentator', () => {
   const make = (generate: () => Promise<unknown>, extra = {}) => {
     let t = 1_000_000;
-    const c = new Commentator({ generate, now: () => t, minIntervalMs: 30_000, repeatMs: 300_000, ...extra });
+    const c = new Commentator({
+      generate,
+      now: () => t,
+      minIntervalMs: 30_000,
+      repeatMs: 300_000,
+      ...extra,
+    });
     return { c, advance: (ms: number) => (t += ms) };
   };
 
@@ -60,9 +66,13 @@ describe('Commentator', () => {
   it('falls back silently on errors, timeouts and invalid output', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     expect(await make(() => Promise.reject(new Error('boom'))).c.maybeComment(hot)).toBeNull();
-    expect(await make(() => new Promise(() => {}), { timeoutMs: 20 }).c.maybeComment(hot)).toBeNull();
     expect(
-      await make(() => Promise.resolve({ alertMessage: '', urgencyLevel: 'critical' })).c.maybeComment(hot),
+      await make(() => new Promise(() => {}), { timeoutMs: 20 }).c.maybeComment(hot),
+    ).toBeNull();
+    expect(
+      await make(() =>
+        Promise.resolve({ alertMessage: '', urgencyLevel: 'critical' }),
+      ).c.maybeComment(hot),
     ).toBeNull();
   });
 });

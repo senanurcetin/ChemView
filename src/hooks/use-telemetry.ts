@@ -1,24 +1,18 @@
-"use client"
+'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Command, Snapshot } from '@/server/sim/types';
+import type { TelemetrySample } from '@/server/store';
+import { PRELOAD_WINDOW_MS, mergeHistory, toPoint, type HistoryPoint } from '@/lib/history';
+
+export type { HistoryPoint };
 
 export type ConnectionStatus = 'Connected' | 'Disconnected' | 'Connecting';
-
-export interface HistoryPoint {
-  time: string;
-  value: number;
-}
 
 export interface CommandOutcome {
   ok: boolean;
   reason?: string;
 }
-
-const HISTORY_LIMIT = 60;
-
-const clock = (iso: string) =>
-  new Date(iso).toLocaleTimeString([], { hour12: false, minute: '2-digit', second: '2-digit' });
 
 /**
  * Subscribes to the server's SSE telemetry stream and exposes the latest
@@ -31,6 +25,33 @@ export function useTelemetry() {
   const [rpmHistory, setRpmHistory] = useState<HistoryPoint[]>([]);
   const [tempHistory, setTempHistory] = useState<HistoryPoint[]>([]);
   const lastSeq = useRef(-1);
+
+  // Seed the trends from the server's persisted samples so a page refresh does not start empty.
+  useEffect(() => {
+    const controller = new AbortController();
+    const from = new Date(Date.now() - PRELOAD_WINDOW_MS).toISOString();
+    fetch(`/api/history?from=${encodeURIComponent(from)}`, { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body: { samples: TelemetrySample[] } | null) => {
+        if (!body) return;
+        setRpmHistory((prev) =>
+          mergeHistory(
+            prev,
+            body.samples.map((s) => toPoint(s.ts, s.rpm)),
+          ),
+        );
+        setTempHistory((prev) =>
+          mergeHistory(
+            prev,
+            body.samples.map((s) => toPoint(s.ts, s.temp)),
+          ),
+        );
+      })
+      .catch(() => {
+        /* history is a nicety; the live stream still fills the trend */
+      });
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     const source = new EventSource('/api/stream');
@@ -51,9 +72,8 @@ export function useTelemetry() {
       setStatus('Connected');
       setSnapshot(next);
 
-      const time = clock(next.timestamp);
-      setRpmHistory((prev) => [...prev, { time, value: next.state.rpm }].slice(-HISTORY_LIMIT));
-      setTempHistory((prev) => [...prev, { time, value: next.state.temp }].slice(-HISTORY_LIMIT));
+      setRpmHistory((prev) => mergeHistory(prev, [toPoint(next.timestamp, next.state.rpm)]));
+      setTempHistory((prev) => mergeHistory(prev, [toPoint(next.timestamp, next.state.temp)]));
     };
 
     return () => source.close();

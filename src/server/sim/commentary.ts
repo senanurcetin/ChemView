@@ -47,10 +47,7 @@ export function triggerKey(state: SimState): string | null {
   if (state.temp > THRESHOLDS.temperatureCelsius) return 'temp-over';
   if (state.temp > THRESHOLDS.temperatureCelsius * 0.9) return 'temp-near';
   if (state.ph < THRESHOLDS.phLower || state.ph > THRESHOLDS.phUpper) return 'ph-out';
-  if (
-    state.ph < THRESHOLDS.phLower + 0.3 ||
-    state.ph > THRESHOLDS.phUpper - 0.3
-  ) {
+  if (state.ph < THRESHOLDS.phLower + 0.3 || state.ph > THRESHOLDS.phUpper - 0.3) {
     return 'ph-near';
   }
   return null;
@@ -131,7 +128,10 @@ export class Commentator {
       if (!parsed.success) return null;
       return { message: parsed.data.alertMessage, urgency: parsed.data.urgencyLevel };
     } catch (error) {
-      console.warn('[commentary] LLM alert skipped:', error instanceof Error ? error.message : error);
+      console.warn(
+        '[commentary] LLM alert skipped:',
+        error instanceof Error ? error.message : error,
+      );
       return null;
     } finally {
       this.inFlight = false;

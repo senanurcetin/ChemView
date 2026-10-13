@@ -16,11 +16,19 @@ Portfolio case study: [senanur-cetin.vercel.app/projects/chemview](https://senan
 
 - Runs the mixing-tank simulation **on the server** (physics, safety interlocks, simulated Modbus register map) and streams a snapshot to the browser every second over Server-Sent Events.
 - Visualizes operator controls, trends, and the Modbus wire log in one HMI layout.
-- Enforces safety interlocks server-side: the mixer cannot start with the discharge valve open, the valve cannot move while the rotor spins, E-STOP always wins and is never rate limited.
+- Enforces safety interlocks server-side: the mixer cannot start with the discharge valve open, the valve cannot move while the rotor spins, and E-STOP always wins, immediately disables mixer/heater, and remains latched until an explicit reset; E-STOP is never rate limited.
 - Raises deterministic rule alarms immediately, and layers optional Gemini (Genkit) commentary on top when `GEMINI_API_KEY` is set. The LLM never gates a safety decision; it is rate limited, time boxed, schema validated and falls back silently.
 - Persists telemetry, alerts and the audit trail (Firestore when configured, bounded in-memory otherwise) and serves `/api/history` and a CSV export at `/api/export`.
 
 There is still no real PLC: the Modbus layer is a deterministic simulation, not a network client.
+
+### Emergency-stop reset (simulator contract)
+
+The HMI exposes **RESET E-STOP** while the simulated stop is latched. Reset clears the latch only; it never starts the mixer or enables the heater. The server rejects other commands during the latch, including setpoint and valve changes. A fresh server process initializes a new simulator state: this is **not** a hardware or persistent emergency-stop circuit.
+
+When `OPERATOR_TOKEN` is configured, `reset_estop` is an ordinary protected operator command, while `estop` remains callable without a token. The browser HMI does not possess or store the bearer token: a reset attempted from that HMI will receive HTTP 401 in token-protected deployments. An authorized operator integration must send the token server-to-server or use an appropriately secured operator channel; do not embed the token in client JavaScript.
+
+Offline tests cover the latch and authentication contract. This simulation is **not PLC/SIL certified**.
 
 ## Stack
 
@@ -28,7 +36,7 @@ There is still no real PLC: the Modbus layer is a deterministic simulation, not 
 - TypeScript, Tailwind CSS, shadcn/ui, Recharts
 - Genkit and Gemini for AI-assisted alert commentary
 - Firebase Admin (Firestore) for optional persistence
-- Vitest for unit tests
+- Vitest for unit tests, Playwright for end-to-end smoke tests
 
 ## Local setup
 
@@ -40,7 +48,8 @@ npm run dev
 
 The app runs on `http://localhost:9002`. Without any keys it works fully, using rule alarms and the in-memory store.
 
-Quality checks (also run in CI): `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`.
+Quality checks (also run in CI): `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test`, `npm run build`.
+Extra suites: `npm run test:firestore` (Store contract tests against the Firestore emulator, needs Java) and `npm run test:e2e` (Playwright smoke tests; set `PLAYWRIGHT_CHROMIUM_PATH` to use a preinstalled Chromium, otherwise run `npx playwright install chromium` once).
 
 See [docs/architecture.md](docs/architecture.md) for how the pieces fit together.
 

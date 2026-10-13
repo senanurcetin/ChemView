@@ -1,4 +1,4 @@
-import { Dashboard } from "@/components/chemical-mixing/Dashboard";
+import { Dashboard } from '@/components/chemical-mixing/Dashboard';
 
 export default function Home() {
   return (

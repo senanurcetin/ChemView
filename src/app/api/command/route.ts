@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getEngine } from '@/server/sim/engine';
+import { authorizeCommand } from '@/server/auth';
 import { RateLimiter } from '@/server/rate-limit';
 import { commandSchema } from '@/server/sim/schema';
 
@@ -20,6 +21,14 @@ export async function POST(request: Request) {
   const parsed = commandSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ ok: false, reason: 'Invalid command.' }, { status: 400 });
+  }
+
+  const auth = authorizeCommand(parsed.data.type, request.headers.get('authorization'));
+  if (!auth.ok) {
+    return NextResponse.json(
+      { ok: false, reason: auth.reason },
+      { status: auth.status, headers: { 'WWW-Authenticate': 'Bearer' } },
+    );
   }
 
   // E-STOP is never throttled: a safety command must always get through.
