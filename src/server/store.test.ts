@@ -128,4 +128,40 @@ describe('RateLimiter', () => {
     t = 1001;
     expect(rl.check('a')).toBe(0);
   });
+  it('caps live keys under high-cardinality client churn without resetting existing quotas', () => {
+    let t = 0;
+    const rl = new RateLimiter(2, 1000, () => t, 2);
+    expect(rl.check('a')).toBe(0);
+    expect(rl.check('b')).toBe(0);
+    // Additional distinct clients cannot grow the live-key table.
+    for (let i = 0; i < 100; i++) {
+      expect(rl.check(`spoof-${i}`)).toBe(1000);
+    }
+    // Existing clients have their own remaining calls and cannot reset by churn.
+    expect(rl.check('a')).toBe(0);
+    expect(rl.check('a')).toBe(1000);
+    expect(rl.check('b')).toBe(0);
+    expect(rl.check('b')).toBe(1000);
+
+    t = 1000;
+    expect(rl.check('fresh')).toBe(0); // all old entries expired, room freed
+    expect(rl.check('a')).toBe(0);
+  });
+
+  it('allows renewal of a tracked expired key even when capacity was full', () => {
+    let t = 0;
+    const rl = new RateLimiter(1, 1000, () => t, 1);
+    expect(rl.check('a')).toBe(0);
+    expect(rl.check('new')).toBe(1000);
+    t = 1000;
+    expect(rl.check('a')).toBe(0);
+    expect(rl.check('new')).toBe(1000);
+  });
+
+  it('rejects invalid limiter configuration before accepting requests', () => {
+    expect(() => new RateLimiter(0, 1000)).toThrow(RangeError);
+    expect(() => new RateLimiter(1, 0)).toThrow(RangeError);
+    expect(() => new RateLimiter(1, 1000, Date.now, 0)).toThrow(RangeError);
+  });
+
 });

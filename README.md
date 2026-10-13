@@ -1,16 +1,16 @@
-# ChemView
+# ChemView — Industrial HMI & Mixing-Process Digital Twin
 
-ChemView is an open-source industrial HMI and digital twin prototype for a chemical mixing process. It demonstrates how modern web tooling can model telemetry, operator controls, communication traces, and safety interlocks in a single interface.
+**Reviewer quick brief:** [Project scope, inspectable evidence and limitations](docs/hiring-summary.md).
 
-![ChemView interface](https://github.com/user-attachments/assets/5c3d9ad0-08a0-442d-a7e1-a5c06e9c76ef)
+[![Repository](https://img.shields.io/badge/source-GitHub-181717?logo=github)](https://github.com/senanurcetin/ChemView)
 
-Demo: [YouTube walkthrough](https://www.youtube.com/watch?v=GJgmsIAXbrk)
+**Next.js · TypeScript · Simulated Modbus · Safety interlocks · SSE · Optional Gemini**
 
-Portfolio role: `archive proof`
+ChemView is an industrial HMI and digital twin **prototype** for a chemical mixing process. It demonstrates how modern web tooling can model telemetry, operator controls, communication traces, and safety interlocks in a single interface.
 
-## Why it sits in supporting evidence
+![ChemView HMI while mixing: heater on, discharge valve locked by the interlock](docs/assets/chemview-dashboard.png)
 
-ChemView is kept as supporting evidence for industrial UX, HMI state modeling, and telemetry interface design. It strengthens the portfolio visually and product-wise, but it is not meant to compete with the lead case studies for Data + AI roles.
+Portfolio case study: [senanur-cetin.vercel.app/projects/chemview](https://senanur-cetin.vercel.app/projects/chemview)
 
 ## What it does
 
@@ -53,9 +53,9 @@ Extra suites: `npm run test:firestore` (Store contract tests against the Firesto
 
 See [docs/architecture.md](docs/architecture.md) for how the pieces fit together.
 
-## Portfolio note
+## Scope and operational boundaries
 
-ChemView is supporting evidence for industrial UX, state modeling, and operator-centered full-stack architecture rather than production PLC integration.
+The process, Modbus register map, interlocks, and telemetry are simulated. No physical PLC, fieldbus gateway, safety-rated controller, or plant equipment is connected. This is an engineering demonstration, **not a certified safety system**. Production use would require independent industrial safety assessment, hardened access controls and validated equipment integration.
 
 ## License
 
