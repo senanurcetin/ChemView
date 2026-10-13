@@ -103,8 +103,15 @@ export function Dashboard() {
   };
 
   const { rpm, temp, ph, valveOpen, isRunning, isHeaterOn, isManualMode } = state;
-  const systemState = isRunning && rpm > 10 ? 'MIXING' : isHeaterOn ? 'HEATING' : 'IDLE';
-  const interlockActive = isRunning || rpm >= 1 || valveOpen ? 'ACTIVE' : 'INACTIVE';
+  const systemState = state.estopLatched
+    ? 'E-STOP LATCHED'
+    : isRunning && rpm > 10
+      ? 'MIXING'
+      : isHeaterOn
+        ? 'HEATING'
+        : 'IDLE';
+  const interlockActive =
+    state.estopLatched || isRunning || rpm >= 1 || valveOpen ? 'ACTIVE' : 'INACTIVE';
   const errorRate = network.packetCount > 0 ? (network.errorCount / network.packetCount) * 100 : 0;
   const health = (100 - errorRate).toFixed(1);
   const connected = status === 'Connected';
@@ -225,10 +232,12 @@ export function Dashboard() {
 
           <ControlPanel
             isRunning={isRunning}
+            estopLatched={state.estopLatched}
             isManualMode={isManualMode}
             onToggle={() => run({ type: isRunning ? 'stop' : 'start' })}
             onToggleMode={() => run({ type: 'set_mode', manual: !isManualMode })}
             onEmergencyStop={() => run({ type: 'estop' })}
+            onResetEmergencyStop={() => run({ type: 'reset_estop' })}
             connectionStatus={status}
             targetRpm={rpmSetpoint}
             targetTemp={tempSetpoint}
@@ -267,7 +276,7 @@ export function Dashboard() {
           <span>STATE: {systemState}</span>
           <span>INTERLOCK: {interlockActive}</span>
           <span>HEATER: {isHeaterOn ? 'ON' : 'OFF'}</span>
-          <span>LOCK: {rpm < 1 ? 'READY' : 'BUSY'}</span>
+          <span>LOCK: {state.estopLatched ? 'E-STOP' : rpm < 1 ? 'READY' : 'BUSY'}</span>
         </div>
       </footer>
     </div>

@@ -6,6 +6,8 @@ const command = (request: APIRequestContext, body: Record<string, unknown>) =>
 test.beforeEach(async ({ request }) => {
   // The simulation is shared server state: put the plant in a known idle state first.
   await command(request, { type: 'estop' });
+  // Reset is deliberate: E-STOP now remains latched across commands and ticks.
+  await command(request, { type: 'reset_estop' });
   await command(request, { type: 'set_valve', open: false });
   await command(request, { type: 'set_mode', manual: false });
 });
@@ -48,9 +50,20 @@ test('E-STOP halts a running mixer immediately', async ({ page, request }) => {
   await page.goto('/');
   await expect(page.locator('footer')).toContainText('STATE: MIXING', { timeout: 10_000 });
 
-  await page.getByRole('button', { name: /e-stop/i }).click();
+  await page.getByRole('button', { name: /^e-stop$/i }).click();
+  await expect(page.locator('footer')).toContainText('STATE: E-STOP LATCHED', { timeout: 5_000 });
+  await expect(page.locator('footer')).toContainText('LOCK: E-STOP');
+  await expect(page.getByText(/E-STOP LATCHED — reset before restarting/)).toBeVisible();
+
+  // The server, not only the disabled button, must reject subsequent restart.
+  const denied = await command(request, { type: 'start' });
+  expect(denied.status()).toBe(409);
+  await expect(page.getByRole('button', { name: /^start$/i })).toBeDisabled();
+
+  await page.getByRole('button', { name: /^reset e-stop$/i }).click();
   await expect(page.locator('footer')).toContainText('STATE: IDLE', { timeout: 5_000 });
   await expect(page.locator('footer')).toContainText('LOCK: READY');
+  await expect(page.getByRole('button', { name: /^start$/i })).toBeEnabled();
 });
 
 test('trend history survives a page reload', async ({ page }) => {

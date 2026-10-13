@@ -2,6 +2,8 @@ export type Level = 'low' | 'medium' | 'high';
 
 export interface SimState {
   isRunning: boolean;
+  /** Stays locked after E-STOP until an explicit reset command. */
+  estopLatched: boolean;
   isManualMode: boolean;
   isHeaterOn: boolean;
   valveOpen: boolean;
@@ -18,6 +20,7 @@ export type Command =
   | { type: 'start' }
   | { type: 'stop' }
   | { type: 'estop' }
+  | { type: 'reset_estop' }
   | { type: 'set_heater'; on: boolean }
   | { type: 'set_valve'; open: boolean }
   | { type: 'set_mode'; manual: boolean }

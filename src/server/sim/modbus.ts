@@ -55,6 +55,8 @@ export function commandFrame(txId: number, cmd: Command): string {
       return coil(3, cmd.manual);
     case 'estop':
       return coil(4, true);
+    case 'reset_estop':
+      return coil(4, false);
     case 'set_rpm_setpoint':
       return reg(10, cmd.value);
     case 'set_temp_setpoint':

@@ -20,10 +20,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 interface ControlPanelProps {
   isRunning: boolean;
+  estopLatched: boolean;
   isManualMode: boolean;
   onToggle: () => void;
   onToggleMode: () => void;
   onEmergencyStop: () => void;
+  onResetEmergencyStop: () => void;
   connectionStatus: 'Connected' | 'Disconnected' | 'Connecting';
   targetRpm: number;
   targetTemp: number;
@@ -38,10 +40,12 @@ interface ControlPanelProps {
 
 export function ControlPanel({
   isRunning,
+  estopLatched,
   isManualMode,
   onToggle,
   onToggleMode,
   onEmergencyStop,
+  onResetEmergencyStop,
   connectionStatus,
   targetRpm,
   targetTemp,
@@ -55,7 +59,7 @@ export function ControlPanel({
 }: ControlPanelProps) {
   // Safety Interlocks
   const valveLocked = isRunning || currentRpm >= 1;
-  const mixerLocked = valveOpen;
+  const mixerLocked = valveOpen || estopLatched;
 
   return (
     <div className="flex flex-col gap-4">
@@ -69,6 +73,7 @@ export function ControlPanel({
                   variant={isRunning ? 'secondary' : 'default'}
                   size="lg"
                   onClick={onToggle}
+                  disabled={estopLatched}
                   className={cn(
                     'h-16 w-full text-sm font-bold gap-3 transition-all duration-300',
                     !isRunning &&
@@ -90,7 +95,9 @@ export function ControlPanel({
             </TooltipTrigger>
             {mixerLocked && (
               <TooltipContent className="bg-zinc-900 border-red-500/50 text-red-400">
-                <p className="text-[10px] font-bold uppercase">Mixer Locked: Close valve first</p>
+                <p className="text-[10px] font-bold uppercase">
+                  {estopLatched ? 'Reset E-STOP first' : 'Mixer Locked: Close valve first'}
+                </p>
               </TooltipContent>
             )}
           </Tooltip>
@@ -106,6 +113,18 @@ export function ControlPanel({
           E-STOP
         </Button>
       </div>
+
+      {estopLatched && (
+        <div
+          role="alert"
+          className="rounded border border-red-500/50 bg-red-950/40 p-3 text-xs text-red-200 flex items-center justify-between gap-3"
+        >
+          <span>E-STOP LATCHED — reset before restarting.</span>
+          <Button type="button" variant="outline" size="sm" onClick={onResetEmergencyStop}>
+            RESET E-STOP
+          </Button>
+        </div>
+      )}
 
       {/* Main Control Panel */}
       <div className="hmi-panel flex flex-col gap-6 bg-zinc-950/50 border-white/5">
