@@ -23,12 +23,16 @@ describe('parseSnapshotEvent', () => {
     expect(parseSnapshotEvent(JSON.stringify({ ...snapshot, runId: '' }))).toBeNull();
     expect(parseSnapshotEvent(JSON.stringify({ ...snapshot, seq: -1 }))).toBeNull();
     expect(
-      parseSnapshotEvent(JSON.stringify({ ...snapshot, state: { ...snapshot.state, rpm: 'fast' } })),
+      parseSnapshotEvent(
+        JSON.stringify({ ...snapshot, state: { ...snapshot.state, rpm: 'fast' } }),
+      ),
     ).toBeNull();
     expect(
       parseSnapshotEvent(JSON.stringify({ ...snapshot, network: { packetCount: 'zero' } })),
     ).toBeNull();
-    expect(parseSnapshotEvent(JSON.stringify({ ...snapshot, traffic: [{ frame: 123 }] }))).toBeNull();
+    expect(
+      parseSnapshotEvent(JSON.stringify({ ...snapshot, traffic: [{ frame: 123 }] })),
+    ).toBeNull();
   });
 });
 
