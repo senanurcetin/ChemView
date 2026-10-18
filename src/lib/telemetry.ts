@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { Snapshot } from '@/server/sim/types';
+import type { TelemetrySample } from '@/server/store';
 
 const finite = z.number().finite();
 const level = z.enum(['low', 'medium', 'high']);
@@ -55,6 +56,25 @@ const snapshotSchema: z.ZodType<Snapshot> = z.object({
   ),
   aiBusy: z.boolean(),
 });
+
+const historySampleSchema: z.ZodType<TelemetrySample> = z.object({
+  ts: timestamp,
+  rpm: finite,
+  temp: finite,
+  ph: finite,
+  level: finite,
+  isRunning: z.boolean(),
+  isHeaterOn: z.boolean(),
+  valveOpen: z.boolean(),
+});
+
+const historyResponseSchema = z.object({ samples: z.array(historySampleSchema) });
+
+/** The /api/history response is external input even when produced by our server. */
+export function parseHistorySamples(payload: unknown): TelemetrySample[] | null {
+  const parsed = historyResponseSchema.safeParse(payload);
+  return parsed.success ? parsed.data.samples : null;
+}
 
 export function parseSnapshotEvent(raw: string): Snapshot | null {
   try {
