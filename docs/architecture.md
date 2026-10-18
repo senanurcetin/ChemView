@@ -26,7 +26,7 @@ All plant state lives in the server `Engine` (`src/server/sim/engine.ts`). The c
 | `sim/commentary.ts`              | Guards around the Genkit flow: trigger gating near limits, 30 s global rate limit, 5 min repeat suppression, 8 s timeout, zod validation, silent fallback.      |
 | `sim/thresholds.ts`              | Single source for process limits, shared by the rules, the interlocks and the Genkit flow.                                                                      |
 | `store.ts`, `firestore-store.ts` | `Store` interface; Firestore when `FIREBASE_*` are set, otherwise a bounded `MemoryStore`. Writes are best-effort and never block a tick.                       |
-| `rate-limit.ts`                  | Per-IP fixed window for `/api/command` (E-STOP is exempt).                                                                                                      |
+| `rate-limit.ts`                  | Shared fixed window for `/api/command` across the simulator (E-STOP exempt).                                                                                                      |
 
 ## HTTP API
 
