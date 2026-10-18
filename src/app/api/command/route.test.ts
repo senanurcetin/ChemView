@@ -75,10 +75,7 @@ describe('POST /api/command — HTTP contract', () => {
       { Authorization: 'Bearer correct-token' },
     );
     expect(reset.status).toBe(200);
-    expect(engineCommand.mock.calls.map(([cmd]) => cmd.type)).toEqual([
-      'estop',
-      'reset_estop',
-    ]);
+    expect(engineCommand.mock.calls.map(([cmd]) => cmd.type)).toEqual(['estop', 'reset_estop']);
   });
 
   it('returns an interlock denial as HTTP 409 with its reason', async () => {
