@@ -22,6 +22,7 @@ not only visual container labels.
 ## Acceptance scenarios
 
 - The HMI waits for a validated, current SSE payload before unlocking controls.
+- Alarm and audit histories occupy balanced full-width panels below the operator controls.
 - At 1366×768 and 1440×900 the layout retains its NEXUS identity, has no
   horizontal document overflow, remains vertically scrollable and exposes
   safety actions. GitHub Actions stores fresh full-page screenshots as

@@ -380,10 +380,15 @@ export function Dashboard() {
             }
           />
 
-          <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-1">
-            <AlertPanel alerts={alerts} isGenerating={snapshot?.aiBusy ?? false} />
-            <AuditLog logs={audit} />
-          </div>
+        </section>
+
+        {/* Full-width event history balances the workstation layout. */}
+        <section
+          aria-label="Process event history"
+          className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2 xl:col-span-12"
+        >
+          <AlertPanel alerts={alerts} isGenerating={snapshot?.aiBusy ?? false} />
+          <AuditLog logs={audit} />
         </section>
       </main>
 
