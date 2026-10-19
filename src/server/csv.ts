@@ -2,6 +2,7 @@ import type { TelemetrySample } from './store';
 
 const HEADER = [
   'timestamp',
+  'run_id',
   'rpm',
   'temperature_c',
   'ph',
@@ -15,6 +16,7 @@ export function telemetryToCsv(samples: TelemetrySample[]): string {
   const rows = samples.map((s) =>
     [
       s.ts,
+      s.runId ?? '',
       s.rpm.toFixed(2),
       s.temp.toFixed(2),
       s.ph.toFixed(3),
