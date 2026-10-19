@@ -34,8 +34,10 @@ All plant state lives in the server `Engine` (`src/server/sim/engine.ts`). The c
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `GET /api/stream`                | SSE; one `Snapshot` (state, network counters, wire log, audit, alerts) per tick and per accepted command.                |
 | `POST /api/command`              | Body validated by zod (`sim/schema.ts`). `200` ok, `409` interlock denial with `reason`, `400` invalid, `429` throttled. |
-| `GET /api/history?from&to&limit` | Persisted telemetry (one sample per 5 s). Defaults to the last hour.                                                     |
-| `GET /api/export?from&to`        | Same data as CSV.                                                                                                        |
+| `GET /api/history?from&to&limit&runId` | Run-scoped persisted telemetry (one sample per 5 s); current run by default.                              |
+| `GET /api/export?from&to&runId`        | Same run-scoped telemetry as a CSV file.                                                        |
+| `GET /api/alerts?runId&limit`         | Most recent persisted rule/AI alert events for one run.                                         |
+| `GET /api/audit?runId&limit`          | Most recent persisted operator/audit events for one run.                                       |
 
 The simulator clamps accepted RPM and temperature setpoints to the limits in `sim/thresholds.ts`. Its simulated Modbus FC 06 trace records the **effective applied value**, rather than an out-of-range value originally requested by the operator. This keeps the accepted process state and trace consistent; it does not represent a physical Modbus write.
 

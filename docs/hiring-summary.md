@@ -13,15 +13,18 @@ ChemView runs a mixing-process simulation on the server, presents controls and p
 | Can it operate without an LLM key?  | [Local setup](../README.md#local-setup); rule-based alarms and in-memory storage remain available                            |
 | Can the architecture be followed?   | [Architecture design](architecture.md) and [main README](../README.md)                                                       |
 | Are controls testable?              | `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`; see [validation commands](../README.md#local-setup)        |
+| Do events cross simulator runs?     | [Run-scoped telemetry, alarms and audit](architecture.md#session-scoped-audit-history), plus synthetic restart/replay tests |
 
 ## Implementation choices
 
 - Safety-relevant command rules evaluated on the server, not in the UI alone.
 - Separation of simulated register activity, deterministic alarms and optional narrative AI.
-- History and CSV export for human review; Firestore is optional.
+- Run-scoped telemetry, alert and audit history with bounded API queries and CSV export; Firestore is optional.
+- Validation of full SSE snapshots, per-run event provenance and replay rejection after restart.
+- Optimistic concurrency guards on ordinary operator controls, plus E-STOP/reset event ordering.
 
 ## Engineering limits
 
-There is no real PLC, fieldbus gateway or certified safety instrumented system. Neither the simulated E-STOP nor the LLM commentary provides safety protection in the real world. External deployment would need independent access control, networking and industrial safety review.
+The latest integrated main-branch changes still need a consolidated CI/Playwright/Firestore-emulator run before claiming full verification. There is no real PLC, fieldbus gateway or certified safety instrumented system. Neither the simulated E-STOP nor the LLM commentary provides safety protection in the real world. External deployment would need independent access control, networking and industrial safety review.
 
 **More detail:** [Repository README](../README.md) · [Security policy](../SECURITY.md).

@@ -18,7 +18,7 @@ Portfolio case study: [senanur-cetin.vercel.app/projects/chemview](https://senan
 - Visualizes operator controls, trends, and the Modbus wire log in one HMI layout.
 - Enforces safety interlocks server-side: the mixer cannot start with the discharge valve open, the valve cannot move while the rotor spins, and E-STOP always wins, immediately disables mixer/heater, and remains latched until an explicit reset; E-STOP is never rate limited.
 - Raises deterministic rule alarms immediately, and layers optional Gemini (Genkit) commentary on top when `GEMINI_API_KEY` is set. The LLM never gates a safety decision; it is rate limited, time boxed, schema validated and falls back silently.
-- Persists telemetry, alerts and the audit trail (Firestore when configured, bounded in-memory otherwise) and serves `/api/history` and a CSV export at `/api/export`.
+- Persists run-scoped telemetry, alerts and the audit trail (Firestore when configured, bounded in-memory otherwise). Read-only `/api/history`, `/api/alerts`, `/api/audit` and CSV `/api/export` support review of a single simulation run.
 
 There is still no real PLC: the Modbus layer is a deterministic simulation, not a network client.
 
