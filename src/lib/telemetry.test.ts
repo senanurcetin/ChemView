@@ -57,15 +57,20 @@ describe('classifySnapshot', () => {
 
 describe('parseHistorySamples', () => {
   it('accepts persisted samples for the trend preload', () => {
-    const sample = toSample(initialState(), '2026-10-18T12:00:00Z');
-    expect(parseHistorySamples({ samples: [sample], count: 1 })).toEqual([sample]);
+    const runId = sampleSnapshot().runId;
+    const sample = toSample(initialState(), '2026-10-18T12:00:00Z', runId);
+    expect(parseHistorySamples({ runId, samples: [sample], count: 1 }, runId)).toEqual([sample]);
   });
 
   it('rejects incomplete and non-numeric historical samples', () => {
-    const sample = toSample(initialState(), '2026-10-18T12:00:00Z');
+    const runId = sampleSnapshot().runId;
+    const sample = toSample(initialState(), '2026-10-18T12:00:00Z', runId);
     expect(parseHistorySamples(null)).toBeNull();
-    expect(parseHistorySamples({ samples: {} })).toBeNull();
-    expect(parseHistorySamples({ samples: [{ ...sample, temp: 'unknown' }] })).toBeNull();
-    expect(parseHistorySamples({ samples: [{ ...sample, ts: 'not a date' }] })).toBeNull();
+    expect(parseHistorySamples({ runId, samples: {} })).toBeNull();
+    expect(parseHistorySamples({ runId, samples: [{ ...sample, temp: 'unknown' }] })).toBeNull();
+    expect(parseHistorySamples({ runId, samples: [{ ...sample, ts: 'not a date' }] })).toBeNull();
+    expect(parseHistorySamples({ runId, samples: [sample] }, 'other-run')).toBeNull();
+    expect(parseHistorySamples({ runId, samples: [{ ...sample, runId: 'wrong' }] })).toBeNull();
+    expect(parseHistorySamples({ runId, samples: [{ ...sample, runId: undefined }] })).toBeNull();
   });
 });
