@@ -117,6 +117,15 @@ describe('Engine persistence', () => {
     await vi.waitFor(() => expect(console.warn).toHaveBeenCalled());
   });
 
+  it('persists generated rule alerts with the current engine run ID', async () => {
+    const store = new MemoryStore();
+    const e = new Engine({ seed: 1, store });
+    e.tick();
+    const { runId, alerts } = e.getSnapshot();
+    expect(await store.recentAlerts(10, runId)).toEqual(alerts);
+    expect(await store.recentAlerts(10, 'another-run')).toEqual([]);
+  });
+
   it('hydrates the audit trail only when empty', () => {
     const e = new Engine({ seed: 1 });
     const entry = { id: 'x', timestamp: 't', message: 'old', level: 'low' as const };

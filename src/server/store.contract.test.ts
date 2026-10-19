@@ -89,9 +89,30 @@ describe.each(factories)('Store contract: $name', ({ skip, create }) => {
     const runA = `alert-contract-${Date.now()}-a`;
     const runB = `alert-contract-${Date.now()}-b`;
     const alerts: Alert[] = [
-      { id: `${runA}-1`, runId: runA, timestamp: iso(500), source: 'rule', message: 'A1', urgency: 'high' },
-      { id: `${runB}-1`, runId: runB, timestamp: iso(501), source: 'ai', message: 'B1', urgency: 'medium' },
-      { id: `${runA}-2`, runId: runA, timestamp: iso(502), source: 'rule', message: 'A2', urgency: 'low' },
+      {
+        id: `${runA}-1`,
+        runId: runA,
+        timestamp: iso(500),
+        source: 'rule',
+        message: 'A1',
+        urgency: 'high',
+      },
+      {
+        id: `${runB}-1`,
+        runId: runB,
+        timestamp: iso(501),
+        source: 'ai',
+        message: 'B1',
+        urgency: 'medium',
+      },
+      {
+        id: `${runA}-2`,
+        runId: runA,
+        timestamp: iso(502),
+        source: 'rule',
+        message: 'A2',
+        urgency: 'low',
+      },
     ];
     for (const alert of alerts) await store.saveAlert(alert);
     const recentA = await store.recentAlerts(1, runA);

@@ -136,6 +136,18 @@ test('manual sliders are disabled when the E-STOP latch is active', async ({ pag
   await expect(page.getByRole('slider', { name: 'Target temperature' })).toBeDisabled();
 });
 
+test('alarm archive defaults to current simulator session', async ({ page, request }) => {
+  await page.goto('/');
+  await expect(page.getByText('Gateway Active')).toBeVisible();
+  const response = await request.get('/api/alerts?limit=10');
+  expect(response.status()).toBe(200);
+  const body = await response.json();
+  expect(body.runId).toMatch(/^[0-9a-f-]{36}$/);
+  expect(Array.isArray(body.alerts)).toBe(true);
+  expect(body.alerts.length).toBeLessThanOrEqual(10);
+  for (const alert of body.alerts) expect(alert.runId).toBe(body.runId);
+});
+
 test('starting the mixer spins the rotor up', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByText('Gateway Active')).toBeVisible();

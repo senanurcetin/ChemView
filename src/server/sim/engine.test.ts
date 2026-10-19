@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Engine, initialState, step } from './engine';
+import { NOMINAL_MESSAGE, evaluateRules } from './alerts';
 import { applyCommand } from './interlocks';
 import { commandFrame, readRequestFrame, readResponseFrame } from './modbus';
 import { createRng } from './rng';
@@ -170,6 +171,30 @@ describe('Engine', () => {
     expect(e.getSnapshot().network.packetCount).toBe(cases.length);
   });
 
+  it('records a new high alarm only after recovery and a fresh excursion', () => {
+    const e = make();
+    e.command({ type: 'set_mode', manual: true });
+    e.command({ type: 'set_temp_setpoint', value: 100 });
+    e.command({ type: 'set_heater', on: true });
+    for (let i = 0; i < 400; i++) e.tick();
+
+    const initialHigh = e.getSnapshot().alerts[0];
+    expect(initialHigh.urgency).toBe('high');
+    expect(initialHigh.runId).toBe(e.getSnapshot().runId);
+    e.tick();
+    expect(e.getSnapshot().alerts[0].id).toBe(initialHigh.id);
+
+    e.command({ type: 'set_heater', on: false });
+    for (let i = 0; i < 140; i++) e.tick();
+    expect(e.getSnapshot().alerts[0].message).toBe(NOMINAL_MESSAGE);
+
+    e.command({ type: 'set_heater', on: true });
+    for (let i = 0; i < 25; i++) e.tick();
+    const secondHigh = e.getSnapshot().alerts[0];
+    expect(secondHigh.urgency).toBe('high');
+    expect(secondHigh.id).not.toBe(initialHigh.id);
+  });
+
   it('caps log buffers at 50 entries', () => {
     const e = make();
     for (let i = 0; i < 40; i++) e.tick();
@@ -209,11 +234,14 @@ describe('rule alerts', () => {
     expect(alerts[0]).toMatchObject({ source: 'rule', urgency: 'low' });
   });
 
-  it('flags overheating with a high alert and an audit entry', async () => {
-    const { evaluateRules } = await import('./alerts');
+  it('flags overheating with a high alert and an audit entry', () => {
     expect(evaluateRules(base({ temp: 81 }))).toMatchObject({ key: 'temp-high', urgency: 'high' });
     expect(evaluateRules(base({ ph: 5.5 }))).toMatchObject({ key: 'ph-range', urgency: 'medium' });
     expect(evaluateRules(base({ valveOpen: true, level: 0 }))).toMatchObject({ key: 'tank-empty' });
     expect(evaluateRules(base())).toBeNull();
+    expect(evaluateRules(base({ temp: 81, ph: 5.5, valveOpen: true, level: 0 }))).toMatchObject({
+      key: 'temp-high',
+      urgency: 'high',
+    });
   });
 });

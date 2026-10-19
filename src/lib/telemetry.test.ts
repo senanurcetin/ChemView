@@ -42,7 +42,7 @@ describe('parseSnapshotEvent', () => {
   });
 });
 
-  // This regression protects the HMI against impossible sensor readings.
+// This regression protects the HMI against impossible sensor readings.
 describe('telemetry physical ranges', () => {
   it('rejects out-of-range physical values but preserves valid process alarms', () => {
     const snapshot = sampleSnapshot();
@@ -99,8 +99,10 @@ describe('alarm history transport', () => {
     expect(parseAlertHistory({ runId, alerts: [first] }, runId)).toEqual([first]);
     expect(parseAlertHistory({ runId, alerts: [{}] }, runId)).toBeNull();
     expect(parseAlertHistory({ runId, alerts: [first] }, 'another-run')).toBeNull();
-    expect(parseAlertHistory({ runId, alerts: [{ ...first, runId: undefined }] }, runId)).toBeNull();
-    expect(parseAlertHistory({ runId, alerts: [alert('b', first.timestamp, 'other')] }, runId)).toBeNull();
+    const missingRun = { ...first, runId: undefined };
+    const foreignRun = alert('b', first.timestamp, 'other');
+    expect(parseAlertHistory({ runId, alerts: [missingRun] }, runId)).toBeNull();
+    expect(parseAlertHistory({ runId, alerts: [foreignRun] }, runId)).toBeNull();
   });
 
   it('deduplicates SSE/archive overlap and keeps newest bounded events', () => {
