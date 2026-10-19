@@ -194,7 +194,16 @@ export class Engine {
     const result = applyCommand(this.state, cmd);
     if (!result.ok) return result;
     this.state = result.state;
-    if (result.wrote) this.pushTraffic('TX', commandFrame(++this.txId, cmd));
+    if (result.wrote) {
+      // Write the effective setpoint, not an out-of-range operator request, to the simulated wire.
+      const appliedCommand: Command =
+        cmd.type === 'set_rpm_setpoint'
+          ? { type: 'set_rpm_setpoint', value: this.state.targetRpmManual }
+          : cmd.type === 'set_temp_setpoint'
+            ? { type: 'set_temp_setpoint', value: this.state.targetTempManual }
+            : cmd;
+      this.pushTraffic('TX', commandFrame(++this.txId, appliedCommand));
+    }
     if (result.audit) this.pushAudit(result.audit);
     this.emit();
     return result;
