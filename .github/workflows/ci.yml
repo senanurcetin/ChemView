@@ -22,6 +22,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Audit full and production-only dependencies
+        run: |
+          npm audit --json > npm-audit-full.json || true
+          npm audit --omit=dev --json > npm-audit-production.json || true
+          node -e "for (const name of ['full', 'production']) { const data = require('./npm-audit-' + name + '.json'); console.log(name, JSON.stringify(data.metadata?.vulnerabilities ?? {})); }"
+
+      - name: Save dependency audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chemview-dependency-audit
+          path: |
+            npm-audit-full.json
+            npm-audit-production.json
+          retention-days: 14
+          if-no-files-found: warn
+
       - name: Type check
         run: npm run typecheck
 
