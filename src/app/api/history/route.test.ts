@@ -26,7 +26,11 @@ describe('GET /api/history', () => {
   it('uses the current simulation run by default', async () => {
     const response = await GET(new Request('http://localhost:9002/api/history'));
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ runId: activeRun, count: 0, samples: [] });
+    expect(await response.json()).toMatchObject({
+      runId: activeRun,
+      count: 0,
+      samples: [],
+    });
     expect(history).toHaveBeenCalledWith(expect.objectContaining({ runId: activeRun }));
   });
 
