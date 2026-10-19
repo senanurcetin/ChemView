@@ -121,6 +121,17 @@ describe.each(factories)('Store contract: $name', ({ skip, create }) => {
     expect(recentB).toEqual([alerts[1]]);
   });
 
+  it.skipIf(skip)('keeps audit history separate for each simulator run', async () => {
+    const runA = `audit-contract-${Date.now()}-a`;
+    const runB = `audit-contract-${Date.now()}-b`;
+    const first = { ...entry(`${runA}-first`, 610), runId: runA };
+    const second = { ...entry(`${runB}-second`, 611), runId: runB };
+    const third = { ...entry(`${runA}-third`, 612), runId: runA };
+    for (const record of [first, second, third]) await store.saveAudit(record);
+    expect(await store.recentAudit(1, runA)).toEqual([third]);
+    expect(await store.recentAudit(10, runB)).toEqual([second]);
+  });
+
   it.skipIf(skip)('recentAudit returns newest first and honors the limit', async () => {
     await store.saveAudit(entry('a', 100));
     await store.saveAudit(entry('c', 300));

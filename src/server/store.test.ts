@@ -93,9 +93,11 @@ describe('Engine persistence', () => {
       const activeRunId = engine.getSnapshot().runId;
       expect(samples.every((sample) => sample.runId === activeRunId)).toBe(true);
     });
-    expect((await store.recentAudit(5)).map((e) => e.message)).toContain(
+    const runId = engine.getSnapshot().runId;
+    expect((await store.recentAudit(5, runId)).map((entry) => entry.message)).toContain(
       'INFO: Mixer STARTED by Operator',
     );
+    expect(await store.recentAudit(5)).toEqual([]);
   });
 
   it('a failing store never breaks the tick', async () => {
@@ -126,13 +128,24 @@ describe('Engine persistence', () => {
     expect(await store.recentAlerts(10, 'another-run')).toEqual([]);
   });
 
-  it('hydrates the audit trail only when empty', () => {
-    const e = new Engine({ seed: 1 });
-    const entry = { id: 'x', timestamp: 't', message: 'old', level: 'low' as const };
-    e.hydrate([entry]);
-    expect(e.getSnapshot().audit).toEqual([entry]);
-    e.hydrate([{ ...entry, id: 'y' }]);
-    expect(e.getSnapshot().audit).toHaveLength(1);
+  it('never hydrates audit records from an earlier simulator session', () => {
+    const engine = new Engine({ seed: 1 });
+    const runId = engine.getSnapshot().runId;
+    const entry = {
+      id: 'x',
+      timestamp: '2026-01-01T00:00:00.000Z',
+      message: 'local',
+      level: 'low' as const,
+      runId,
+    };
+    engine.hydrate([
+      { ...entry, runId: 'previous-session' },
+      { ...entry, runId: undefined },
+      entry,
+    ]);
+    expect(engine.getSnapshot().audit).toEqual([entry]);
+    engine.hydrate([{ ...entry, id: 'another' }]);
+    expect(engine.getSnapshot().audit).toHaveLength(1);
   });
 });
 

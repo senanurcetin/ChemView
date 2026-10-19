@@ -10,7 +10,7 @@ interface Credentials {
   privateKey?: string;
 }
 
-/** Firestore-backed store. New telemetry and alerts are separated by simulator run. */
+/** Firestore-backed store. New telemetry, alerts and audit are separated by run. */
 export class FirestoreStore implements Store {
   readonly kind = 'firestore';
   private readonly db: Firestore;
@@ -52,7 +52,10 @@ export class FirestoreStore implements Store {
   }
 
   async saveAudit(entry: AuditEntry) {
-    await this.db.collection('audit').doc(entry.id).set(entry);
+    const collection = entry.runId
+      ? this.db.collection('sim_runs').doc(entry.runId).collection('audit')
+      : this.db.collection('audit'); // Records written before run-scoped storage.
+    await collection.doc(entry.id).set(entry);
   }
 
   async history({ from, to, limit = 5000, runId }: HistoryRange) {
@@ -68,8 +71,11 @@ export class FirestoreStore implements Store {
     return snap.docs.map((d) => d.data() as TelemetrySample);
   }
 
-  async recentAudit(limit: number) {
-    const snap = await this.db.collection('audit').orderBy('timestamp', 'desc').limit(limit).get();
-    return snap.docs.map((d) => d.data() as AuditEntry);
+  async recentAudit(limit: number, runId?: string) {
+    const collection = runId
+      ? this.db.collection('sim_runs').doc(runId).collection('audit')
+      : this.db.collection('audit');
+    const snap = await collection.orderBy('timestamp', 'desc').limit(limit).get();
+    return snap.docs.map((doc) => doc.data() as AuditEntry);
   }
 }

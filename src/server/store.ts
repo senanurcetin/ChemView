@@ -31,8 +31,8 @@ export interface Store {
   saveAudit(entry: AuditEntry): Promise<void>;
   /** Samples with `from <= ts <= to`, oldest first; at most `limit` of them (the oldest in range). */
   history(range: HistoryRange): Promise<TelemetrySample[]>;
-  /** Most recent audit entries, newest first. */
-  recentAudit(limit: number): Promise<AuditEntry[]>;
+  /** Newest audit entries from one run; unscoped queries return legacy records only. */
+  recentAudit(limit: number, runId?: string): Promise<AuditEntry[]>;
 }
 
 export function toSample(state: SimState, ts: string, runId?: string): TelemetrySample {
@@ -92,8 +92,11 @@ export class MemoryStore implements Store {
       .slice(0, limit);
   }
 
-  async recentAudit(limit: number) {
-    return [...this.audit].sort((a, b) => b.timestamp.localeCompare(a.timestamp)).slice(0, limit);
+  async recentAudit(limit: number, runId?: string) {
+    return this.audit
+      .filter((entry) => entry.runId === runId)
+      .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+      .slice(0, limit);
   }
 }
 
@@ -132,8 +135,8 @@ class LazyStore implements Store {
   async history(range: HistoryRange) {
     return (await this.inner).history(range);
   }
-  async recentAudit(limit: number) {
-    return (await this.inner).recentAudit(limit);
+  async recentAudit(limit: number, runId?: string) {
+    return (await this.inner).recentAudit(limit, runId);
   }
 }
 

@@ -111,9 +111,10 @@ export class Engine {
     );
   }
 
-  /** Seeds the audit trail from the store after a restart (newest first). */
+  /** Restore only records belonging to this exact engine run, never older runs. */
   hydrate(audit: AuditEntry[]) {
-    if (this.audit.length === 0) this.audit = audit.slice(0, LOG_LIMIT);
+    if (this.audit.length !== 0) return;
+    this.audit = audit.filter((entry) => entry.runId === this.runId).slice(0, LOG_LIMIT);
   }
 
   private pushTraffic(direction: 'RX' | 'TX', frame: string) {
@@ -125,7 +126,12 @@ export class Engine {
   }
 
   private pushAudit(entry: Omit<AuditEntry, 'id' | 'timestamp'>) {
-    const full: AuditEntry = { id: this.nextId(), timestamp: this.now().toISOString(), ...entry };
+    const full: AuditEntry = {
+      ...entry,
+      id: this.nextId(),
+      timestamp: this.now().toISOString(),
+      runId: this.runId,
+    };
     this.audit = [full, ...this.audit].slice(0, LOG_LIMIT);
     this.persist((store) => store.saveAudit(full));
   }
@@ -341,7 +347,7 @@ export function getEngine(): Engine {
     const engine = new Engine({ commentator: createCommentator(), store: getStore() });
     globalForEngine.__chemviewEngine = engine;
     getStore()
-      .recentAudit(LOG_LIMIT)
+      .recentAudit(LOG_LIMIT, engine.getSnapshot().runId)
       .then((audit) => engine.hydrate(audit))
       .catch(() => {});
   }

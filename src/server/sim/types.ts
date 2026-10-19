@@ -45,6 +45,8 @@ export type Command =
 
 export interface AuditEntry {
   id: string;
+  /** Optional only for pre-migration audit records. */
+  runId?: string;
   timestamp: string;
   message: string;
   level: Level;
