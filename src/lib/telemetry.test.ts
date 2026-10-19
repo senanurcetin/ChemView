@@ -39,7 +39,7 @@ describe('parseSnapshotEvent', () => {
         parseSnapshotEvent(
           JSON.stringify({
             ...snapshot,
-            [kind]: snapshot[kind].map(({ runId: _runId, ...item }) => item),
+            [kind]: snapshot[kind].map((item) => ({ ...item, runId: undefined })),
           }),
         ),
       ).toBeNull();

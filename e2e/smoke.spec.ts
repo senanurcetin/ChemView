@@ -90,6 +90,105 @@ test('stalled SSE data is marked stale even when the connection stays open', asy
   await expect(page.getByRole('button', { name: /^e-stop$/i })).toBeEnabled();
 });
 
+test('a restarted simulator ignores old-run SSE replays and mismatched audit events', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    class ManualEventSource {
+      onopen: (() => void) | null = null;
+      onmessage: ((event: { data: string }) => void) | null = null;
+      onerror: (() => void) | null = null;
+      readyState = 1;
+
+      constructor() {
+        Object.assign(window, {
+          __emitChemViewTestSnapshot: (value: string) => this.onmessage?.({ data: value }),
+        });
+        setTimeout(() => this.onopen?.(), 0);
+      }
+
+      close() {
+        this.readyState = 2;
+      }
+    }
+    Object.defineProperty(window, 'EventSource', { value: ManualEventSource });
+  });
+
+  await page.goto('/');
+  const firstRun = '123e4567-e89b-42d3-a456-426614174000';
+  const secondRun = '123e4567-e89b-42d3-a456-426614174001';
+
+  const emit = async (
+    runId: string,
+    seq: number,
+    label: string,
+    eventRunId: string = runId,
+  ) => {
+    await page.evaluate(
+      ({ runId, seq, label, eventRunId }) => {
+        const timestamp = new Date().toISOString();
+        const snapshot = {
+          runId,
+          seq,
+          estopEpoch: 0,
+          timestamp,
+          state: {
+            isRunning: false,
+            estopLatched: false,
+            isManualMode: false,
+            isHeaterOn: false,
+            valveOpen: false,
+            rpm: 0,
+            temp: 24.5,
+            ph: 7,
+            level: 65,
+            targetRpmManual: 500,
+            targetTempManual: 60,
+          },
+          network: { packetCount: 0, latencyMs: 15, errorCount: 0 },
+          traffic: [],
+          audit: [
+            { id: `${label}-audit`, runId: eventRunId, timestamp, message: `${label}-AUDIT`, level: 'low' },
+          ],
+          alerts: [
+            { id: `${label}-alert`, runId: eventRunId, timestamp, message: `${label}-ALERT`, source: 'rule', urgency: 'medium' },
+          ],
+          aiBusy: false,
+        };
+        const bridge = window as unknown as { __emitChemViewTestSnapshot: (value: string) => void };
+        bridge.__emitChemViewTestSnapshot(JSON.stringify(snapshot));
+      },
+      { runId, seq, label, eventRunId },
+    );
+  };
+
+  await emit(firstRun, 1, 'OLD');
+  await expect(page.getByTestId('telemetry-run-id')).toHaveAttribute('title', firstRun);
+  await expect(page.getByText('OLD-AUDIT')).toHaveCount(1);
+  await expect(page.getByText('OLD-ALERT')).toHaveCount(1);
+
+  await emit(secondRun, 1, 'NEW');
+  await expect(page.getByTestId('telemetry-run-id')).toHaveAttribute('title', secondRun);
+  await expect(page.getByTestId('simulation-restart')).toBeVisible();
+  await expect(page.getByText('OLD-AUDIT')).toHaveCount(0);
+  await expect(page.getByText('OLD-ALERT')).toHaveCount(0);
+  await expect(page.getByText('NEW-AUDIT')).toHaveCount(1);
+  await expect(page.getByText('NEW-ALERT')).toHaveCount(1);
+
+  // The old run may arrive with a higher sequence: it is still retired.
+  await emit(firstRun, 100, 'REPLAY');
+  await expect(page.getByTestId('telemetry-run-id')).toHaveAttribute('title', secondRun);
+  await expect(page.getByText('REPLAY-AUDIT')).toHaveCount(0);
+
+  // A mixed-session payload must be rejected rather than partially rendered.
+  await emit(secondRun, 2, 'CORRUPT', firstRun);
+  await expect(page.getByText('Gateway Disconnected')).toBeVisible();
+  await expect(page.getByText('CORRUPT-AUDIT')).toHaveCount(0);
+  await emit(secondRun, 3, 'RECOVERED');
+  await expect(page.getByText('Gateway Active')).toBeVisible();
+  await expect(page.getByText('RECOVERED-AUDIT')).toHaveCount(1);
+});
+
 test('manual setpoint sliders follow an external operator session', async ({ page, request }) => {
   await page.goto('/');
   await expect(page.getByText('Gateway Active')).toBeVisible();
