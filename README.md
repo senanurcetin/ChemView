@@ -100,6 +100,15 @@ session or a superseded request. E-STOP failures still surface to the operator.
 The process state remains server-owned and is refreshed only through validated
 SSE snapshots.
 
+## Run-scoped operator audit trail
+
+Audit events now carry the simulator `runId`, alongside telemetry and alerts.
+The HMI merges live audit entries with up to 50 archived events for the current
+run; the read-only `GET /api/audit?runId=<uuid>&limit=<1..100>` endpoint can
+inspect earlier runs. Older, untagged Firestore records remain available in
+the legacy Store collection, but are excluded from current-session displays.
+These records are not cryptographically signed or certified audit evidence.
+
 ## Scope and operational boundaries
 
 The process, Modbus register map, interlocks, and telemetry are simulated. No physical PLC, fieldbus gateway, safety-rated controller, or plant equipment is connected. This is an engineering demonstration, **not a certified safety system**. Production use would require independent industrial safety assessment, hardened access controls and validated equipment integration.

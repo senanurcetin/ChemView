@@ -5,6 +5,8 @@ import { toSample } from '@/server/store';
 import {
   classifySnapshot,
   mergeAlertHistory,
+  mergeAuditHistory,
+  parseAuditHistory,
   parseAlertHistory,
   parseHistorySamples,
   parseSnapshotEvent,
@@ -115,6 +117,36 @@ describe('alarm history transport', () => {
       'c',
       'b',
     ]);
+  });
+});
+
+describe('audit history transport', () => {
+  const runId = '123e4567-e89b-42d3-a456-426614174000';
+  const entry = (id: string, ts: string, session = runId) => ({
+    id,
+    runId: session,
+    timestamp: ts,
+    message: id,
+    level: 'low' as const,
+  });
+
+  it('rejects cross-run and legacy audit archive records', () => {
+    const record = entry('x', '2026-10-18T12:00:01Z');
+    expect(parseAuditHistory({ runId, entries: [record] }, runId)).toEqual([record]);
+    expect(parseAuditHistory({ runId, entries: [record] }, 'other-run')).toBeNull();
+    expect(parseAuditHistory({ runId, entries: [{ ...record, runId: undefined }] }, runId))
+      .toBeNull();
+    expect(parseAuditHistory({ runId, entries: [{ ...record, runId: 'other' }] }, runId))
+      .toBeNull();
+    expect(parseAuditHistory({ runId, entries: [{}] }, runId)).toBeNull();
+  });
+
+  it('merges archived and live audit events without duplicate IDs', () => {
+    const first = entry('a', '2026-10-18T12:00:01Z');
+    const second = entry('b', '2026-10-18T12:00:03Z');
+    const latest = entry('c', '2026-10-18T12:00:05Z');
+    expect(mergeAuditHistory([first, second], [second, latest], 2).map((x) => x.id))
+      .toEqual(['c', 'b']);
   });
 });
 

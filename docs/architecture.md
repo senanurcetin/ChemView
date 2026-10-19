@@ -100,6 +100,21 @@ non-emergency commands, while E-STOP failures always remain reportable.
 No response changes process state optimistically; only validated SSE snapshots
 update readback. Malformed command API responses fail closed.
 
+## Session-scoped audit history
+
+Each newly generated audit entry is tagged with the active `runId` and stored
+under `sim_runs/<runId>/audit/<eventId>` in Firestore (bounded memory storage
+is used without credentials). `GET /api/audit` returns the newest 50 entries
+for the current simulator run and accepts optional UUID `runId` and bounded
+`limit` for archived sessions. The HMI deduplicates live and persisted entries
+by event ID, and refuses cross-run, malformed or legacy payloads.
+
+Earlier, untagged top-level Firestore `audit` entries are not deleted; the
+Store still supports unscoped legacy queries. Engine hydration now reads only
+its own run, so a new simulator never displays prior-session audit records
+as live process events. This is event provenance for a demo, not a
+tamper-evident compliance audit.
+
 ## Alerting model
 
 Safety alarms are deterministic and raised on the tick the condition appears. Gemini commentary (`source: "ai"`) is additive: it adds trend-aware context and a recommendation when the plant is on or near a limit, and its failure changes nothing visible except the absence of the comment.

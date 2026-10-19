@@ -1,11 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Alert, Command, Snapshot } from '@/server/sim/types';
+import type { Alert, AuditEntry, Command, Snapshot } from '@/server/sim/types';
 import {
   classifySnapshot,
   mergeAlertHistory,
+  mergeAuditHistory,
   parseAlertHistory,
+  parseAuditHistory,
   parseHistorySamples,
   parseSnapshotEvent,
   type SnapshotCursor,
@@ -50,6 +52,7 @@ export function useTelemetry() {
   const [nowMs, setNowMs] = useState(0);
   const [sessionRestarted, setSessionRestarted] = useState(false);
   const [alertHistory, setAlertHistory] = useState<Alert[]>([]);
+  const [auditHistory, setAuditHistory] = useState<AuditEntry[]>([]);
   const [rpmHistory, setRpmHistory] = useState<HistoryPoint[]>([]);
   const [tempHistory, setTempHistory] = useState<HistoryPoint[]>([]);
   const lastCursor = useRef<SnapshotCursor | null>(null);
@@ -127,6 +130,30 @@ export function useTelemetry() {
     return () => controller.abort();
   }, [activeRunId]);
 
+  // The archive is scoped to the run named by a validated SSE snapshot.
+  useEffect(() => {
+    if (!activeRunId) return;
+    const controller = new AbortController();
+    fetch(`/api/audit?runId=${encodeURIComponent(activeRunId)}&limit=50`, {
+      signal: controller.signal,
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload: unknown) => {
+        if (controller.signal.aborted || lastCursor.current?.runId !== activeRunId) return;
+        const entries = parseAuditHistory(payload, activeRunId);
+        if (!entries) return;
+        setAuditHistory((previous) =>
+          lastCursor.current?.runId === activeRunId
+            ? mergeAuditHistory(previous, entries)
+            : previous,
+        );
+      })
+      .catch(() => {
+        /* Persisted audit is optional; SSE still supplies recent events. */
+      });
+    return () => controller.abort();
+  }, [activeRunId]);
+
   useEffect(() => {
     const source = new EventSource('/api/stream');
 
@@ -149,6 +176,11 @@ export function useTelemetry() {
       setTransportStatus('Connected');
       lastCursor.current = { runId: next.runId, seq: next.seq };
       setSnapshot(next);
+      setAuditHistory((previous) =>
+        transition === 'new-run'
+          ? mergeAuditHistory([], next.audit)
+          : mergeAuditHistory(previous, next.audit),
+      );
       setAlertHistory((previous) =>
         transition === 'new-run'
           ? mergeAlertHistory([], next.alerts)
@@ -202,6 +234,7 @@ export function useTelemetry() {
   return {
     snapshot,
     alerts: alertHistory.filter((alert) => alert.runId === activeRunId),
+    audit: auditHistory.filter((entry) => entry.runId === activeRunId),
     status,
     lastUpdateAgeSeconds,
     sessionRestarted,

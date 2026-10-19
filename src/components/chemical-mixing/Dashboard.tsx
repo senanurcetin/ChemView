@@ -46,6 +46,7 @@ export function Dashboard() {
   const {
     snapshot,
     alerts,
+    audit,
     status,
     lastUpdateAgeSeconds,
     sessionRestarted,
@@ -57,7 +58,6 @@ export function Dashboard() {
   const state = snapshot?.state ?? initialState();
   const network = snapshot?.network ?? { packetCount: 0, latencyMs: 0, errorCount: 0 };
   const traffic = snapshot?.traffic ?? [];
-  const audit = snapshot?.audit ?? [];
 
   const lastTx = [...traffic].reverse().find((t) => t.direction === 'TX')?.id;
   const lastRx = [...traffic].reverse().find((t) => t.direction === 'RX')?.id;

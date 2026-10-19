@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { Alert, Snapshot } from '@/server/sim/types';
+import type { Alert, AuditEntry, Snapshot } from '@/server/sim/types';
 import { THRESHOLDS } from '@/server/sim/thresholds';
 import type { TelemetrySample } from '@/server/store';
 
@@ -18,6 +18,14 @@ const alertSchema: z.ZodType<Alert> = z.object({
   source: z.enum(['rule', 'ai']),
   message: z.string(),
   urgency: level,
+});
+
+const auditEntrySchema: z.ZodType<AuditEntry> = z.object({
+  id: z.string().min(1),
+  runId: z.string().uuid().optional(),
+  timestamp,
+  message: z.string(),
+  level,
 });
 
 /** Validate the entire SSE payload before updating any operator-visible state. */
@@ -52,14 +60,7 @@ const snapshotSchema: z.ZodType<Snapshot> = z.object({
       frame: z.string(),
     }),
   ),
-  audit: z.array(
-    z.object({
-      id: z.string(),
-      timestamp,
-      message: z.string(),
-      level,
-    }),
-  ),
+  audit: z.array(auditEntrySchema),
   alerts: z.array(alertSchema),
   aiBusy: z.boolean(),
 });
@@ -105,6 +106,34 @@ export function parseAlertHistory(payload: unknown, expectedRunId: string): Aler
   if (!parsed.success || parsed.data.runId !== expectedRunId) return null;
   if (parsed.data.alerts.some((alert) => alert.runId !== expectedRunId)) return null;
   return parsed.data.alerts;
+}
+
+const auditHistorySchema = z.object({
+  runId: z.string().uuid(),
+  entries: z.array(auditEntrySchema),
+});
+
+/** Audit archives are an untrusted API payload: reject legacy and cross-run entries. */
+export function parseAuditHistory(payload: unknown, expectedRunId: string): AuditEntry[] | null {
+  const parsed = auditHistorySchema.safeParse(payload);
+  if (!parsed.success || parsed.data.runId !== expectedRunId) return null;
+  if (parsed.data.entries.some((entry) => entry.runId !== expectedRunId)) return null;
+  return parsed.data.entries;
+}
+
+/** Keep up to fifty unique audit events, newest first, across SSE and archive. */
+export function mergeAuditHistory(
+  previous: AuditEntry[],
+  incoming: AuditEntry[],
+  limit = 50,
+): AuditEntry[] {
+  const events = new Map<string, AuditEntry>();
+  for (const entry of [...incoming, ...previous]) {
+    if (!events.has(entry.id)) events.set(entry.id, entry);
+  }
+  return [...events.values()]
+    .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+    .slice(0, limit);
 }
 
 /** Combine persisted and live alerts, newest first, with one entry per event ID. */
