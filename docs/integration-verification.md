@@ -1,0 +1,33 @@
+# Consolidated integration verification
+
+ChemView is a **simulation-only engineering prototype**. This checklist is for
+the combined `main` branch after the run-scoped telemetry, audit, alarms,
+multi-operator interlocks and optional AI commentary changes.
+
+## Required automated gates
+
+The existing GitHub Actions workflow runs these groups on a non-skipped push
+to `main`. Individual implementation commits intentionally skipped CI to
+avoid redundant full-suite executions.
+
+- **Build:** `npm ci`, `npm run typecheck`, `npm run lint`,
+  `npm run format:check`, `npm test` and `npm run build`
+- **Persistence:** `npm run test:firestore` against the Firestore emulator
+- **Browser:** `npm run test:e2e` with Playwright Chromium
+
+## Acceptance scenarios
+
+- The HMI waits for a validated, current SSE payload before unlocking controls.
+- A late packet from a retired simulation run cannot reactivate stale readback.
+- Telemetry, alarm events and audit records are scoped by `runId`.
+- Simulated E-STOP is unconditional and cannot be cleared by a stale RESET.
+- Stale multi-operator commands cannot silently overwrite current process state.
+- A delayed AI response cannot override a newer command or alarm condition.
+- Deterministic alarms still fire independently of optional Gemini responses.
+- No test reaches a real PLC, Modbus TCP device or production Firebase instance.
+
+## Reporting rule
+
+A saved test or a green historical PR check is **not** proof that the current
+combined `main` branch passed. Report the current commit SHA, workflow run
+and each job result separately; disclose failures and skipped checks.
