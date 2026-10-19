@@ -26,7 +26,7 @@ interface ControlPanelProps {
   onToggleMode: () => void;
   onEmergencyStop: () => void;
   onResetEmergencyStop: () => void;
-  connectionStatus: 'Connected' | 'Disconnected' | 'Connecting';
+  connectionStatus: 'Connected' | 'Disconnected' | 'Connecting' | 'Stale';
   targetRpm: number;
   targetTemp: number;
   currentRpm: number;
