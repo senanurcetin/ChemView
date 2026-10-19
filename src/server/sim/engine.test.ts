@@ -195,6 +195,57 @@ describe('Engine', () => {
     expect(secondHigh.id).not.toBe(initialHigh.id);
   });
 
+  it('rejects a stale operator setpoint without changing state or writing Modbus', () => {
+    const e = make();
+    const runId = e.getSnapshot().runId;
+    const accepted = e.command({
+      type: 'set_rpm_setpoint',
+      value: 820,
+      expectedValue: 500,
+      expectedRunId: runId,
+    });
+    expect(accepted.ok).toBe(true);
+    const before = e.getSnapshot();
+
+    const conflicting = e.command({
+      type: 'set_rpm_setpoint',
+      value: 700,
+      expectedValue: 500,
+      expectedRunId: runId,
+    });
+    expect(conflicting).toMatchObject({ ok: false, wrote: false });
+    expect(conflicting.reason).toMatch(/another operator/);
+    expect(e.getSnapshot()).toEqual(before);
+
+    // A telemetry tick changes the SSE seq but never invalidates a
+    // compare-and-set readback that still matches the applied setpoint.
+    e.tick();
+    const valid = e.command({
+      type: 'set_temp_setpoint',
+      value: 65,
+      expectedValue: 60,
+      expectedRunId: runId,
+    });
+    expect(valid.ok).toBe(true);
+    expect(e.getSnapshot().state.targetTempManual).toBe(65);
+  });
+
+  it('rejects a command for an earlier simulator run but never blocks E-STOP', () => {
+    const old = make().getSnapshot().runId;
+    const current = make();
+    const before = current.getSnapshot();
+    const stale = current.command({
+      type: 'set_temp_setpoint',
+      value: 75,
+      expectedValue: 60,
+      expectedRunId: old,
+    });
+    expect(stale).toMatchObject({ ok: false, wrote: false });
+    expect(current.getSnapshot()).toEqual(before);
+    expect(current.command({ type: 'estop' }).ok).toBe(true);
+    expect(current.getSnapshot().state.estopLatched).toBe(true);
+  });
+
   it('caps log buffers at 50 entries', () => {
     const e = make();
     for (let i = 0; i < 40; i++) e.tick();
@@ -221,6 +272,28 @@ describe('commandSchema', () => {
       false,
     );
     expect(commandSchema.safeParse({ type: 'nope' }).success).toBe(false);
+    expect(
+      commandSchema.safeParse({
+        type: 'set_rpm_setpoint',
+        value: 650,
+        expectedValue: 500,
+        expectedRunId: '123e4567-e89b-42d3-a456-426614174000',
+      }).success,
+    ).toBe(true);
+    expect(
+      commandSchema.safeParse({
+        type: 'set_rpm_setpoint',
+        value: 650,
+        expectedValue: NaN,
+      }).success,
+    ).toBe(false);
+    expect(
+      commandSchema.safeParse({
+        type: 'set_temp_setpoint',
+        value: 65,
+        expectedRunId: 'not-a-uuid',
+      }).success,
+    ).toBe(false);
   });
 });
 

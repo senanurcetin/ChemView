@@ -8,6 +8,16 @@ export const commandSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('set_heater'), on: z.boolean() }),
   z.object({ type: z.literal('set_valve'), open: z.boolean() }),
   z.object({ type: z.literal('set_mode'), manual: z.boolean() }),
-  z.object({ type: z.literal('set_rpm_setpoint'), value: z.number().finite() }),
-  z.object({ type: z.literal('set_temp_setpoint'), value: z.number().finite() }),
+  z.object({
+    type: z.literal('set_rpm_setpoint'),
+    value: z.number().finite(),
+    expectedValue: z.number().finite().optional(),
+    expectedRunId: z.string().uuid().optional(),
+  }),
+  z.object({
+    type: z.literal('set_temp_setpoint'),
+    value: z.number().finite(),
+    expectedValue: z.number().finite().optional(),
+    expectedRunId: z.string().uuid().optional(),
+  }),
 ]);

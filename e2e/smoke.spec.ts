@@ -182,6 +182,40 @@ test('ordinary controls stay locked until an SSE snapshot is validated', async (
   await expect(page.getByRole('button', { name: /^e-stop$/i })).toBeEnabled();
 });
 
+test('stale concurrent operator setpoint writes are rejected', async ({ page, request }) => {
+  await command(request, { type: 'set_rpm_setpoint', value: 500 });
+  await page.goto('/');
+  await expect(page.getByText('Gateway Active')).toBeVisible();
+
+  const runId = await page.getByTestId('telemetry-run-id').getAttribute('title');
+  expect(runId).toMatch(/^[0-9a-f-]{36}$/);
+
+  const first = await command(request, {
+    type: 'set_rpm_setpoint',
+    value: 850,
+    expectedValue: 500,
+    expectedRunId: runId,
+  });
+  expect(first.status()).toBe(200);
+
+  const stale = await command(request, {
+    type: 'set_rpm_setpoint',
+    value: 700,
+    expectedValue: 500,
+    expectedRunId: runId,
+  });
+  expect(stale.status()).toBe(409);
+
+  const wrongRun = await command(request, {
+    type: 'set_temp_setpoint',
+    value: 65,
+    expectedValue: 60,
+    expectedRunId: '123e4567-e89b-42d3-a456-426614174000',
+  });
+  expect(wrongRun.status()).toBe(409);
+  await expect(page.getByText('Gateway Active')).toBeVisible();
+});
+
 test('starting the mixer spins the rotor up', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByText('Gateway Active')).toBeVisible();

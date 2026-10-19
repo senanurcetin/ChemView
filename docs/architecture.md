@@ -69,6 +69,12 @@ Deterministic rule alarms and optional AI commentary are tagged with the simulat
 
 Incoming SSE snapshots and persisted history are rejected when numeric readings violate basic physical domains (negative RPM, pH outside 0–14, fill outside 0–100%, and configured setpoint bounds). Temperature remains valid above the 80 °C rule-alarm threshold so a real simulated overheating condition is displayed rather than discarded. These input checks catch impossible values, not subtle sensor drift or field-device failures. The alarm API is read-only and follows the existing publicly readable demo endpoints.
 
+## Concurrent setpoint admission
+
+Manual RPM and temperature updates support optional optimistic concurrency preconditions: `expectedValue` (the authoritative setpoint observed when dragging began) and `expectedRunId` (the simulator instance). The server checks these before invoking its usual interlocks and before emitting a simulated Modbus write. A mismatch returns 409 and does not change the state or increment the SSE sequence. The browser reverts rejected drafts to the latest validated readback, and discards a pending draft if a third value arrives. Normal telemetry ticks advance the SSE sequence but **do not** trigger false operator conflicts.
+
+This protects manual setpoint edits only, not all command types. Callers that omit the optional preconditions retain legacy last-write-wins semantics; E-STOP never depends on readback preconditions.
+
 ## Alerting model
 
 Safety alarms are deterministic and raised on the tick the condition appears. Gemini commentary (`source: "ai"`) is additive: it adds trend-aware context and a recommendation when the plant is on or near a limit, and its failure changes nothing visible except the absence of the comment.

@@ -92,6 +92,26 @@ describe('POST /api/command — HTTP contract', () => {
     });
   });
 
+  it('preserves optional setpoint preconditions and forwards conflicts as 409', async () => {
+    const { POST } = await import('./route');
+    const cmd = {
+      type: 'set_rpm_setpoint',
+      value: 750,
+      expectedValue: 500,
+      expectedRunId: '123e4567-e89b-42d3-a456-426614174000',
+    };
+    const accepted = await postCommand(POST, cmd);
+    expect(accepted.status).toBe(200);
+    expect(engineCommand).toHaveBeenCalledWith(cmd);
+    engineCommand.mockReturnValueOnce({
+      ok: false,
+      reason: 'Setpoint changed in another operator session.',
+    });
+    const conflict = await postCommand(POST, cmd);
+    expect(conflict.status).toBe(409);
+    expect(await conflict.json()).toMatchObject({ ok: false });
+  });
+
   it('shares the 60-command budget across spoofed IPs but always admits E-STOP', async () => {
     const { POST } = await import('./route');
 

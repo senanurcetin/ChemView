@@ -192,6 +192,32 @@ export class Engine {
   }
 
   command(cmd: Command): CommandResult {
+    // Compare-and-set the *authoritative* setpoint; unrelated telemetry ticks do not
+    // invalidate a request. A stale operator must not silently overwrite another
+    // operator's more recent adjustment or a restarted simulation session.
+    if (cmd.type === 'set_rpm_setpoint' || cmd.type === 'set_temp_setpoint') {
+      const applied =
+        cmd.type === 'set_rpm_setpoint'
+          ? this.state.targetRpmManual
+          : this.state.targetTempManual;
+      if (cmd.expectedRunId !== undefined && cmd.expectedRunId !== this.runId) {
+        return {
+          ok: false,
+          reason: 'Simulator session changed. Refresh telemetry before changing setpoints.',
+          state: this.state,
+          wrote: false,
+        };
+      }
+      if (cmd.expectedValue !== undefined && cmd.expectedValue !== applied) {
+        return {
+          ok: false,
+          reason: 'Setpoint changed in another operator session. Review current value and retry.',
+          state: this.state,
+          wrote: false,
+        };
+      }
+    }
+
     const result = applyCommand(this.state, cmd);
     if (!result.ok) return result;
     this.state = result.state;

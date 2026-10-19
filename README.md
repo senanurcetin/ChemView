@@ -75,6 +75,10 @@ The setpoint sliders follow server-owned values, including accepted writes from 
 
 The simulator records its rule-based and optional AI alarm events by `runId`; `GET /api/alerts` returns the last 50 events for the current process run (or `?runId=<uuid>&limit=<1..100>` for a selected archived run). The dashboard merges archived events with live SSE events, showing up to 50 distinct entries. Memory storage keeps the most recent 200 alarm events; Firestore uses `sim_runs/<runId>/alerts`. Older top-level Firestore alerts are retained but excluded from the current-session API. These events are historical observations, not safety-rated alarm acknowledgements. Incoming telemetries with impossible physical readings are rejected before updating the HMI.
 
+## Concurrent setpoint updates
+
+The HMI sends a setpoint command with the expected server value captured at the beginning of a drag and the active simulator `runId`. The engine compares those optional preconditions atomically with its current in-process state. If another operator changed that setpoint, or the simulator restarted, it rejects the stale request with HTTP 409 without writing a simulated Modbus frame. Ordinary API clients can continue to omit these optional fields for backward compatibility. These checks avoid silent lost updates on the two manual setpoints; they are not general transaction isolation across every plant command.
+
 ## Scope and operational boundaries
 
 The process, Modbus register map, interlocks, and telemetry are simulated. No physical PLC, fieldbus gateway, safety-rated controller, or plant equipment is connected. This is an engineering demonstration, **not a certified safety system**. Production use would require independent industrial safety assessment, hardened access controls and validated equipment integration.

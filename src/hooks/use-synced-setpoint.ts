@@ -8,6 +8,7 @@ interface LocalEdit {
   value: number;
   runId: string;
   baseSeq: number;
+  expectedValue: number;
   token: number;
   phase: EditPhase;
 }
@@ -17,7 +18,7 @@ interface SyncedSetpointOptions {
   runId: string | null;
   seq: number;
   enabled: boolean;
-  send: (value: number) => Promise<{ ok: boolean }>;
+  send: (value: number, expectedValue: number, expectedRunId: string) => Promise<{ ok: boolean }>;
 }
 
 /** An optimistic setpoint is shown only while editing or awaiting a matching SSE echo. */
@@ -30,6 +31,7 @@ export function useSyncedSetpoint({
 }: SyncedSetpointOptions) {
   const [edit, setEdit] = useState<LocalEdit | null>(null);
   const nextToken = useRef(0);
+  const draftRef = useRef<LocalEdit | null>(null);
   const localEdit = edit?.runId === runId && enabled ? edit : null;
 
   // Remote operator writes and server-side clamps always win when we are idle.
@@ -37,10 +39,17 @@ export function useSyncedSetpoint({
   useEffect(() => {
     if (!edit) return;
     if (!enabled || edit.runId !== runId) {
+      if (draftRef.current?.token === edit.token) draftRef.current = null;
       setEdit((current) => (current?.token === edit.token ? null : current));
       return;
     }
-    if (edit.phase === 'pending' && seq > edit.baseSeq && appliedValue === edit.value) {
+    // A matching SSE value confirms our command. A distinct third value means
+    // another operator has already changed the target; stop showing our draft.
+    if (
+      edit.phase === 'pending' &&
+      seq > edit.baseSeq &&
+      (appliedValue === edit.value || appliedValue !== edit.expectedValue)
+    ) {
       setEdit((current) => (current?.token === edit.token ? null : current));
     }
   }, [appliedValue, edit, enabled, runId, seq]);
@@ -57,27 +66,44 @@ export function useSyncedSetpoint({
   const onChange = useCallback(
     (value: number) => {
       if (!enabled || !runId) return;
-      setEdit({
+      // Capture the original server readback at the *start* of a drag, even
+      // if a remote operator's SSE update arrives during the interaction.
+      const existing = draftRef.current;
+      const expectedValue =
+        existing?.phase === 'editing' && existing.runId === runId
+          ? existing.expectedValue
+          : appliedValue;
+      const next: LocalEdit = {
         value,
+        expectedValue,
         runId,
         baseSeq: seq,
         token: ++nextToken.current,
         phase: 'editing',
-      });
+      };
+      draftRef.current = next;
+      setEdit(next);
     },
-    [enabled, runId, seq],
+    [appliedValue, enabled, runId, seq],
   );
 
   const onCommit = useCallback(
     (value: number) => {
-      if (!enabled || !runId || value === appliedValue) {
+      const draft = draftRef.current;
+      const staleDrag = draft && draft.phase === 'editing' && draft.runId !== runId;
+      const expectedValue =
+        draft?.phase === 'editing' && draft.runId === runId
+          ? draft.expectedValue
+          : appliedValue;
+      draftRef.current = null;
+      if (!enabled || !runId || staleDrag || value === expectedValue) {
         ++nextToken.current;
         setEdit(null);
         return;
       }
       const token = ++nextToken.current;
-      setEdit({ value, runId, baseSeq: seq, token, phase: 'pending' });
-      void send(value)
+      setEdit({ value, expectedValue, runId, baseSeq: seq, token, phase: 'pending' });
+      void send(value, expectedValue, runId)
         .then(({ ok }) => {
           if (!ok) setEdit((current) => (current?.token === token ? null : current));
         })

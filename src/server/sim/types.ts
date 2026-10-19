@@ -24,8 +24,19 @@ export type Command =
   | { type: 'set_heater'; on: boolean }
   | { type: 'set_valve'; open: boolean }
   | { type: 'set_mode'; manual: boolean }
-  | { type: 'set_rpm_setpoint'; value: number }
-  | { type: 'set_temp_setpoint'; value: number };
+  | {
+      type: 'set_rpm_setpoint';
+      value: number;
+      /** Optional compare-and-set readback to prevent lost operator updates. */
+      expectedValue?: number;
+      expectedRunId?: string;
+    }
+  | {
+      type: 'set_temp_setpoint';
+      value: number;
+      expectedValue?: number;
+      expectedRunId?: string;
+    };
 
 export interface AuditEntry {
   id: string;

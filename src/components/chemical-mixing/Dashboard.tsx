@@ -94,14 +94,16 @@ export function Dashboard() {
     runId: snapshot?.runId ?? null,
     seq: snapshot?.seq ?? 0,
     enabled: setpointsEditable,
-    send: (value) => run({ type: 'set_rpm_setpoint', value }),
+    send: (value, expectedValue, expectedRunId) =>
+      run({ type: 'set_rpm_setpoint', value, expectedValue, expectedRunId }),
   });
   const tempSetpoint = useSyncedSetpoint({
     appliedValue: state.targetTempManual,
     runId: snapshot?.runId ?? null,
     seq: snapshot?.seq ?? 0,
     enabled: setpointsEditable,
-    send: (value) => run({ type: 'set_temp_setpoint', value }),
+    send: (value, expectedValue, expectedRunId) =>
+      run({ type: 'set_temp_setpoint', value, expectedValue, expectedRunId }),
   });
 
   // Server-side export: the last hour of persisted samples, not just the 60 s on screen.
