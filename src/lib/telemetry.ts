@@ -59,6 +59,7 @@ const snapshotSchema: z.ZodType<Snapshot> = z.object({
 
 const historySampleSchema: z.ZodType<TelemetrySample> = z.object({
   ts: timestamp,
+  runId: z.string().uuid().optional(),
   rpm: finite,
   temp: finite,
   ph: finite,
@@ -68,12 +69,22 @@ const historySampleSchema: z.ZodType<TelemetrySample> = z.object({
   valveOpen: z.boolean(),
 });
 
-const historyResponseSchema = z.object({ samples: z.array(historySampleSchema) });
+const historyResponseSchema = z.object({
+  runId: z.string().uuid(),
+  samples: z.array(historySampleSchema),
+});
 
 /** The /api/history response is external input even when produced by our server. */
-export function parseHistorySamples(payload: unknown): TelemetrySample[] | null {
+export function parseHistorySamples(
+  payload: unknown,
+  expectedRunId?: string,
+): TelemetrySample[] | null {
   const parsed = historyResponseSchema.safeParse(payload);
-  return parsed.success ? parsed.data.samples : null;
+  if (!parsed.success) return null;
+  if (expectedRunId && parsed.data.runId !== expectedRunId) return null;
+  // Never merge samples from another run, including legacy untagged records.
+  if (parsed.data.samples.some((sample) => sample.runId !== parsed.data.runId)) return null;
+  return parsed.data.samples;
 }
 
 export function parseSnapshotEvent(raw: string): Snapshot | null {
