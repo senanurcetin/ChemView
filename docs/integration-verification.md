@@ -22,6 +22,10 @@ not only visual container labels.
 ## Acceptance scenarios
 
 - The HMI waits for a validated, current SSE payload before unlocking controls.
+- At 1366×768 and 1440×900 the layout retains its NEXUS identity, has no
+  horizontal document overflow, remains vertically scrollable and exposes
+  safety actions. GitHub Actions stores fresh full-page screenshots as
+  `chemview-hmi-design-captures` for visual review.
 - A late packet from a retired simulation run cannot reactivate stale readback.
 - Telemetry, alarm events and audit records are scoped by `runId`.
 - Simulated E-STOP is unconditional and cannot be cleared by a stale RESET.

@@ -99,6 +99,15 @@ jobs:
       - name: End-to-end smoke tests
         run: npm run test:e2e
 
+      - name: Upload current HMI screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chemview-hmi-design-captures
+          path: artifacts/*.png
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v4

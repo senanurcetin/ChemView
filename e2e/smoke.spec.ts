@@ -23,6 +23,38 @@ test.beforeEach(async ({ request }) => {
   expect((await command(request, { type: 'set_mode', manual: false })).status()).toBe(200);
 });
 
+test('NEXUS identity and operator panels remain accessible on shorter desktops', async ({
+  page,
+}) => {
+  for (const size of [
+    { width: 1366, height: 768 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(size);
+    await page.goto('/');
+    await expect(page.getByText('Gateway Active')).toBeVisible();
+    await expect(page.getByRole('img', { name: 'NEXUS' })).toBeVisible();
+    await expect(page.getByText('Simulated Process')).toBeVisible();
+    await expect(page.getByRole('button', { name: /^e-stop$/i })).toBeVisible();
+    await expect(page.getByText('System Event Audit Log')).toBeAttached();
+
+    const dimensions = await page.evaluate(() => ({
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: window.innerWidth,
+      documentHeight: document.documentElement.scrollHeight,
+      viewportHeight: window.innerHeight,
+    }));
+    expect(dimensions.documentWidth).toBeLessThanOrEqual(dimensions.viewportWidth);
+    expect(dimensions.documentHeight).toBeGreaterThan(dimensions.viewportHeight);
+
+    await page.screenshot({
+      path: `artifacts/chemview-hmi-${size.width}x${size.height}.png`,
+      fullPage: true,
+      animations: 'disabled',
+    });
+  }
+});
+
 test('dashboard connects to the gateway without page errors', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));

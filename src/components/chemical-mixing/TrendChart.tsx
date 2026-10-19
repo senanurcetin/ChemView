@@ -29,7 +29,7 @@ export function TrendChart({ title, data, color, unit, domain }: TrendChartProps
   return (
     <Card className="h-full border-border/40 bg-card/50 backdrop-blur-sm">
       <CardHeader className="py-3">
-        <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           {title} ({unit})
         </CardTitle>
       </CardHeader>
@@ -40,8 +40,8 @@ export function TrendChart({ title, data, color, unit, domain }: TrendChartProps
             <XAxis dataKey="time" hide={true} />
             <YAxis
               domain={domain || ['auto', 'auto']}
-              fontSize={10}
-              tick={{ fill: '#666' }}
+              fontSize={11}
+              tick={{ fill: '#a1a1aa' }}
               axisLine={false}
               tickLine={false}
               unit={unit}
