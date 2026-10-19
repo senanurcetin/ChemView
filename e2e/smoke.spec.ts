@@ -1,15 +1,26 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
 
-const command = (request: APIRequestContext, body: Record<string, unknown>) =>
-  request.post('/api/command', { data: body });
+/** Respect the shared demo command budget instead of assuming the quota is unused. */
+const command = async (request: APIRequestContext, body: Record<string, unknown>) => {
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const response = await request.post('/api/command', { data: body });
+    if (response.status() !== 429 || body.type === 'estop' || attempt === 3) {
+      return response;
+    }
+    const retrySeconds = Number(response.headers()['retry-after']);
+    const delayMs = (Number.isFinite(retrySeconds) && retrySeconds > 0 ? retrySeconds : 10) * 1000;
+    await new Promise((resolve) => setTimeout(resolve, delayMs + 100));
+  }
+  throw new Error('Unable to submit demo command after rate-limit retries');
+};
 
 test.beforeEach(async ({ request }) => {
   // The simulation is shared server state: put the plant in a known idle state first.
-  await command(request, { type: 'estop' });
-  // Reset is deliberate: E-STOP now remains latched across commands and ticks.
-  await command(request, { type: 'reset_estop' });
-  await command(request, { type: 'set_valve', open: false });
-  await command(request, { type: 'set_mode', manual: false });
+  expect((await command(request, { type: 'estop' })).status()).toBe(200);
+  // E-STOP reset and the remaining commands must actually reach the engine.
+  expect((await command(request, { type: 'reset_estop' })).status()).toBe(200);
+  expect((await command(request, { type: 'set_valve', open: false })).status()).toBe(200);
+  expect((await command(request, { type: 'set_mode', manual: false })).status()).toBe(200);
 });
 
 test('dashboard connects to the gateway without page errors', async ({ page }) => {
@@ -470,7 +481,7 @@ test('the discharge interlock rejects Start with a visible toast', async ({ page
 });
 
 test('E-STOP halts a running mixer immediately', async ({ page, request }) => {
-  await command(request, { type: 'start' });
+  expect((await command(request, { type: 'start' })).status()).toBe(200);
 
   await page.goto('/');
   await expect(page.locator('footer')).toContainText('STATE: MIXING', { timeout: 10_000 });

@@ -28,6 +28,8 @@ not only visual container labels.
 - Stale multi-operator commands cannot silently overwrite current process state.
 - A denied slider write returns the readback to the server-owned value; a later
   operator write is not hidden by an old local draft.
+- Shared-demo API 429 responses are handled in browser-test setup using
+  the server's `Retry-After`; the production rate limiter is not disabled.
 - A delayed AI response cannot override a newer command or alarm condition.
 - Deterministic alarms still fire independently of optional Gemini responses.
 - No test reaches a real PLC, Modbus TCP device or production Firebase instance.
