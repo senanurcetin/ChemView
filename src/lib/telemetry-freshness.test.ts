@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { TELEMETRY_STALE_MS, telemetryAgeSeconds, telemetryStatus } from './telemetry-freshness';
+import {
+  TELEMETRY_STALE_MS,
+  telemetryAgeSeconds,
+  telemetryStatus,
+} from './telemetry-freshness';
 
 describe('telemetryAgeSeconds', () => {
   it('returns null until a valid sample has been accepted', () => {
@@ -21,13 +25,11 @@ describe('telemetryStatus', () => {
   });
 
   it('marks a stalled connection stale at the six-second boundary', () => {
-    expect(telemetryStatus('Connected', 1000, 1000 + TELEMETRY_STALE_MS - 1)).toBe(
-      'Connected',
-    );
-    expect(telemetryStatus('Connected', 1000, 1000 + TELEMETRY_STALE_MS)).toBe('Stale');
-    expect(telemetryStatus('Connected', 1000, 1000 + TELEMETRY_STALE_MS + 60000)).toBe(
-      'Stale',
-    );
+    const lastAcceptedAt = 1000;
+    const boundary = lastAcceptedAt + TELEMETRY_STALE_MS;
+    expect(telemetryStatus('Connected', lastAcceptedAt, boundary - 1)).toBe('Connected');
+    expect(telemetryStatus('Connected', lastAcceptedAt, boundary)).toBe('Stale');
+    expect(telemetryStatus('Connected', lastAcceptedAt, boundary + 60000)).toBe('Stale');
   });
 
   it('recovers after the next accepted snapshot and preserves transport errors', () => {
