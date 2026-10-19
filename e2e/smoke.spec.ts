@@ -182,6 +182,46 @@ test('ordinary controls stay locked until an SSE snapshot is validated', async (
   await expect(page.getByRole('button', { name: /^e-stop$/i })).toBeEnabled();
 });
 
+test('HMI rejects a local setpoint edit superseded by another operator', async ({
+  page,
+  request,
+}) => {
+  await command(request, { type: 'set_rpm_setpoint', value: 500 });
+  await command(request, { type: 'set_mode', manual: true });
+  await page.goto('/');
+  await expect(page.getByText('Gateway Active')).toBeVisible();
+  await expect(page.getByText('500 RPM')).toBeVisible();
+
+  let attempted: Record<string, unknown> | null = null;
+  await page.route('**/api/command', async (route) => {
+    const body = route.request().postDataJSON() as Record<string, unknown>;
+    if (body.type !== 'set_rpm_setpoint') return route.continue();
+    attempted = body;
+    // This request is sent through a separate API context, so it reaches the
+    // simulator before the intercepted browser write.
+    const externalWrite = await command(request, {
+      type: 'set_rpm_setpoint',
+      value: 900,
+    });
+    expect(externalWrite.status()).toBe(200);
+    await route.continue();
+  });
+
+  await page.getByRole('slider', { name: 'Target RPM' }).focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByText('Action Denied', { exact: true })).toBeVisible();
+  await expect(page.getByText('900 RPM')).toBeVisible();
+
+  expect(attempted).toMatchObject({
+    type: 'set_rpm_setpoint',
+    value: 510,
+    expectedValue: 500,
+  });
+  expect((attempted as unknown as { expectedRunId: string }).expectedRunId).toMatch(
+    /^[0-9a-f-]{36}$/,
+  );
+});
+
 test('stale concurrent operator setpoint writes are rejected', async ({ page, request }) => {
   await command(request, { type: 'set_rpm_setpoint', value: 500 });
   await page.goto('/');
