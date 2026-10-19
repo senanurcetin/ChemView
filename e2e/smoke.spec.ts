@@ -9,6 +9,7 @@ test.beforeEach(async ({ request }) => {
   // Reset is deliberate: E-STOP now remains latched across commands and ticks.
   await command(request, { type: 'reset_estop' });
   await command(request, { type: 'set_valve', open: false });
+  await command(request, { type: 'set_heater', on: false });
   await command(request, { type: 'set_mode', manual: false });
 });
 

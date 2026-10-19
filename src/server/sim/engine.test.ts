@@ -276,6 +276,23 @@ describe('Engine', () => {
     });
     expect(mode.ok).toBe(true);
     expect(engine.getSnapshot().state.isManualMode).toBe(true);
+
+    const valveStart = engine.command({
+      type: 'set_valve',
+      open: true,
+      expectedValue: false,
+      expectedRunId,
+    });
+    expect(valveStart.ok).toBe(true);
+    const snap = engine.getSnapshot();
+    const oldValve = engine.command({
+      type: 'set_valve',
+      open: false,
+      expectedValue: false,
+      expectedRunId,
+    });
+    expect(oldValve).toMatchObject({ ok: false, wrote: false });
+    expect(engine.getSnapshot()).toEqual(snap);
   });
 
   it('rejects controls for an old run without affecting E-STOP', () => {
@@ -291,6 +308,20 @@ describe('Engine', () => {
     expect(engine.getSnapshot()).toEqual(before);
     expect(engine.command({ type: 'estop' }).ok).toBe(true);
     expect(engine.getSnapshot().state.estopLatched).toBe(true);
+
+    const staleReset = engine.command({
+      type: 'reset_estop',
+      expectedRunId: oldRunId,
+    });
+    expect(staleReset).toMatchObject({ ok: false, wrote: false });
+    expect(engine.getSnapshot().state.estopLatched).toBe(true);
+
+    const reset = engine.command({
+      type: 'reset_estop',
+      expectedRunId: engine.getSnapshot().runId,
+    });
+    expect(reset.ok).toBe(true);
+    expect(engine.getSnapshot().state.estopLatched).toBe(false);
   });
 
   it('guards a stale START/STOP transition but allows current readback', () => {
