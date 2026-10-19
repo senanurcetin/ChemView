@@ -83,6 +83,33 @@ test('stalled SSE data is marked stale even when the connection stays open', asy
   await expect(page.getByTestId('telemetry-run-id')).toContainText('123e4567');
 });
 
+test('manual setpoint sliders follow an external operator session', async ({ page, request }) => {
+  await page.goto('/');
+  await expect(page.getByText('Gateway Active')).toBeVisible();
+  await command(request, { type: 'set_mode', manual: true });
+  await expect(page.getByText(/System Mode: Manual Override/i)).toBeVisible();
+
+  await command(request, { type: 'set_rpm_setpoint', value: 860 });
+  await command(request, { type: 'set_temp_setpoint', value: 67.5 });
+  await expect(page.getByText('860 RPM')).toBeVisible();
+  await expect(page.getByText('67.5 °C')).toBeVisible();
+
+  // A second write from the same shared process must replace the idle slider's value.
+  await command(request, { type: 'set_rpm_setpoint', value: 720 });
+  await expect(page.getByText('720 RPM')).toBeVisible();
+});
+
+test('manual sliders are disabled when the E-STOP latch is active', async ({ page, request }) => {
+  await page.goto('/');
+  await expect(page.getByText('Gateway Active')).toBeVisible();
+  await command(request, { type: 'set_mode', manual: true });
+  await expect(page.getByText(/System Mode: Manual Override/i)).toBeVisible();
+  await command(request, { type: 'estop' });
+  await expect(page.getByRole('button', { name: /^reset e-stop$/i })).toBeVisible();
+  await expect(page.getByRole('slider', { name: 'Target RPM' })).toBeDisabled();
+  await expect(page.getByRole('slider', { name: 'Target temperature' })).toBeDisabled();
+});
+
 test('starting the mixer spins the rotor up', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByText('Gateway Active')).toBeVisible();

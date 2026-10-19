@@ -29,9 +29,13 @@ interface ControlPanelProps {
   connectionStatus: 'Connected' | 'Disconnected' | 'Connecting' | 'Stale';
   targetRpm: number;
   targetTemp: number;
+  rpmSetpointPending: boolean;
+  tempSetpointPending: boolean;
   currentRpm: number;
   setTargetRpm: (val: number) => void;
   setTargetTemp: (val: number) => void;
+  commitTargetRpm: (val: number) => void;
+  commitTargetTemp: (val: number) => void;
   valveOpen: boolean;
   onToggleValve: () => void;
   isHeaterOn: boolean;
@@ -49,9 +53,13 @@ export function ControlPanel({
   connectionStatus,
   targetRpm,
   targetTemp,
+  rpmSetpointPending,
+  tempSetpointPending,
   currentRpm,
   setTargetRpm,
   setTargetTemp,
+  commitTargetRpm,
+  commitTargetTemp,
   valveOpen,
   onToggleValve,
   isHeaterOn,
@@ -60,6 +68,8 @@ export function ControlPanel({
   // Safety Interlocks
   const valveLocked = isRunning || currentRpm >= 1;
   const mixerLocked = valveOpen || estopLatched;
+  const manualWriteEnabled =
+    isManualMode && !estopLatched && connectionStatus === 'Connected';
 
   return (
     <div className="flex flex-col gap-4">
@@ -202,7 +212,7 @@ export function ControlPanel({
         <div
           className={cn(
             'space-y-6 transition-all duration-300',
-            !isManualMode ? 'opacity-30 pointer-events-none grayscale' : 'opacity-100',
+            !manualWriteEnabled ? 'opacity-30 pointer-events-none grayscale' : 'opacity-100',
           )}
         >
           <div className="space-y-3">
@@ -210,14 +220,19 @@ export function ControlPanel({
               <span className="text-[10px] text-muted-foreground uppercase font-bold">
                 Target Speed
               </span>
-              <span className="text-xs font-mono text-primary font-bold">{targetRpm} RPM</span>
+              <span className="text-xs font-mono text-primary font-bold">
+                {targetRpm} RPM {rpmSetpointPending && '(PENDING)'}
+              </span>
             </div>
             <Slider
+              aria-label="Target RPM"
               value={[targetRpm]}
               min={0}
               max={1500}
               step={10}
+              disabled={!manualWriteEnabled}
               onValueChange={(vals) => setTargetRpm(vals[0])}
+              onValueCommit={(vals) => commitTargetRpm(vals[0])}
               className="[&_[role=slider]]:bg-primary"
             />
           </div>
@@ -228,15 +243,18 @@ export function ControlPanel({
                 Heater Setpoint
               </span>
               <span className="text-xs font-mono text-primary font-bold">
-                {targetTemp.toFixed(1)} °C
+                {targetTemp.toFixed(1)} °C {tempSetpointPending && '(PENDING)'}
               </span>
             </div>
             <Slider
+              aria-label="Target temperature"
               value={[targetTemp]}
               min={20}
               max={100}
               step={0.5}
+              disabled={!manualWriteEnabled}
               onValueChange={(vals) => setTargetTemp(vals[0])}
+              onValueCommit={(vals) => commitTargetTemp(vals[0])}
               className="[&_[role=slider]]:bg-primary"
             />
           </div>

@@ -67,6 +67,10 @@ Legacy untagged Firestore records in `telemetry` are **not deleted or migrated**
 
 The operator display shows the current simulator session and the age of the latest validated telemetry snapshot. If an SSE connection stays open but delivers no advancing samples for 6 seconds, the header switches to `Gateway Stale` and a visible warning labels the displayed process readings as **last known values**. A new accepted sample clears the stale status; reconnecting the transport alone does not imply current data. An engine-session change is shown explicitly. These indicators are for this simulated HMI only and must not be mistaken for field-device or safety-system health.
 
+## Shared-process operator readback
+
+The setpoint sliders follow server-owned values, including accepted writes from another browser. When an operator drags a manual-mode slider, the HMI displays a draft and sends one command on release; an unconfirmed setpoint is labeled `(PENDING)` until the SSE stream echoes its applied value. Denied or unconfirmed drafts revert to server readback. Manual setpoints are disabled if telemetry is stale/disconnected or E-STOP is latched, while the E-STOP action itself stays available.
+
 ## Scope and operational boundaries
 
 The process, Modbus register map, interlocks, and telemetry are simulated. No physical PLC, fieldbus gateway, safety-rated controller, or plant equipment is connected. This is an engineering demonstration, **not a certified safety system**. Production use would require independent industrial safety assessment, hardened access controls and validated equipment integration.

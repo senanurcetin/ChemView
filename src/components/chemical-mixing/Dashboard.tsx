@@ -13,12 +13,12 @@ import { Button } from '@/components/ui/button';
 import { Download, Wifi, WifiOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTelemetry } from '@/hooks/use-telemetry';
+import { useSyncedSetpoint } from '@/hooks/use-synced-setpoint';
 import { cn } from '@/lib/utils';
 import { GATEWAY_ADDRESS, OPERATOR_ID } from '@/lib/config';
 import { initialState } from '@/server/sim/state';
 import type { Command } from '@/server/sim/types';
 
-const SETPOINT_DEBOUNCE_MS = 200;
 const ACTIVITY_FLASH_MS = 150;
 
 /** True for a short moment whenever `marker` changes (drives the RX/TX LEDs). */
@@ -64,18 +64,6 @@ export function Dashboard() {
   const txActive = useFlash(lastTx);
   const rxActive = useFlash(lastRx);
 
-  // Sliders keep a local value so dragging stays smooth; the server gets a debounced write.
-  const [rpmSetpoint, setRpmSetpoint] = useState(state.targetRpmManual);
-  const [tempSetpoint, setTempSetpoint] = useState(state.targetTempManual);
-  const seeded = useRef(false);
-  useEffect(() => {
-    if (snapshot && !seeded.current) {
-      seeded.current = true;
-      setRpmSetpoint(snapshot.state.targetRpmManual);
-      setTempSetpoint(snapshot.state.targetTempManual);
-    }
-  }, [snapshot]);
-
   const run = useCallback(
     async (command: Command) => {
       const outcome = await sendCommand(command);
@@ -86,24 +74,27 @@ export function Dashboard() {
           description: `⛔ ${outcome.reason ?? 'Command rejected.'}`,
         });
       }
+      return outcome;
     },
     [sendCommand, toast],
   );
 
-  const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
-  const sendSetpoint = useCallback(
-    (command: Extract<Command, { type: 'set_rpm_setpoint' | 'set_temp_setpoint' }>) => {
-      clearTimeout(debounceTimers.current[command.type]);
-      debounceTimers.current[command.type] = setTimeout(() => {
-        void run(command);
-      }, SETPOINT_DEBOUNCE_MS);
-    },
-    [run],
-  );
-  useEffect(() => {
-    const timers = debounceTimers.current;
-    return () => Object.values(timers).forEach(clearTimeout);
-  }, []);
+  const setpointsEditable =
+    Boolean(snapshot) && status === 'Connected' && state.isManualMode && !state.estopLatched;
+  const rpmSetpoint = useSyncedSetpoint({
+    appliedValue: state.targetRpmManual,
+    runId: snapshot?.runId ?? null,
+    seq: snapshot?.seq ?? 0,
+    enabled: setpointsEditable,
+    send: (value) => run({ type: 'set_rpm_setpoint', value }),
+  });
+  const tempSetpoint = useSyncedSetpoint({
+    appliedValue: state.targetTempManual,
+    runId: snapshot?.runId ?? null,
+    seq: snapshot?.seq ?? 0,
+    enabled: setpointsEditable,
+    send: (value) => run({ type: 'set_temp_setpoint', value }),
+  });
 
   // Server-side export: the last hour of persisted samples, not just the 60 s on screen.
   const exportToCsv = () => {
@@ -281,17 +272,15 @@ export function Dashboard() {
             onEmergencyStop={() => run({ type: 'estop' })}
             onResetEmergencyStop={() => run({ type: 'reset_estop' })}
             connectionStatus={status}
-            targetRpm={rpmSetpoint}
-            targetTemp={tempSetpoint}
+            targetRpm={rpmSetpoint.value}
+            targetTemp={tempSetpoint.value}
+            rpmSetpointPending={rpmSetpoint.pending}
+            tempSetpointPending={tempSetpoint.pending}
             currentRpm={rpm}
-            setTargetRpm={(value) => {
-              setRpmSetpoint(value);
-              sendSetpoint({ type: 'set_rpm_setpoint', value });
-            }}
-            setTargetTemp={(value) => {
-              setTempSetpoint(value);
-              sendSetpoint({ type: 'set_temp_setpoint', value });
-            }}
+            setTargetRpm={rpmSetpoint.onChange}
+            setTargetTemp={tempSetpoint.onChange}
+            commitTargetRpm={rpmSetpoint.onCommit}
+            commitTargetTemp={tempSetpoint.onCommit}
             valveOpen={valveOpen}
             onToggleValve={() => run({ type: 'set_valve', open: !valveOpen })}
             isHeaterOn={isHeaterOn}

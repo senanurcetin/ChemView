@@ -57,6 +57,12 @@ The browser tracks the local receipt time of each validated, advancing SSE snaps
 
 The HMI shows an abbreviated `runId` and the elapsed seconds since the most recently accepted snapshot. After the first detected engine-session change on the current page it also displays a persistent session-change notice; trend history is already session-scoped by the preceding history changes. This is an operator **display-health indicator**, not a physical sensor heartbeat, network certification, or control interlock. E-STOP is never disabled by this UI status.
 
+## Shared-operator setpoint readback
+
+RPM and heater setpoint sliders mirror the server-owned `Snapshot.state` values whenever they are idle. During a local drag, the operator sees a temporary draft value; a **single** command is sent on slider commit rather than on each drag movement. The draft remains marked `(PENDING)` until a newer SSE snapshot confirms the applied value. Denied commands and a missing readback cause the local draft to revert, so an unconfirmed operator request is never presented indefinitely as the applied setting.
+
+Setpoint editing is disabled in automatic mode, while E-STOP is latched, or when validated telemetry is not currently connected. The simulated E-STOP action itself remains available. Concurrent operators can still overwrite each other's accepted values; this demo does not provide exclusive operator locks or a safety-rated control channel.
+
 ## Alerting model
 
 Safety alarms are deterministic and raised on the tick the condition appears. Gemini commentary (`source: "ai"`) is additive: it adds trend-aware context and a recommendation when the plant is on or near a limit, and its failure changes nothing visible except the absence of the comment.
