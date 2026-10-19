@@ -25,7 +25,11 @@ test.beforeEach(async ({ request }) => {
 
 test('NEXUS identity and operator panels remain accessible on shorter desktops', async ({
   page,
+  request,
 }) => {
+  // Capture a representative process in motion instead of an empty idle tank.
+  expect((await command(request, { type: 'start' })).status()).toBe(200);
+  expect((await command(request, { type: 'set_heater', on: true })).status()).toBe(200);
   for (const size of [
     { width: 1366, height: 768 },
     { width: 1440, height: 900 },
@@ -33,6 +37,7 @@ test('NEXUS identity and operator panels remain accessible on shorter desktops',
     await page.setViewportSize(size);
     await page.goto('/');
     await expect(page.getByText('Gateway Active')).toBeVisible();
+    await expect(page.locator('footer')).toContainText('STATE: MIXING');
     await expect(page.getByRole('img', { name: 'NEXUS' })).toBeVisible();
     await expect(page.getByText('Simulated Process')).toBeVisible();
     await expect(page.getByRole('button', { name: /^e-stop$/i })).toBeVisible();
@@ -52,6 +57,7 @@ test('NEXUS identity and operator panels remain accessible on shorter desktops',
     await auditHeading.scrollIntoViewIfNeeded();
     await expect(auditHeading).toBeInViewport();
 
+    if (size.width === 1366) await page.waitForTimeout(4500);
     await page.evaluate(() => window.scrollTo(0, 0));
 
     await page.screenshot({
