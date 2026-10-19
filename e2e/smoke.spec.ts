@@ -9,7 +9,6 @@ test.beforeEach(async ({ request }) => {
   // Reset is deliberate: E-STOP now remains latched across commands and ticks.
   await command(request, { type: 'reset_estop' });
   await command(request, { type: 'set_valve', open: false });
-  await command(request, { type: 'set_heater', on: false });
   await command(request, { type: 'set_mode', manual: false });
 });
 
@@ -187,6 +186,7 @@ test('concurrent heater commands reject an obsolete operator readback', async ({
   page,
   request,
 }) => {
+  await command(request, { type: 'set_heater', on: false });
   await page.goto('/');
   await expect(page.getByText('Gateway Active')).toBeVisible();
   const runId = await page.getByTestId('telemetry-run-id').getAttribute('title');
