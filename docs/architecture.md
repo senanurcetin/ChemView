@@ -67,7 +67,9 @@ The HMI shows an abbreviated `runId` and the elapsed seconds since the most rece
 
 ## Shared-operator setpoint readback
 
-RPM and heater setpoint sliders mirror the server-owned `Snapshot.state` values whenever they are idle. During a local drag, the operator sees a temporary draft value; a **single** command is sent on slider commit rather than on each drag movement. The draft remains marked `(PENDING)` until a newer SSE snapshot confirms the applied value. Denied commands and a missing readback cause the local draft to revert, so an unconfirmed operator request is never presented indefinitely as the applied setting.
+RPM and heater setpoint sliders mirror the server-owned `Snapshot.state` values whenever they are idle. During a local drag, the operator sees a temporary draft value; a **single** command is sent on slider commit rather than on each drag movement. The draft remains marked `(PENDING)` until a newer SSE snapshot confirms the applied value.
+Slider changes are accepted only during an actual pointer or keyboard interaction,
+so controlled-component echoes after a rejected command cannot restore a stale local draft. Denied commands and a missing readback cause the local draft to revert, so an unconfirmed operator request is never presented indefinitely as the applied setting.
 
 Normal operator controls (mixer, mode, heater, valve, E-STOP reset and manual setpoints) are disabled while no validated current telemetry is available. The simulated E-STOP action itself remains available. The command handler on the client also checks freshness so a pending event cannot bypass the disabled controls; server-side interlocks and authentication remain authoritative. Valve control uses an accessible labeled switch rather than a click handler on an unlabeled container. Concurrent operators can still overwrite each other's accepted values; this demo does not provide exclusive operator locks or a safety-rated control channel.
 

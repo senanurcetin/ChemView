@@ -36,6 +36,10 @@ interface ControlPanelProps {
   setTargetTemp: (val: number) => void;
   commitTargetRpm: (val: number) => void;
   commitTargetTemp: (val: number) => void;
+  beginRpmEdit: () => void;
+  endRpmEdit: () => void;
+  beginTempEdit: () => void;
+  endTempEdit: () => void;
   valveOpen: boolean;
   onToggleValve: () => void;
   isHeaterOn: boolean;
@@ -60,6 +64,10 @@ export function ControlPanel({
   setTargetTemp,
   commitTargetRpm,
   commitTargetTemp,
+  beginRpmEdit,
+  endRpmEdit,
+  beginTempEdit,
+  endTempEdit,
   valveOpen,
   onToggleValve,
   isHeaterOn,
@@ -243,6 +251,12 @@ export function ControlPanel({
               disabled={!manualWriteEnabled}
               onValueChange={(vals) => setTargetRpm(vals[0])}
               onValueCommit={(vals) => commitTargetRpm(vals[0])}
+              onPointerDownCapture={beginRpmEdit}
+              onPointerUpCapture={endRpmEdit}
+              onPointerCancelCapture={endRpmEdit}
+              onKeyDownCapture={beginRpmEdit}
+              onKeyUpCapture={endRpmEdit}
+              onBlurCapture={endRpmEdit}
               className="[&_[role=slider]]:bg-primary"
             />
           </div>
@@ -265,6 +279,12 @@ export function ControlPanel({
               disabled={!manualWriteEnabled}
               onValueChange={(vals) => setTargetTemp(vals[0])}
               onValueCommit={(vals) => commitTargetTemp(vals[0])}
+              onPointerDownCapture={beginTempEdit}
+              onPointerUpCapture={endTempEdit}
+              onPointerCancelCapture={endTempEdit}
+              onKeyDownCapture={beginTempEdit}
+              onKeyUpCapture={endTempEdit}
+              onBlurCapture={endTempEdit}
               className="[&_[role=slider]]:bg-primary"
             />
           </div>

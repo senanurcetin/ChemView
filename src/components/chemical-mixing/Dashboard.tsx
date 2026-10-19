@@ -330,6 +330,10 @@ export function Dashboard() {
             setTargetTemp={tempSetpoint.onChange}
             commitTargetRpm={rpmSetpoint.onCommit}
             commitTargetTemp={tempSetpoint.onCommit}
+            beginRpmEdit={rpmSetpoint.beginGesture}
+            endRpmEdit={rpmSetpoint.endGesture}
+            beginTempEdit={tempSetpoint.beginGesture}
+            endTempEdit={tempSetpoint.endGesture}
             valveOpen={valveOpen}
             onToggleValve={() =>
               run({

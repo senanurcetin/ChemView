@@ -32,6 +32,15 @@ export function useSyncedSetpoint({
   const [edit, setEdit] = useState<LocalEdit | null>(null);
   const nextToken = useRef(0);
   const draftRef = useRef<LocalEdit | null>(null);
+  // Radix may echo a controlled value after we roll back a rejected write.
+  // Such updates are not a new operator gesture and must not create a draft.
+  const gestureActive = useRef(false);
+  const beginGesture = useCallback(() => {
+    gestureActive.current = true;
+  }, []);
+  const endGesture = useCallback(() => {
+    gestureActive.current = false;
+  }, []);
   const localEdit = edit?.runId === runId && enabled ? edit : null;
 
   // Remote operator writes and server-side clamps always win when we are idle.
@@ -65,7 +74,7 @@ export function useSyncedSetpoint({
 
   const onChange = useCallback(
     (value: number) => {
-      if (!enabled || !runId) return;
+      if (!gestureActive.current || !enabled || !runId) return;
       // Capture the original server readback at the *start* of a drag, even
       // if a remote operator's SSE update arrives during the interaction.
       const existing = draftRef.current;
@@ -89,6 +98,7 @@ export function useSyncedSetpoint({
 
   const onCommit = useCallback(
     (value: number) => {
+      gestureActive.current = false;
       const draft = draftRef.current;
       const staleDrag = draft && draft.phase === 'editing' && draft.runId !== runId;
       const expectedValue =
@@ -117,5 +127,7 @@ export function useSyncedSetpoint({
     pending: localEdit?.phase === 'pending',
     onChange,
     onCommit,
+    beginGesture,
+    endGesture,
   };
 }
