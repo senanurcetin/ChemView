@@ -8,6 +8,9 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const limiter = new RateLimiter(60, 10_000);
+// The simulator is a single shared resource. Client-supplied proxy headers must not
+// let a caller reset its command quota by rotating apparent IP addresses.
+const COMMAND_BUDGET_KEY = 'shared-simulator';
 
 /** Applies an operator command. Interlock denials return 409 with a reason. */
 export async function POST(request: Request) {
@@ -33,8 +36,7 @@ export async function POST(request: Request) {
 
   // E-STOP is never throttled: a safety command must always get through.
   if (parsed.data.type !== 'estop') {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'local';
-    const retryMs = limiter.check(ip);
+    const retryMs = limiter.check(COMMAND_BUDGET_KEY);
     if (retryMs > 0) {
       return NextResponse.json(
         { ok: false, reason: 'Too many commands. Slow down.' },

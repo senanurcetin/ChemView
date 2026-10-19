@@ -53,6 +53,10 @@ Extra suites: `npm run test:firestore` (Store contract tests against the Firesto
 
 See [docs/architecture.md](docs/architecture.md) for how the pieces fit together.
 
+## Command admission policy
+
+The simulator models one shared process. Ordinary operator commands have a shared budget of **60 commands per 10 seconds**; client-provided proxy/IP headers cannot reset that budget. E-STOP always bypasses the limit, while E-STOP reset requires the usual authorization and quota. This protects the demo's shared command loop from simple identity rotation, but a busy client can still exhaust the ordinary-command quota for other users. It is not production-grade per-operator admission control.
+
 ## Telemetry session provenance
 
 Each simulator process has a unique `runId`. New telemetry samples are stored by run (in memory or under Firestore `sim_runs/<runId>/telemetry`) so identical timestamps from separate process sessions cannot overwrite each other. `/api/history` and `/api/export` default to the current run; use a previously recorded UUID via `?runId=<uuid>` to inspect an archived run. CSV includes a `run_id` column. The browser waits for a valid SSE snapshot before loading history for that exact run.
