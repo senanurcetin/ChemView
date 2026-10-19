@@ -26,7 +26,7 @@ test('dashboard displays the current simulation session and data age', async ({ 
   await page.goto('/');
   await expect(page.getByText('Gateway Active')).toBeVisible();
   await expect(page.getByTestId('telemetry-run-id')).toContainText(/SESSION: [0-9a-f]{8}/i);
-  await expect(page.getByTestId('telemetry-age')).toContainText(/LAST DATA: \\d+s AGO/i);
+  await expect(page.getByTestId('telemetry-age')).toContainText(/LAST DATA: \d+s AGO/i);
 });
 
 test('stalled SSE data is marked stale even when the connection stays open', async ({ page }) => {
