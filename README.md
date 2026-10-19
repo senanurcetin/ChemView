@@ -53,6 +53,12 @@ Extra suites: `npm run test:firestore` (Store contract tests against the Firesto
 
 See [docs/architecture.md](docs/architecture.md) for how the pieces fit together.
 
+## Telemetry session provenance
+
+Each simulator process has a unique `runId`. New telemetry samples are stored by run (in memory or under Firestore `sim_runs/<runId>/telemetry`) so identical timestamps from separate process sessions cannot overwrite each other. `/api/history` and `/api/export` default to the current run; use a previously recorded UUID via `?runId=<uuid>` to inspect an archived run. CSV includes a `run_id` column. The browser waits for a valid SSE snapshot before loading history for that exact run.
+
+Legacy untagged Firestore records in `telemetry` are **not deleted or migrated**. They remain available through the Store's unscoped history API but are excluded from the new run-scoped dashboard and HTTP defaults. This is a simulation history contract, not certified plant historian behavior.
+
 ## Scope and operational boundaries
 
 The process, Modbus register map, interlocks, and telemetry are simulated. No physical PLC, fieldbus gateway, safety-rated controller, or plant equipment is connected. This is an engineering demonstration, **not a certified safety system**. Production use would require independent industrial safety assessment, hardened access controls and validated equipment integration.
