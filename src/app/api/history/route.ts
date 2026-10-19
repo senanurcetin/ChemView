@@ -12,5 +12,11 @@ export async function GET(request: Request) {
   if (!query.ok) return NextResponse.json({ error: query.error }, { status: 400 });
   const runId = query.runId ?? getEngine().getSnapshot().runId;
   const samples = await getStore().history({ ...query, runId });
-  return NextResponse.json({ runId, from: query.from, to: query.to, count: samples.length, samples });
+  return NextResponse.json({
+    runId,
+    from: query.from,
+    to: query.to,
+    count: samples.length,
+    samples,
+  });
 }
