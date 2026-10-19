@@ -61,7 +61,7 @@ describe('Engine commentary delivery', () => {
     expect(engine.getSnapshot().seq).toBe(seq + 1);
   });
 
-  it('discards a delayed model reply after emergency stop and never invokes Gemini while latched', async () => {
+  it('discards a delayed reply after E-STOP and skips Gemini while latched', async () => {
     const { engine, generate, finish } = pendingCommentary();
     const epoch = engine.getSnapshot().estopEpoch;
     engine.command({ type: 'estop' });
@@ -89,6 +89,10 @@ describe('Engine commentary delivery', () => {
     // threshold and invalidating advice prepared for the near-limit state.
     for (let i = 0; i < 70; i++) engine.tick();
     expect(engine.getSnapshot().state.temp).toBeGreaterThan(80);
+    // The deterministic safety rule must still raise an immediate high alarm.
+    expect(engine.getSnapshot().alerts.some(
+      (item) => item.source === 'rule' && item.urgency === 'high',
+    )).toBe(true);
     finish(recommendation);
     await vi.waitFor(() => expect(engine.getSnapshot().aiBusy).toBe(false));
     expect(engine.getSnapshot().alerts.every((item) => item.source !== 'ai')).toBe(true);
