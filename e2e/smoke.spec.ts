@@ -119,9 +119,8 @@ test('a restarted simulator ignores old-run SSE replays and mismatched audit eve
     .poll(() =>
       page.evaluate(
         () =>
-          typeof (
-            window as unknown as { __emitChemViewTestSnapshot?: (value: string) => void }
-          ).__emitChemViewTestSnapshot,
+          typeof (window as unknown as { __emitChemViewTestSnapshot?: (value: string) => void })
+            .__emitChemViewTestSnapshot,
       ),
     )
     .toBe('function');

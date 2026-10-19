@@ -92,9 +92,7 @@ export function useSyncedSetpoint({
       const draft = draftRef.current;
       const staleDrag = draft && draft.phase === 'editing' && draft.runId !== runId;
       const expectedValue =
-        draft?.phase === 'editing' && draft.runId === runId
-          ? draft.expectedValue
-          : appliedValue;
+        draft?.phase === 'editing' && draft.runId === runId ? draft.expectedValue : appliedValue;
       draftRef.current = null;
       if (!enabled || !runId || staleDrag || value === expectedValue) {
         ++nextToken.current;

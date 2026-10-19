@@ -30,14 +30,14 @@ All plant state lives in the server `Engine` (`src/server/sim/engine.ts`). The c
 
 ## HTTP API
 
-| Route                            | Purpose                                                                                                                  |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `GET /api/stream`                | SSE; one `Snapshot` (state, network counters, wire log, audit, alerts) per tick and per accepted command.                |
-| `POST /api/command`              | Body validated by zod (`sim/schema.ts`). `200` ok, `409` interlock denial with `reason`, `400` invalid, `429` throttled. |
-| `GET /api/history?from&to&limit&runId` | Run-scoped persisted telemetry (one sample per 5 s); current run by default.                              |
-| `GET /api/export?from&to&runId`        | Same run-scoped telemetry as a CSV file.                                                        |
-| `GET /api/alerts?runId&limit`         | Most recent persisted rule/AI alert events for one run.                                         |
-| `GET /api/audit?runId&limit`          | Most recent persisted operator/audit events for one run.                                       |
+| Route                                  | Purpose                                                                                                                  |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `GET /api/stream`                      | SSE; one `Snapshot` (state, network counters, wire log, audit, alerts) per tick and per accepted command.                |
+| `POST /api/command`                    | Body validated by zod (`sim/schema.ts`). `200` ok, `409` interlock denial with `reason`, `400` invalid, `429` throttled. |
+| `GET /api/history?from&to&limit&runId` | Run-scoped persisted telemetry (one sample per 5 s); current run by default.                                             |
+| `GET /api/export?from&to&runId`        | Same run-scoped telemetry as a CSV file.                                                                                 |
+| `GET /api/alerts?runId&limit`          | Most recent persisted rule/AI alert events for one run.                                                                  |
+| `GET /api/audit?runId&limit`           | Most recent persisted operator/audit events for one run.                                                                 |
 
 The simulator clamps accepted RPM and temperature setpoints to the limits in `sim/thresholds.ts`. Its simulated Modbus FC 06 trace records the **effective applied value**, rather than an out-of-range value originally requested by the operator. This keeps the accepted process state and trace consistent; it does not represent a physical Modbus write.
 
@@ -85,7 +85,7 @@ This protects manual setpoint edits only, not all command types. Callers that om
 
 ## Concurrent discrete-command admission
 
-The ordinary control actions also support opt-in simulator run and observed-state guards. The HMI sends `expectedRunId` for each action (including RESET E-STOP), `expectedRunning` for START/STOP, and boolean `expectedValue` for heater, discharge valve, and mode changes. The engine checks the current *authoritative* state before applying interlocks or generating a Modbus trace. This is in-process, per-field optimistic concurrency; it is not a distributed transaction or ownership lock. E-STOP remains unconditional and the legacy API still accepts commands without optional guards.
+The ordinary control actions also support opt-in simulator run and observed-state guards. The HMI sends `expectedRunId` for each action (including RESET E-STOP), `expectedRunning` for START/STOP, and boolean `expectedValue` for heater, discharge valve, and mode changes. The engine checks the current _authoritative_ state before applying interlocks or generating a Modbus trace. This is in-process, per-field optimistic concurrency; it is not a distributed transaction or ownership lock. E-STOP remains unconditional and the legacy API still accepts commands without optional guards.
 
 ## E-STOP reset event ordering
 

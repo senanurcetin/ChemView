@@ -61,11 +61,7 @@ describe('alert history', () => {
         message: id,
       });
     }
-    expect((await store.recentAlerts(10, runA)).map((a) => a.id)).toEqual([
-      'a4',
-      'a3',
-      'a2',
-    ]);
+    expect((await store.recentAlerts(10, runA)).map((a) => a.id)).toEqual(['a4', 'a3', 'a2']);
     expect((await store.recentAlerts(10, runB)).map((a) => a.id)).toEqual([]);
   });
 });

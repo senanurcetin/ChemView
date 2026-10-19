@@ -362,16 +362,12 @@ describe('Engine', () => {
   it('guards a stale START/STOP transition but allows current readback', () => {
     const engine = make();
     const expectedRunId = engine.getSnapshot().runId;
-    expect(engine.command({ type: 'start', expectedRunning: false, expectedRunId }).ok).toBe(
-      true,
-    );
+    expect(engine.command({ type: 'start', expectedRunning: false, expectedRunId }).ok).toBe(true);
     const before = engine.getSnapshot();
     const stale = engine.command({ type: 'start', expectedRunning: false, expectedRunId });
     expect(stale.ok).toBe(false);
     expect(engine.getSnapshot()).toEqual(before);
-    expect(engine.command({ type: 'stop', expectedRunning: true, expectedRunId }).ok).toBe(
-      true,
-    );
+    expect(engine.command({ type: 'stop', expectedRunning: true, expectedRunId }).ok).toBe(true);
   });
 
   it('caps log buffers at 50 entries', () => {

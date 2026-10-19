@@ -115,20 +115,16 @@ describe('classifySnapshot', () => {
   it('never reactivates a retired run when its delayed packets are replayed', () => {
     const active = { runId: 'engine-B', seq: 3, estopEpoch: 0 };
     const retired = new Set(['engine-A']);
-    expect(
-      classifySnapshot(active, { runId: 'engine-A', seq: 100, estopEpoch: 0 }, retired),
-    ).toBe('ignore');
+    expect(classifySnapshot(active, { runId: 'engine-A', seq: 100, estopEpoch: 0 }, retired)).toBe(
+      'ignore',
+    );
     expect(classifySnapshot(active, { runId: 'engine-C', seq: 0 }, retired)).toBe('new-run');
   });
 
   it('rejects a regressing emergency-stop epoch despite advancing sequence', () => {
     const current = { runId: 'engine-B', seq: 8, estopEpoch: 3 };
-    expect(classifySnapshot(current, { runId: 'engine-B', seq: 9, estopEpoch: 2 })).toBe(
-      'ignore',
-    );
-    expect(classifySnapshot(current, { runId: 'engine-B', seq: 9, estopEpoch: 3 })).toBe(
-      'advance',
-    );
+    expect(classifySnapshot(current, { runId: 'engine-B', seq: 9, estopEpoch: 2 })).toBe('ignore');
+    expect(classifySnapshot(current, { runId: 'engine-B', seq: 9, estopEpoch: 3 })).toBe('advance');
   });
 });
 
@@ -179,10 +175,12 @@ describe('audit history transport', () => {
     const record = entry('x', '2026-10-18T12:00:01Z');
     expect(parseAuditHistory({ runId, entries: [record] }, runId)).toEqual([record]);
     expect(parseAuditHistory({ runId, entries: [record] }, 'other-run')).toBeNull();
-    expect(parseAuditHistory({ runId, entries: [{ ...record, runId: undefined }] }, runId))
-      .toBeNull();
-    expect(parseAuditHistory({ runId, entries: [{ ...record, runId: 'other' }] }, runId))
-      .toBeNull();
+    expect(
+      parseAuditHistory({ runId, entries: [{ ...record, runId: undefined }] }, runId),
+    ).toBeNull();
+    expect(
+      parseAuditHistory({ runId, entries: [{ ...record, runId: 'other' }] }, runId),
+    ).toBeNull();
     expect(parseAuditHistory({ runId, entries: [{}] }, runId)).toBeNull();
   });
 
@@ -190,8 +188,10 @@ describe('audit history transport', () => {
     const first = entry('a', '2026-10-18T12:00:01Z');
     const second = entry('b', '2026-10-18T12:00:03Z');
     const latest = entry('c', '2026-10-18T12:00:05Z');
-    expect(mergeAuditHistory([first, second], [second, latest], 2).map((x) => x.id))
-      .toEqual(['c', 'b']);
+    expect(mergeAuditHistory([first, second], [second, latest], 2).map((x) => x.id)).toEqual([
+      'c',
+      'b',
+    ]);
   });
 });
 

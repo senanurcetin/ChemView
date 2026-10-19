@@ -108,8 +108,7 @@ export function Dashboard() {
     [controlsAvailable, sendCommand, toast],
   );
 
-  const setpointsEditable =
-    controlsAvailable && state.isManualMode && !state.estopLatched;
+  const setpointsEditable = controlsAvailable && state.isManualMode && !state.estopLatched;
   const rpmSetpoint = useSyncedSetpoint({
     appliedValue: state.targetRpmManual,
     runId: snapshot?.runId ?? null,

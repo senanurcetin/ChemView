@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "format": "prettier --write .",
-    "format:check": "prettier --write . && git diff -- docs/architecture.md docs/hiring-summary.md e2e/smoke.spec.ts src/components/chemical-mixing/Dashboard.tsx src/hooks/use-synced-setpoint.ts src/lib/telemetry.test.ts src/server/sim/engine.test.ts src/server/sim/engine.ts src/server/store.test.ts src/components/ui/slider.tsx && prettier --check .",
+    "format:check": "prettier --check .",
     "genkit:dev": "genkit start -- npx tsx src/ai/dev.ts",
     "test:firestore": "firebase emulators:exec --only firestore --project chemview-test \"vitest run src/server/store.contract.test.ts\"",
     "test:e2e": "playwright test"

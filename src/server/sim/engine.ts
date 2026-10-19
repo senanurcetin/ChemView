@@ -284,9 +284,7 @@ export class Engine {
     // operator's more recent adjustment or a restarted simulation session.
     if (cmd.type === 'set_rpm_setpoint' || cmd.type === 'set_temp_setpoint') {
       const applied =
-        cmd.type === 'set_rpm_setpoint'
-          ? this.state.targetRpmManual
-          : this.state.targetTempManual;
+        cmd.type === 'set_rpm_setpoint' ? this.state.targetRpmManual : this.state.targetTempManual;
       if (cmd.expectedValue !== undefined && cmd.expectedValue !== applied) {
         return {
           ok: false,
