@@ -123,6 +123,7 @@ export function Dashboard() {
   const errorRate = network.packetCount > 0 ? (network.errorCount / network.packetCount) * 100 : 0;
   const health = (100 - errorRate).toFixed(1);
   const connected = status === 'Connected';
+  const ageLabel = lastUpdateAgeSeconds === null ? 'WAITING' : `${lastUpdateAgeSeconds}s AGO`;
 
   return (
     <div className="flex flex-col h-screen overflow-hidden p-4 lg:p-6 max-w-[1800px] mx-auto bg-[#222222]">
@@ -185,7 +186,7 @@ export function Dashboard() {
               data-testid="telemetry-age"
               className="text-[9px] text-muted-foreground font-mono"
             >
-              LAST DATA: {lastUpdateAgeSeconds === null ? 'WAITING' : `${lastUpdateAgeSeconds}s AGO`}
+              LAST DATA: {ageLabel}
             </span>
             <span
               data-testid="telemetry-run-id"
