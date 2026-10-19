@@ -36,18 +36,18 @@ export function CommunicationLog({ logs }: CommunicationLogProps) {
   }, [logs]);
 
   return (
-    <div className="hmi-panel bg-black border-primary/20 flex flex-col h-[200px] font-mono">
+    <div className="hmi-panel bg-black border-primary/20 flex min-w-0 flex-col h-[200px] font-mono">
       <div className="flex items-center gap-2 mb-2 border-b border-primary/10 pb-2">
         <Terminal className="w-3 h-3 text-primary" />
-        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
+        <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
           Live Protocol Traffic (Modbus TCP/IP)
         </h3>
       </div>
 
-      <ScrollArea className="flex-grow" ref={scrollRef}>
+      <ScrollArea className="min-h-0 flex-1" ref={scrollRef}>
         <div className="space-y-1 py-1">
           {logs.map((log) => (
-            <div key={log.id} className="text-[10px] flex gap-3 whitespace-nowrap">
+            <div key={log.id} className="flex min-w-0 gap-3 text-[11px] whitespace-nowrap">
               <span className="text-zinc-600">[{formatClock(log.timestamp)}]</span>
               <span className={log.direction === 'TX' ? 'text-orange-500' : 'text-primary'}>
                 {log.direction === 'TX' ? 'SEND >' : 'RECV <'}
@@ -56,7 +56,7 @@ export function CommunicationLog({ logs }: CommunicationLogProps) {
             </div>
           ))}
           {logs.length === 0 && (
-            <div className="text-[10px] text-zinc-700 italic">Waiting for bus activity...</div>
+            <div className="text-[11px] text-zinc-700 italic">Waiting for bus activity...</div>
           )}
         </div>
       </ScrollArea>

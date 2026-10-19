@@ -113,7 +113,7 @@ export function ControlPanel({
             </TooltipTrigger>
             {mixerLocked && (
               <TooltipContent className="bg-zinc-900 border-red-500/50 text-red-400">
-                <p className="text-[10px] font-bold uppercase">
+                <p className="text-[11px] font-bold uppercase">
                   {estopLatched ? 'Reset E-STOP first' : 'Mixer Locked: Close valve first'}
                 </p>
               </TooltipContent>
@@ -155,7 +155,7 @@ export function ControlPanel({
         <div className="flex items-center justify-between border-b border-white/5 pb-4">
           <div className="flex items-center gap-2">
             <Cpu className={cn('w-4 h-4', !isManualMode ? 'text-primary' : 'text-zinc-500')} />
-            <Label className="text-[10px] font-bold uppercase tracking-widest cursor-pointer">
+            <Label className="text-[11px] font-bold uppercase tracking-widest cursor-pointer">
               System Mode: {isManualMode ? 'Manual Override' : 'Auto Mode'}
             </Label>
           </div>
@@ -173,7 +173,7 @@ export function ControlPanel({
           <div className="p-3 border border-white/5 rounded-md bg-zinc-900/30 flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <Flame className={cn('w-4 h-4', isHeaterOn ? 'text-orange-500' : 'text-zinc-600')} />
-              <span className="text-[9px] font-bold text-muted-foreground uppercase">Heater</span>
+              <span className="text-[11px] font-bold text-muted-foreground uppercase">Heater</span>
             </div>
             <div className="flex justify-center">
               <Switch
@@ -199,7 +199,7 @@ export function ControlPanel({
                     <Database
                       className={cn('w-4 h-4', valveOpen ? 'text-primary' : 'text-zinc-600')}
                     />
-                    <span className="text-[9px] font-bold text-muted-foreground uppercase">
+                    <span className="text-[11px] font-bold text-muted-foreground uppercase">
                       Valve
                     </span>
                   </div>
@@ -217,7 +217,7 @@ export function ControlPanel({
               </TooltipTrigger>
               {valveLocked && (
                 <TooltipContent className="bg-zinc-900 border-red-500/50 text-red-400">
-                  <p className="text-[10px] font-bold uppercase">
+                  <p className="text-[11px] font-bold uppercase">
                     Safety Lock: Mixer must be at 0 RPM
                   </p>
                 </TooltipContent>
@@ -235,7 +235,7 @@ export function ControlPanel({
         >
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-[10px] text-muted-foreground uppercase font-bold">
+              <span className="text-[11px] text-muted-foreground uppercase font-bold">
                 Target Speed
               </span>
               <span className="text-xs font-mono text-primary font-bold">
@@ -263,7 +263,7 @@ export function ControlPanel({
 
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-[10px] text-muted-foreground uppercase font-bold">
+              <span className="text-[11px] text-muted-foreground uppercase font-bold">
                 Heater Setpoint
               </span>
               <span className="text-xs font-mono text-primary font-bold">
@@ -291,7 +291,7 @@ export function ControlPanel({
         </div>
 
         <div className="pt-4 border-t border-white/5">
-          <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground">
+          <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
             <div className="flex items-center gap-1">
               <SlidersHorizontal className="w-3 h-3" />
               <span>LOGIC: SAFETY_INTERLOCK_V2</span>

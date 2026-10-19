@@ -10,6 +10,10 @@ ChemView is an industrial HMI and digital twin **prototype** for a chemical mixi
 
 ![ChemView HMI while mixing: heater on, discharge valve locked by the interlock](docs/assets/chemview-dashboard.png)
 
+> The historical screenshot below will be replaced after the new responsive HMI passes screenshot QA.
+
+**Visual identity:** ChemView is presented as an engineering demonstration *by NEXUS*, using the official transparent NEXUS logo from the user's approved brand assets. The original ChemView cyan/orange status palette is retained.
+
 Portfolio case study: [senanur-cetin.vercel.app/projects/chemview](https://senanur-cetin.vercel.app/projects/chemview)
 
 ## What it does

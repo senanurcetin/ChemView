@@ -42,7 +42,7 @@ export function TankSimulation({
   const rotationDuration = isRunning && rpm > 0 ? Math.max(0.1, 4 - rpm / 300) : 0;
 
   return (
-    <div className="relative w-full h-full min-h-[300px] flex items-center justify-center bg-black/20 rounded-xl border border-primary/5 overflow-hidden">
+    <div className="relative w-full min-h-[340px] flex flex-1 items-center justify-center bg-black/20 rounded-xl border border-primary/5 overflow-hidden">
       {/* Tank Container */}
       <div className="relative w-48 h-64 border-2 border-gray-600 rounded-b-2xl overflow-hidden bg-gray-900/30">
         {/* Liquid Layer */}
@@ -112,7 +112,7 @@ export function TankSimulation({
 
       {/* HUD Overlay */}
       <div className="absolute top-2 right-2 text-right bg-black/40 p-1.5 rounded border border-white/5">
-        <div className="text-[7px] uppercase text-zinc-500 font-bold">Mixer RPM</div>
+        <div className="text-[10px] uppercase text-zinc-500 font-bold">Mixer RPM</div>
         <div className="text-sm font-bold text-primary tabular-nums">{rpm.toFixed(0)}</div>
       </div>
     </div>

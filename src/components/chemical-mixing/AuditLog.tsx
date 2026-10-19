@@ -26,18 +26,18 @@ interface AuditLogProps {
 
 export function AuditLog({ logs }: AuditLogProps) {
   return (
-    <div className="hmi-panel bg-zinc-950/50 border-white/5 flex flex-col h-full min-h-[300px]">
+    <div className="hmi-panel bg-zinc-950/50 border-white/5 flex min-w-0 flex-col h-[280px]">
       <div className="flex items-center gap-2 mb-4 border-b border-white/5 pb-4">
         <History className="w-4 h-4 text-primary" />
-        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
+        <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
           System Event Audit Log
         </h3>
       </div>
 
-      <ScrollArea className="flex-grow pr-4">
+      <ScrollArea className="min-h-0 flex-1 pr-4">
         <div className="space-y-2">
           {logs.length === 0 ? (
-            <p className="text-[10px] text-muted-foreground text-center py-8">
+            <p className="text-[11px] text-muted-foreground text-center py-8">
               No historical events recorded.
             </p>
           ) : (
@@ -59,16 +59,16 @@ export function AuditLog({ logs }: AuditLogProps) {
                   <Icon className={cn('w-3 h-3 mt-1', color)} />
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-[9px] font-mono text-muted-foreground">
+                      <span className="text-[11px] font-mono text-muted-foreground">
                         {formatClock(log.timestamp)}
                       </span>
                       <span
-                        className={cn('text-[9px] font-bold uppercase tracking-tighter', color)}
+                        className={cn('text-[11px] font-bold uppercase tracking-tighter', color)}
                       >
                         {log.level}
                       </span>
                     </div>
-                    <p className="text-[10px] leading-tight text-zinc-300 font-medium">
+                    <p className="text-[11px] leading-tight text-zinc-300 font-medium">
                       {log.message}
                     </p>
                   </div>

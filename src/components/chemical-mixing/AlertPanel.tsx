@@ -17,15 +17,15 @@ const formatTime = (iso: string) =>
 
 export function AlertPanel({ alerts, isGenerating }: AlertPanelProps) {
   return (
-    <div className="hmi-panel bg-zinc-950/50 border-white/5 flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4">
+    <div className="hmi-panel bg-zinc-950/50 border-white/5 flex min-w-0 flex-col h-[280px]">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <BrainCircuit className="w-5 h-5 text-primary" />
           <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
             Operational Insights
           </h3>
         </div>
-        <span className="text-[9px] font-mono text-muted-foreground">LAST 50 EVENTS</span>
+        <span className="text-[10px] font-mono text-muted-foreground">LAST 50 EVENTS</span>
         {isGenerating && (
           <div className="flex items-center gap-2">
             <span className="text-[10px] text-primary animate-pulse uppercase">Analyzing...</span>
@@ -33,7 +33,7 @@ export function AlertPanel({ alerts, isGenerating }: AlertPanelProps) {
         )}
       </div>
 
-      <ScrollArea className="flex-grow pr-4">
+      <ScrollArea className="min-h-0 flex-1 pr-4">
         <div className="space-y-3">
           {alerts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -68,7 +68,7 @@ export function AlertPanel({ alerts, isGenerating }: AlertPanelProps) {
                       <span className="text-[10px] font-bold uppercase tracking-wider">
                         {alert.urgency} PRIORITY
                       </span>
-                      <span className="text-[9px] font-mono px-1 rounded border border-current/30 opacity-70">
+                      <span className="text-[10px] font-mono px-1 rounded border border-current/30 opacity-70">
                         {alert.source === 'ai' ? 'AI' : 'RULE'}
                       </span>
                     </div>

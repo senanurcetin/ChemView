@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Thermometer, Droplet, Activity, Database, Flame } from 'lucide-react';
+import { Thermometer, Activity, Database, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface StatusDisplayProps {
@@ -66,7 +66,7 @@ export function StatusDisplay({
         >
           <div className="flex items-center justify-between mb-2">
             <stat.icon className={cn('w-4 h-4', stat.color)} />
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               {stat.label}
             </span>
           </div>
@@ -74,7 +74,7 @@ export function StatusDisplay({
             <span className={cn('text-3xl font-bold tabular-nums tracking-tighter', stat.color)}>
               {stat.value}
             </span>
-            <span className="text-[10px] font-bold text-muted-foreground uppercase">
+            <span className="text-[11px] font-bold text-muted-foreground uppercase">
               {stat.unit}
             </span>
           </div>

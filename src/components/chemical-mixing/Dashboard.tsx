@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { TankSimulation } from './TankSimulation';
 import { TrendChart } from './TrendChart';
 import { ControlPanel } from './ControlPanel';
@@ -147,20 +148,25 @@ export function Dashboard() {
   const ageLabel = lastUpdateAgeSeconds === null ? 'WAITING' : `${lastUpdateAgeSeconds}s AGO`;
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden p-4 lg:p-6 max-w-[1800px] mx-auto bg-[#222222]">
-      <header className="flex items-center justify-between border-b border-white/10 pb-4 mb-4 shrink-0">
-        <div>
+    <div className="flex min-h-screen w-full max-w-[1800px] flex-col overflow-x-hidden bg-[#222222] p-4 lg:p-6 mx-auto">
+      <header className="mb-4 flex flex-col gap-4 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-1.5">
           <h1 className="text-2xl font-bold tracking-tighter text-primary">
             CHEMVIEW <span className="text-white font-light">HMI 1.0</span>
           </h1>
-          <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
-            Industrial Digital Twin Prototype
-          </p>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <p className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider">
+              Industrial Digital Twin Prototype
+            </p>
+            <span className="rounded border border-primary/20 bg-primary/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+              Simulated Process
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex flex-wrap items-center gap-3 sm:justify-end lg:gap-5">
           <div className="flex items-center gap-3 bg-zinc-900/50 px-3 py-1.5 rounded-md border border-white/5">
             <div className="flex flex-col items-center">
-              <span className="text-[7px] font-bold text-zinc-500 uppercase">RX</span>
+              <span className="text-[10px] font-bold text-zinc-400 uppercase">RX</span>
               <div
                 className={cn(
                   'w-1.5 h-1.5 rounded-full transition-all',
@@ -182,7 +188,7 @@ export function Dashboard() {
             variant="outline"
             size="sm"
             onClick={exportToCsv}
-            className="h-8 text-[10px] font-mono gap-2 border-white/10"
+            className="h-9 text-[11px] font-mono gap-2 border-white/10"
           >
             <Download className="w-3 h-3" /> EXPORT CSV
           </Button>
@@ -195,27 +201,38 @@ export function Dashboard() {
               )}
               <span
                 className={cn(
-                  'text-[10px] font-mono font-bold uppercase',
+                  'text-[11px] font-mono font-bold uppercase',
                   connected ? 'text-primary' : 'text-destructive',
                 )}
               >
                 {connected ? 'Gateway Active' : `Gateway ${status}`}
               </span>
             </div>
-            <span className="text-[9px] text-muted-foreground font-mono">{GATEWAY_ADDRESS}</span>
+            <span className="text-[10px] text-muted-foreground font-mono">{GATEWAY_ADDRESS}</span>
             <span
               data-testid="telemetry-age"
-              className="text-[9px] text-muted-foreground font-mono"
+              className="text-[10px] text-muted-foreground font-mono"
             >
               LAST DATA: {ageLabel}
             </span>
             <span
               data-testid="telemetry-run-id"
               title={snapshot?.runId ?? 'Awaiting simulator session'}
-              className="text-[9px] text-muted-foreground font-mono"
+              className="text-[10px] text-muted-foreground font-mono"
             >
               SESSION: {snapshot ? snapshot.runId.slice(0, 8) : 'WAITING'}
             </span>
+          </div>
+          <div className="flex items-center gap-2 border-l border-white/10 pl-3" aria-label="Nexus brand">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">by</span>
+            <Image
+              src="/nexus-logo.png"
+              alt="NEXUS"
+              width={100}
+              height={40}
+              priority
+              className="h-auto w-[86px]"
+            />
           </div>
         </div>
       </header>
@@ -240,9 +257,9 @@ export function Dashboard() {
         </div>
       )}
 
-      <div className="grid grid-cols-12 gap-4 flex-grow overflow-hidden">
+      <main className="grid min-w-0 flex-1 grid-cols-1 items-start gap-4 xl:grid-cols-12">
         {/* Left Column: Telemetry & Visualization */}
-        <div className="col-span-8 flex flex-col gap-4 overflow-hidden">
+        <section aria-label="Process telemetry" className="flex min-w-0 flex-col gap-4 xl:col-span-8">
           <StatusDisplay
             mixingSpeed={rpm}
             temperature={temp}
@@ -251,8 +268,8 @@ export function Dashboard() {
             isHeaterOn={isHeaterOn}
           />
 
-          <div className="grid grid-cols-2 gap-4 flex-grow overflow-hidden">
-            <div className="hmi-panel flex flex-col items-center justify-center p-4">
+          <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
+            <div className="hmi-panel flex min-h-[360px] min-w-0 flex-col items-center justify-center p-4">
               <TankSimulation
                 rpm={rpm}
                 isRunning={isRunning}
@@ -263,7 +280,7 @@ export function Dashboard() {
               />
             </div>
 
-            <div className="flex flex-col gap-4 overflow-hidden">
+            <div className="flex min-w-0 flex-col gap-4">
               <TrendChart
                 title="Temperature"
                 data={tempHistory}
@@ -278,15 +295,15 @@ export function Dashboard() {
                 unit="RPM"
                 domain={[0, 1500]}
               />
-              <div className="flex-grow overflow-hidden">
+              <div className="min-w-0">
                 <CommunicationLog logs={traffic} />
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Right Column: Controls & Intelligence */}
-        <div className="col-span-4 flex flex-col gap-4 overflow-hidden">
+        <section aria-label="Operator controls" className="flex min-w-0 flex-col gap-4 xl:col-span-4">
           <NetworkStats
             packetCount={network.packetCount}
             latency={network.latencyMs}
@@ -354,23 +371,23 @@ export function Dashboard() {
             }
           />
 
-          <div className="flex-grow grid grid-rows-2 gap-4 overflow-hidden">
+          <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-1">
             <AlertPanel alerts={alerts} isGenerating={snapshot?.aiBusy ?? false} />
             <AuditLog logs={audit} />
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
 
-      <footer className="mt-4 pt-3 border-t border-white/5 shrink-0 flex flex-col gap-2">
-        <div className="flex items-center justify-between text-[8px] font-mono text-muted-foreground uppercase tracking-widest">
-          <div className="flex gap-4">
+      <footer className="mt-5 flex flex-col gap-2 border-t border-white/10 pt-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] font-mono text-muted-foreground uppercase tracking-wider">
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
             <span>LATENCY: {network.latencyMs.toFixed(1)}ms</span>
             <span>HEALTH: {health}%</span>
             <span>BUFFER: {traffic.length}/50</span>
           </div>
           <span>OPERATOR: {OPERATOR_ID}</span>
         </div>
-        <div className="bg-zinc-900/50 p-1.5 rounded border border-white/5 text-[8px] font-mono text-zinc-500 flex gap-4 uppercase">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 rounded border border-white/5 bg-zinc-900/50 p-2 font-mono text-[10px] uppercase text-zinc-400">
           <span>STATE: {systemState}</span>
           <span>INTERLOCK: {interlockActive}</span>
           <span>HEATER: {isHeaterOn ? 'ON' : 'OFF'}</span>
