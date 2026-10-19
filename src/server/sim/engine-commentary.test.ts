@@ -83,7 +83,7 @@ describe('Engine commentary delivery', () => {
     expect(engine.getSnapshot().alerts.every((item) => item.source !== 'ai')).toBe(true);
   });
 
-  it('discards commentary if the trigger changes during analysis without operator input', async () => {
+  it('discards commentary if its trigger changes during analysis', async () => {
     const { engine, finish } = pendingCommentary();
     // Temperature keeps climbing while Gemini is busy, crossing the high
     // threshold and invalidating advice prepared for the near-limit state.
