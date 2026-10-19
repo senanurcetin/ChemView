@@ -379,7 +379,6 @@ export function Dashboard() {
               })
             }
           />
-
         </section>
 
         {/* Full-width event history balances the workstation layout. */}
