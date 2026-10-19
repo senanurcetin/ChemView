@@ -41,11 +41,13 @@ test('NEXUS identity and operator panels remain accessible on shorter desktops',
     const dimensions = await page.evaluate(() => ({
       documentWidth: document.documentElement.scrollWidth,
       viewportWidth: window.innerWidth,
-      documentHeight: document.documentElement.scrollHeight,
-      viewportHeight: window.innerHeight,
+      verticalOverflow: getComputedStyle(document.body).overflowY,
     }));
     expect(dimensions.documentWidth).toBeLessThanOrEqual(dimensions.viewportWidth);
-    expect(dimensions.documentHeight).toBeGreaterThan(dimensions.viewportHeight);
+    expect(dimensions.verticalOverflow).not.toBe('hidden');
+    const auditHeading = page.getByText('System Event Audit Log');
+    await auditHeading.scrollIntoViewIfNeeded();
+    await expect(auditHeading).toBeInViewport();
 
     await page.screenshot({
       path: `artifacts/chemview-hmi-${size.width}x${size.height}.png`,
