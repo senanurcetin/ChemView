@@ -83,6 +83,14 @@ The HMI sends a setpoint command with the expected server value captured at the 
 
 Alongside RPM and temperature compare-and-set requests, the HMI now supplies the current simulator `runId` and the observed value for ordinary START/STOP, heater, valve, manual/automatic mode and E-STOP reset commands. The engine rejects stale run or state preconditions with HTTP 409 before generating a simulated Modbus write. This prevents an outdated operator screen from silently undoing a newer switch action. The simulated E-STOP never requires a matching readback. Legacy external clients may omit these optional fields and retain last-write-wins behavior.
 
+## E-STOP event ordering
+
+The simulator tags each E-STOP with an increasing `estopEpoch`. An HMI RESET
+includes the observed epoch and is denied with HTTP 409 if a newer E-STOP
+occurred before processing. E-STOP itself remains unconditional, including
+during connection interruptions; older API clients that omit the optional
+reset precondition remain supported.
+
 ## Scope and operational boundaries
 
 The process, Modbus register map, interlocks, and telemetry are simulated. No physical PLC, fieldbus gateway, safety-rated controller, or plant equipment is connected. This is an engineering demonstration, **not a certified safety system**. Production use would require independent industrial safety assessment, hardened access controls and validated equipment integration.

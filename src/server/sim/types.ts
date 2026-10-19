@@ -20,7 +20,12 @@ export type Command =
   | { type: 'start'; expectedRunning?: boolean; expectedRunId?: string }
   | { type: 'stop'; expectedRunning?: boolean; expectedRunId?: string }
   | { type: 'estop' }
-  | { type: 'reset_estop'; expectedRunId?: string }
+  | {
+      type: 'reset_estop';
+      expectedRunId?: string;
+      /** Reject resets prepared before a newer E-STOP event. */
+      expectedEstopEpoch?: number;
+    }
   | { type: 'set_heater'; on: boolean; expectedValue?: boolean; expectedRunId?: string }
   | { type: 'set_valve'; open: boolean; expectedValue?: boolean; expectedRunId?: string }
   | { type: 'set_mode'; manual: boolean; expectedValue?: boolean; expectedRunId?: string }
@@ -83,6 +88,8 @@ export interface Alert {
 export interface Snapshot {
   /** Stable identity of this engine instance; changes on simulator restart. */
   runId: string;
+  /** Increments on each E-STOP, including while already latched. */
+  estopEpoch: number;
   seq: number;
   timestamp: string;
   state: SimState;

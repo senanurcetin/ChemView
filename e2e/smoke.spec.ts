@@ -44,6 +44,7 @@ test('stalled SSE data is marked stale even when the connection stays open', asy
           this.onmessage?.({
             data: JSON.stringify({
               runId: '123e4567-e89b-42d3-a456-426614174000',
+              estopEpoch: 0,
               seq: 1,
               timestamp: new Date().toISOString(),
               state: {

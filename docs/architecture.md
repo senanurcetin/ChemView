@@ -79,6 +79,16 @@ This protects manual setpoint edits only, not all command types. Callers that om
 
 The ordinary control actions also support opt-in simulator run and observed-state guards. The HMI sends `expectedRunId` for each action (including RESET E-STOP), `expectedRunning` for START/STOP, and boolean `expectedValue` for heater, discharge valve, and mode changes. The engine checks the current *authoritative* state before applying interlocks or generating a Modbus trace. This is in-process, per-field optimistic concurrency; it is not a distributed transaction or ownership lock. E-STOP remains unconditional and the legacy API still accepts commands without optional guards.
 
+## E-STOP reset event ordering
+
+Every simulated E-STOP event increments a per-engine `estopEpoch`, including
+E-STOP calls issued while the latch is already active. SSE snapshots include the
+epoch, and the HMI's RESET request includes an optional `expectedEstopEpoch`.
+The engine rejects a stale reset when the epoch changed since the operator
+observed the latch, so an old delayed reset cannot clear a newer E-STOP.
+Legacy reset callers may omit the precondition. This is in-process simulation
+safety logic, not a hardware emergency-stop implementation.
+
 ## Alerting model
 
 Safety alarms are deterministic and raised on the tick the condition appears. Gemini commentary (`source: "ai"`) is additive: it adds trend-aware context and a recommendation when the plant is on or near a limit, and its failure changes nothing visible except the absence of the comment.

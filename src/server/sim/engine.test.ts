@@ -324,6 +324,37 @@ describe('Engine', () => {
     expect(engine.getSnapshot().state.estopLatched).toBe(false);
   });
 
+  it('rejects an old RESET after a newer E-STOP event in the same run', () => {
+    const engine = make();
+    const runId = engine.getSnapshot().runId;
+    expect(engine.getSnapshot().estopEpoch).toBe(0);
+    engine.command({ type: 'estop' });
+    const oldEpoch = engine.getSnapshot().estopEpoch;
+    expect(oldEpoch).toBe(1);
+
+    // A second E-STOP, even while latched, invalidates previously prepared resets.
+    engine.command({ type: 'estop' });
+    const before = engine.getSnapshot();
+    expect(before.estopEpoch).toBe(2);
+    const staleReset = engine.command({
+      type: 'reset_estop',
+      expectedRunId: runId,
+      expectedEstopEpoch: oldEpoch,
+    });
+    expect(staleReset).toMatchObject({ ok: false, wrote: false });
+    expect(staleReset.reason).toMatch(/newer E-STOP/);
+    expect(engine.getSnapshot()).toEqual(before);
+
+    const accepted = engine.command({
+      type: 'reset_estop',
+      expectedRunId: runId,
+      expectedEstopEpoch: before.estopEpoch,
+    });
+    expect(accepted.ok).toBe(true);
+    expect(engine.getSnapshot().state.estopLatched).toBe(false);
+    expect(engine.getSnapshot().estopEpoch).toBe(2);
+  });
+
   it('guards a stale START/STOP transition but allows current readback', () => {
     const engine = make();
     const expectedRunId = engine.getSnapshot().runId;
@@ -409,6 +440,12 @@ describe('commandSchema', () => {
         expectedRunId: 'bad-session',
       }).success,
     ).toBe(false);
+    expect(commandSchema.safeParse({ type: 'reset_estop', expectedEstopEpoch: 2 }).success).toBe(
+      true,
+    );
+    expect(commandSchema.safeParse({ type: 'reset_estop', expectedEstopEpoch: -1 }).success).toBe(
+      false,
+    );
   });
 });
 

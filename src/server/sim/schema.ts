@@ -8,7 +8,13 @@ export const commandSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('start'), ...observedMixer }),
   z.object({ type: z.literal('stop'), ...observedMixer }),
   z.object({ type: z.literal('estop') }),
-  z.object({ type: z.literal('reset_estop'), ...session }).strict(),
+  z
+    .object({
+      type: z.literal('reset_estop'),
+      ...session,
+      expectedEstopEpoch: z.number().int().nonnegative().optional(),
+    })
+    .strict(),
   z.object({ type: z.literal('set_heater'), on: z.boolean(), ...observedValue }),
   z.object({ type: z.literal('set_valve'), open: z.boolean(), ...observedValue }),
   z.object({ type: z.literal('set_mode'), manual: z.boolean(), ...observedValue }),

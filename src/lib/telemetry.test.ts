@@ -28,6 +28,8 @@ describe('parseSnapshotEvent', () => {
     const snapshot = sampleSnapshot();
     expect(parseSnapshotEvent(JSON.stringify({ ...snapshot, runId: '' }))).toBeNull();
     expect(parseSnapshotEvent(JSON.stringify({ ...snapshot, seq: -1 }))).toBeNull();
+    expect(parseSnapshotEvent(JSON.stringify({ ...snapshot, estopEpoch: -1 }))).toBeNull();
+    expect(parseSnapshotEvent(JSON.stringify({ ...snapshot, estopEpoch: 0.5 }))).toBeNull();
     expect(
       parseSnapshotEvent(
         JSON.stringify({ ...snapshot, state: { ...snapshot.state, rpm: 'fast' } }),

@@ -294,7 +294,11 @@ export function Dashboard() {
             }
             onEmergencyStop={() => run({ type: 'estop' })}
             onResetEmergencyStop={() =>
-              run({ type: 'reset_estop', expectedRunId: snapshot?.runId })
+              run({
+                type: 'reset_estop',
+                expectedRunId: snapshot?.runId,
+                expectedEstopEpoch: snapshot?.estopEpoch,
+              })
             }
             connectionStatus={status}
             targetRpm={rpmSetpoint.value}

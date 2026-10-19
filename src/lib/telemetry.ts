@@ -23,6 +23,7 @@ const alertSchema: z.ZodType<Alert> = z.object({
 /** Validate the entire SSE payload before updating any operator-visible state. */
 const snapshotSchema: z.ZodType<Snapshot> = z.object({
   runId: z.string().min(1),
+  estopEpoch: z.number().int().nonnegative(),
   seq: z.number().int().nonnegative(),
   timestamp,
   state: z.object({

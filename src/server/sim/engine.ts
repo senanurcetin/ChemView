@@ -78,6 +78,7 @@ export class Engine {
   private readonly rng: Rng;
   private readonly now: () => Date;
   private seq = 0;
+  private estopEpoch = 0;
   private txId = 0;
   private idCounter = 0;
   private network: NetworkCounters = { packetCount: 0, latencyMs: 15.2, errorCount: 0 };
@@ -208,6 +209,21 @@ export class Engine {
       };
     }
 
+    // A reset authorized against an earlier E-STOP event must not clear a
+    // newer latch, even when both events occurred within the same engine run.
+    if (
+      cmd.type === 'reset_estop' &&
+      cmd.expectedEstopEpoch !== undefined &&
+      cmd.expectedEstopEpoch !== this.estopEpoch
+    ) {
+      return {
+        ok: false,
+        reason: 'A newer E-STOP occurred. Review the current latch before resetting.',
+        state: this.state,
+        wrote: false,
+      };
+    }
+
     // Compare the observed switch state before performing any simulated write.
     // Distinct process controls only conflict if their respective state changed.
     let observed: boolean | undefined;
@@ -260,6 +276,9 @@ export class Engine {
 
     const result = applyCommand(this.state, cmd);
     if (!result.ok) return result;
+    // E-STOP always wins. Count even repeated requests against an existing
+    // latch so a delayed RESET from the preceding event cannot clear it.
+    if (cmd.type === 'estop') this.estopEpoch += 1;
     this.state = result.state;
     if (result.wrote) {
       // Write the effective setpoint, not an out-of-range operator request, to the simulated wire.
@@ -279,6 +298,7 @@ export class Engine {
   getSnapshot(): Snapshot {
     return {
       runId: this.runId,
+      estopEpoch: this.estopEpoch,
       seq: this.seq,
       timestamp: this.now().toISOString(),
       state: this.state,
