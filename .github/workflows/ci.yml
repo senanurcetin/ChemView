@@ -126,6 +126,9 @@ jobs:
       - name: Generate Next.js patch candidate
         run: npm install next@15.5.28 --save-exact --ignore-scripts
 
+      - name: Show exact package lock patch
+        run: git diff -- package.json package-lock.json
+
       - name: Compare production advisory counts
         run: |
           npm audit --omit=dev --json > next-candidate-audit.json || true

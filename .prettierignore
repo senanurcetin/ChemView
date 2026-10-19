@@ -6,3 +6,7 @@ next-env.d.ts
 coverage
 playwright-report
 test-results
+
+# Generated CI audit reports
+npm-audit-*.json
+next-candidate-audit.json
