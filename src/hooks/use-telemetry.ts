@@ -44,20 +44,24 @@ export function useTelemetry() {
     )
       .then((res) => (res.ok ? res.json() : null))
       .then((body: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || lastCursor.current?.runId !== activeRunId) return;
         const samples = parseHistorySamples(body, activeRunId);
         if (!samples) return;
         setRpmHistory((prev) =>
-          mergeHistory(
-            prev,
-            samples.map((s) => toPoint(s.ts, s.rpm)),
-          ),
+          lastCursor.current?.runId === activeRunId
+            ? mergeHistory(
+                prev,
+                samples.map((s) => toPoint(s.ts, s.rpm)),
+              )
+            : prev,
         );
         setTempHistory((prev) =>
-          mergeHistory(
-            prev,
-            samples.map((s) => toPoint(s.ts, s.temp)),
-          ),
+          lastCursor.current?.runId === activeRunId
+            ? mergeHistory(
+                prev,
+                samples.map((s) => toPoint(s.ts, s.temp)),
+              )
+            : prev,
         );
       })
       .catch(() => {
