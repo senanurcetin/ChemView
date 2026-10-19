@@ -182,6 +182,30 @@ test('ordinary controls stay locked until an SSE snapshot is validated', async (
   await expect(page.getByRole('button', { name: /^e-stop$/i })).toBeEnabled();
 });
 
+test('concurrent heater commands reject an obsolete operator readback', async ({
+  page,
+  request,
+}) => {
+  await page.goto('/');
+  await expect(page.getByText('Gateway Active')).toBeVisible();
+  const runId = await page.getByTestId('telemetry-run-id').getAttribute('title');
+
+  const first = await command(request, {
+    type: 'set_heater',
+    on: true,
+    expectedValue: false,
+    expectedRunId: runId,
+  });
+  expect(first.status()).toBe(200);
+  const stale = await command(request, {
+    type: 'set_heater',
+    on: false,
+    expectedValue: false,
+    expectedRunId: runId,
+  });
+  expect(stale.status()).toBe(409);
+});
+
 test('HMI rejects a local setpoint edit superseded by another operator', async ({
   page,
   request,

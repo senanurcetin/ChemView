@@ -112,6 +112,26 @@ describe('POST /api/command — HTTP contract', () => {
     expect(await conflict.json()).toMatchObject({ ok: false });
   });
 
+  it('passes observed state and run guards for ordinary controls to the engine', async () => {
+    const { POST } = await import('./route');
+    const cmd = {
+      type: 'set_valve',
+      open: true,
+      expectedValue: false,
+      expectedRunId: '123e4567-e89b-42d3-a456-426614174000',
+    };
+    const response = await postCommand(POST, cmd);
+    expect(response.status).toBe(200);
+    expect(engineCommand).toHaveBeenCalledWith(cmd);
+
+    engineCommand.mockReturnValueOnce({
+      ok: false,
+      reason: 'Control changed in another operator session.',
+    });
+    const conflict = await postCommand(POST, cmd);
+    expect(conflict.status).toBe(409);
+  });
+
   it('shares the 60-command budget across spoofed IPs but always admits E-STOP', async () => {
     const { POST } = await import('./route');
 

@@ -17,13 +17,13 @@ export interface SimState {
 }
 
 export type Command =
-  | { type: 'start' }
-  | { type: 'stop' }
+  | { type: 'start'; expectedRunning?: boolean; expectedRunId?: string }
+  | { type: 'stop'; expectedRunning?: boolean; expectedRunId?: string }
   | { type: 'estop' }
-  | { type: 'reset_estop' }
-  | { type: 'set_heater'; on: boolean }
-  | { type: 'set_valve'; open: boolean }
-  | { type: 'set_mode'; manual: boolean }
+  | { type: 'reset_estop'; expectedRunId?: string }
+  | { type: 'set_heater'; on: boolean; expectedValue?: boolean; expectedRunId?: string }
+  | { type: 'set_valve'; open: boolean; expectedValue?: boolean; expectedRunId?: string }
+  | { type: 'set_mode'; manual: boolean; expectedValue?: boolean; expectedRunId?: string }
   | {
       type: 'set_rpm_setpoint';
       value: number;

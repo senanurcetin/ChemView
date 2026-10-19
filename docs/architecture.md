@@ -75,6 +75,10 @@ Manual RPM and temperature updates support optional optimistic concurrency preco
 
 This protects manual setpoint edits only, not all command types. Callers that omit the optional preconditions retain legacy last-write-wins semantics; E-STOP never depends on readback preconditions.
 
+## Concurrent discrete-command admission
+
+The ordinary control actions also support opt-in simulator run and observed-state guards. The HMI sends `expectedRunId` for each action (including RESET E-STOP), `expectedRunning` for START/STOP, and boolean `expectedValue` for heater, discharge valve, and mode changes. The engine checks the current *authoritative* state before applying interlocks or generating a Modbus trace. This is in-process, per-field optimistic concurrency; it is not a distributed transaction or ownership lock. E-STOP remains unconditional and the legacy API still accepts commands without optional guards.
+
 ## Alerting model
 
 Safety alarms are deterministic and raised on the tick the condition appears. Gemini commentary (`source: "ai"`) is additive: it adds trend-aware context and a recommendation when the plant is on or near a limit, and its failure changes nothing visible except the absence of the comment.

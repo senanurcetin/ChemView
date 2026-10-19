@@ -246,6 +246,68 @@ describe('Engine', () => {
     expect(current.getSnapshot().state.estopLatched).toBe(true);
   });
 
+  it('rejects stale switch commands without changing the process or Modbus trace', () => {
+    const engine = make();
+    const expectedRunId = engine.getSnapshot().runId;
+    const first = engine.command({
+      type: 'set_heater',
+      on: true,
+      expectedValue: false,
+      expectedRunId,
+    });
+    expect(first.ok).toBe(true);
+    const before = engine.getSnapshot();
+    const stale = engine.command({
+      type: 'set_heater',
+      on: false,
+      expectedValue: false,
+      expectedRunId,
+    });
+    expect(stale).toMatchObject({ ok: false, wrote: false });
+    expect(stale.reason).toMatch(/another operator/);
+    expect(engine.getSnapshot()).toEqual(before);
+
+    engine.tick();
+    const mode = engine.command({
+      type: 'set_mode',
+      manual: true,
+      expectedValue: false,
+      expectedRunId,
+    });
+    expect(mode.ok).toBe(true);
+    expect(engine.getSnapshot().state.isManualMode).toBe(true);
+  });
+
+  it('rejects controls for an old run without affecting E-STOP', () => {
+    const oldRunId = make().getSnapshot().runId;
+    const engine = make();
+    const before = engine.getSnapshot();
+    const stale = engine.command({
+      type: 'start',
+      expectedRunning: false,
+      expectedRunId: oldRunId,
+    });
+    expect(stale).toMatchObject({ ok: false, wrote: false });
+    expect(engine.getSnapshot()).toEqual(before);
+    expect(engine.command({ type: 'estop' }).ok).toBe(true);
+    expect(engine.getSnapshot().state.estopLatched).toBe(true);
+  });
+
+  it('guards a stale START/STOP transition but allows current readback', () => {
+    const engine = make();
+    const expectedRunId = engine.getSnapshot().runId;
+    expect(engine.command({ type: 'start', expectedRunning: false, expectedRunId }).ok).toBe(
+      true,
+    );
+    const before = engine.getSnapshot();
+    const stale = engine.command({ type: 'start', expectedRunning: false, expectedRunId });
+    expect(stale.ok).toBe(false);
+    expect(engine.getSnapshot()).toEqual(before);
+    expect(engine.command({ type: 'stop', expectedRunning: true, expectedRunId }).ok).toBe(
+      true,
+    );
+  });
+
   it('caps log buffers at 50 entries', () => {
     const e = make();
     for (let i = 0; i < 40; i++) e.tick();
@@ -292,6 +354,28 @@ describe('commandSchema', () => {
         type: 'set_temp_setpoint',
         value: 65,
         expectedRunId: 'not-a-uuid',
+      }).success,
+    ).toBe(false);
+    expect(
+      commandSchema.safeParse({
+        type: 'set_valve',
+        open: true,
+        expectedValue: false,
+        expectedRunId: '123e4567-e89b-42d3-a456-426614174000',
+      }).success,
+    ).toBe(true);
+    expect(
+      commandSchema.safeParse({
+        type: 'set_mode',
+        manual: true,
+        expectedValue: 'false',
+      }).success,
+    ).toBe(false);
+    expect(
+      commandSchema.safeParse({
+        type: 'stop',
+        expectedRunning: false,
+        expectedRunId: 'bad-session',
       }).success,
     ).toBe(false);
   });

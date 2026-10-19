@@ -277,10 +277,25 @@ export function Dashboard() {
             isRunning={isRunning}
             estopLatched={state.estopLatched}
             isManualMode={isManualMode}
-            onToggle={() => run({ type: isRunning ? 'stop' : 'start' })}
-            onToggleMode={() => run({ type: 'set_mode', manual: !isManualMode })}
+            onToggle={() =>
+              run({
+                type: isRunning ? 'stop' : 'start',
+                expectedRunning: isRunning,
+                expectedRunId: snapshot?.runId,
+              })
+            }
+            onToggleMode={() =>
+              run({
+                type: 'set_mode',
+                manual: !isManualMode,
+                expectedValue: isManualMode,
+                expectedRunId: snapshot?.runId,
+              })
+            }
             onEmergencyStop={() => run({ type: 'estop' })}
-            onResetEmergencyStop={() => run({ type: 'reset_estop' })}
+            onResetEmergencyStop={() =>
+              run({ type: 'reset_estop', expectedRunId: snapshot?.runId })
+            }
             connectionStatus={status}
             targetRpm={rpmSetpoint.value}
             targetTemp={tempSetpoint.value}
@@ -292,9 +307,23 @@ export function Dashboard() {
             commitTargetRpm={rpmSetpoint.onCommit}
             commitTargetTemp={tempSetpoint.onCommit}
             valveOpen={valveOpen}
-            onToggleValve={() => run({ type: 'set_valve', open: !valveOpen })}
+            onToggleValve={() =>
+              run({
+                type: 'set_valve',
+                open: !valveOpen,
+                expectedValue: valveOpen,
+                expectedRunId: snapshot?.runId,
+              })
+            }
             isHeaterOn={isHeaterOn}
-            onToggleHeater={() => run({ type: 'set_heater', on: !isHeaterOn })}
+            onToggleHeater={() =>
+              run({
+                type: 'set_heater',
+                on: !isHeaterOn,
+                expectedValue: isHeaterOn,
+                expectedRunId: snapshot?.runId,
+              })
+            }
           />
 
           <div className="flex-grow grid grid-rows-2 gap-4 overflow-hidden">

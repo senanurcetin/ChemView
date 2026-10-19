@@ -79,6 +79,10 @@ The simulator records its rule-based and optional AI alarm events by `runId`; `G
 
 The HMI sends a setpoint command with the expected server value captured at the beginning of a drag and the active simulator `runId`. The engine compares those optional preconditions atomically with its current in-process state. If another operator changed that setpoint, or the simulator restarted, it rejects the stale request with HTTP 409 without writing a simulated Modbus frame. Ordinary API clients can continue to omit these optional fields for backward compatibility. These checks avoid silent lost updates on the two manual setpoints; they are not general transaction isolation across every plant command.
 
+## Concurrent switch and mode controls
+
+Alongside RPM and temperature compare-and-set requests, the HMI now supplies the current simulator `runId` and the observed value for ordinary START/STOP, heater, valve, manual/automatic mode and E-STOP reset commands. The engine rejects stale run or state preconditions with HTTP 409 before generating a simulated Modbus write. This prevents an outdated operator screen from silently undoing a newer switch action. The simulated E-STOP never requires a matching readback. Legacy external clients may omit these optional fields and retain last-write-wins behavior.
+
 ## Scope and operational boundaries
 
 The process, Modbus register map, interlocks, and telemetry are simulated. No physical PLC, fieldbus gateway, safety-rated controller, or plant equipment is connected. This is an engineering demonstration, **not a certified safety system**. Production use would require independent industrial safety assessment, hardened access controls and validated equipment integration.

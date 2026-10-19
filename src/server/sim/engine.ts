@@ -192,6 +192,54 @@ export class Engine {
   }
 
   command(cmd: Command): CommandResult {
+    // Every ordinary operator control can carry a simulator run guard. Browser
+    // commands include it to prevent stale requests from a prior engine run.
+    // E-STOP intentionally bypasses all optimistic preconditions.
+    if (
+      cmd.type !== 'estop' &&
+      cmd.expectedRunId !== undefined &&
+      cmd.expectedRunId !== this.runId
+    ) {
+      return {
+        ok: false,
+        reason: 'Simulator session changed. Refresh telemetry before issuing commands.',
+        state: this.state,
+        wrote: false,
+      };
+    }
+
+    // Compare the observed switch state before performing any simulated write.
+    // Distinct process controls only conflict if their respective state changed.
+    let observed: boolean | undefined;
+    let expected: boolean | undefined;
+    switch (cmd.type) {
+      case 'start':
+      case 'stop':
+        observed = this.state.isRunning;
+        expected = cmd.expectedRunning;
+        break;
+      case 'set_heater':
+        observed = this.state.isHeaterOn;
+        expected = cmd.expectedValue;
+        break;
+      case 'set_valve':
+        observed = this.state.valveOpen;
+        expected = cmd.expectedValue;
+        break;
+      case 'set_mode':
+        observed = this.state.isManualMode;
+        expected = cmd.expectedValue;
+        break;
+    }
+    if (expected !== undefined && expected !== observed) {
+      return {
+        ok: false,
+        reason: 'Control changed in another operator session. Review the current state.',
+        state: this.state,
+        wrote: false,
+      };
+    }
+
     // Compare-and-set the *authoritative* setpoint; unrelated telemetry ticks do not
     // invalidate a request. A stale operator must not silently overwrite another
     // operator's more recent adjustment or a restarted simulation session.
@@ -200,14 +248,6 @@ export class Engine {
         cmd.type === 'set_rpm_setpoint'
           ? this.state.targetRpmManual
           : this.state.targetTempManual;
-      if (cmd.expectedRunId !== undefined && cmd.expectedRunId !== this.runId) {
-        return {
-          ok: false,
-          reason: 'Simulator session changed. Refresh telemetry before changing setpoints.',
-          state: this.state,
-          wrote: false,
-        };
-      }
       if (cmd.expectedValue !== undefined && cmd.expectedValue !== applied) {
         return {
           ok: false,
