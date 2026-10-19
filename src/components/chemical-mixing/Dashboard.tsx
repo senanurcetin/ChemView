@@ -43,7 +43,15 @@ function useFlash(marker: string | undefined) {
  */
 export function Dashboard() {
   const { toast } = useToast();
-  const { snapshot, status, rpmHistory, tempHistory, sendCommand } = useTelemetry();
+  const {
+    snapshot,
+    status,
+    lastUpdateAgeSeconds,
+    sessionRestarted,
+    rpmHistory,
+    tempHistory,
+    sendCommand,
+  } = useTelemetry();
 
   const state = snapshot?.state ?? initialState();
   const network = snapshot?.network ?? { packetCount: 0, latencyMs: 0, errorCount: 0 };
@@ -173,9 +181,42 @@ export function Dashboard() {
               </span>
             </div>
             <span className="text-[9px] text-muted-foreground font-mono">{GATEWAY_ADDRESS}</span>
+            <span
+              data-testid="telemetry-age"
+              className="text-[9px] text-muted-foreground font-mono"
+            >
+              LAST DATA: {lastUpdateAgeSeconds === null ? 'WAITING' : `${lastUpdateAgeSeconds}s AGO`}
+            </span>
+            <span
+              data-testid="telemetry-run-id"
+              title={snapshot?.runId ?? 'Awaiting simulator session'}
+              className="text-[9px] text-muted-foreground font-mono"
+            >
+              SESSION: {snapshot ? snapshot.runId.slice(0, 8) : 'WAITING'}
+            </span>
           </div>
         </div>
       </header>
+
+      {snapshot && !connected && (
+        <div
+          role="alert"
+          data-testid="telemetry-warning"
+          className="mb-3 shrink-0 rounded border border-amber-600/60 bg-amber-950/40 px-3 py-2 text-xs font-mono text-amber-200"
+        >
+          TELEMETRY NOT LIVE ({status.toUpperCase()}) — displayed values are the last validated
+          snapshot. Verify gateway connectivity before relying on readback.
+        </div>
+      )}
+      {sessionRestarted && (
+        <div
+          role="status"
+          data-testid="simulation-restart"
+          className="mb-3 shrink-0 rounded border border-sky-600/50 bg-sky-950/30 px-3 py-2 text-xs font-mono text-sky-200"
+        >
+          SIMULATION SESSION CHANGED — trend history is scoped to the new session.
+        </div>
+      )}
 
       <div className="grid grid-cols-12 gap-4 flex-grow overflow-hidden">
         {/* Left Column: Telemetry & Visualization */}
