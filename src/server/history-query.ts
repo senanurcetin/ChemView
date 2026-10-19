@@ -26,5 +26,11 @@ export function parseHistoryQuery(params: URLSearchParams, now = new Date()) {
   const to = parsed.data.to ?? now.toISOString();
   const from = parsed.data.from ?? new Date(Date.parse(to) - 3_600_000).toISOString();
   if (from > to) return { ok: false as const, error: '`from` must not be after `to`.' };
-  return { ok: true as const, from, to, limit: parsed.data.limit ?? 1000, runId: parsed.data.runId };
+  return {
+    ok: true as const,
+    from,
+    to,
+    limit: parsed.data.limit ?? 1000,
+    runId: parsed.data.runId,
+  };
 }
