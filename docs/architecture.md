@@ -125,6 +125,14 @@ tamper-evident compliance audit.
 
 ## Alerting model
 
+Optional Gemini commentary is tied to the simulated state in which it was requested. The engine
+publishes an `aiBusy` transition only when an AI request actually starts; nominal or rate-limited
+polling ticks no longer generate a redundant SSE event. A response is discarded if E-STOP was
+activated, an operator control changed, or the triggering process condition changed while the
+request was in flight. AI requests are not initiated while the E-STOP latch is active. The engine
+still publishes analysis completion so the UI can clear its indicator; deterministic rule alarms
+and all server-side interlocks continue independently of Gemini.
+
 Safety alarms are deterministic and raised on the tick the condition appears. Gemini commentary (`source: "ai"`) is additive: it adds trend-aware context and a recommendation when the plant is on or near a limit, and its failure changes nothing visible except the absence of the comment.
 
 ## Operational notes

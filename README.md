@@ -113,6 +113,14 @@ inspect earlier runs. Older, untagged Firestore records remain available in
 the legacy Store collection, but are excluded from current-session displays.
 These records are not cryptographically signed or certified audit evidence.
 
+## AI commentary and simulation events
+
+AI commentary is optional and supplementary to deterministic process alarms. The HMI receives
+an analysis-in-progress update only when an actual Gemini request starts; idle ticks do not
+generate duplicate SSE messages. Late model responses are ignored after an E-STOP, operator
+control change, or change of the triggering condition. AI analysis is skipped while E-STOP is
+latched. This behavior is part of the simulated HMI, not a safety-rated control mechanism.
+
 ## Scope and operational boundaries
 
 The process, Modbus register map, interlocks, and telemetry are simulated. No physical PLC, fieldbus gateway, safety-rated controller, or plant equipment is connected. This is an engineering demonstration, **not a certified safety system**. Production use would require independent industrial safety assessment, hardened access controls and validated equipment integration.

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { evaluateRules, NOMINAL_MESSAGE } from './alerts';
-import { Commentator } from './commentary';
+import { Commentator, triggerKey } from './commentary';
 import { applyCommand } from './interlocks';
 import { commandFrame, readRequestFrame, readResponseFrame } from './modbus';
 import { createRng, type Rng } from './rng';
@@ -79,6 +79,7 @@ export class Engine {
   private readonly now: () => Date;
   private seq = 0;
   private estopEpoch = 0;
+  private commandRevision = 0;
   private txId = 0;
   private idCounter = 0;
   private network: NetworkCounters = { packetCount: 0, latencyMs: 15.2, errorCount: 0 };
@@ -179,14 +180,28 @@ export class Engine {
     return this.emit();
   }
 
-  /** Fire-and-forget: the LLM never blocks the tick, and its failure changes nothing. */
+  /** AI advice is optional, never delays interlocks, and cannot outlive its trigger. */
   private async runCommentary() {
     const commentator = this.commentator;
-    if (!commentator || commentator.busy) return;
+    if (!commentator || commentator.busy || this.state.estopLatched) return;
+
+    const observedRevision = this.commandRevision;
+    const observedEstopEpoch = this.estopEpoch;
+    const observedTrigger = triggerKey(this.state);
     const pending = commentator.maybeComment(this.state);
-    if (commentator.busy) this.emit(); // let clients show "Analyzing..."
+    // maybeComment sets busy synchronously only if it actually started an AI call.
+    // Suppressed/nominal ticks must not emit a second phantom SSE snapshot.
+    if (!commentator.busy) return;
+
+    this.emit(); // Tell operators that an optional analysis is in progress.
     const result = await pending;
-    if (result) {
+    if (
+      result &&
+      !this.state.estopLatched &&
+      this.commandRevision === observedRevision &&
+      this.estopEpoch === observedEstopEpoch &&
+      triggerKey(this.state) === observedTrigger
+    ) {
       this.pushAlert({
         id: this.nextId(),
         timestamp: this.now().toISOString(),
@@ -195,6 +210,8 @@ export class Engine {
         urgency: result.urgency,
       });
     }
+    // Publish analysis completion, including timeout/failure, without presenting
+    // a stale model response as a current-process alarm.
     this.emit();
   }
 
@@ -285,6 +302,7 @@ export class Engine {
     // E-STOP always wins. Count even repeated requests against an existing
     // latch so a delayed RESET from the preceding event cannot clear it.
     if (cmd.type === 'estop') this.estopEpoch += 1;
+    if (result.wrote) this.commandRevision += 1;
     this.state = result.state;
     if (result.wrote) {
       // Write the effective setpoint, not an out-of-range operator request, to the simulated wire.
