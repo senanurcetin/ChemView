@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  TELEMETRY_STALE_MS,
-  telemetryAgeSeconds,
-  telemetryStatus,
-} from './telemetry-freshness';
+import { TELEMETRY_STALE_MS, telemetryAgeSeconds, telemetryStatus } from './telemetry-freshness';
 
 describe('telemetryAgeSeconds', () => {
   it('returns null until a valid sample has been accepted', () => {
