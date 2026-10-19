@@ -123,9 +123,14 @@ describe('history query + csv', () => {
   it('renders a header and one row per sample', () => {
     const csv = telemetryToCsv([sample('2026-01-01T00:00:00.000Z')]);
     expect(csv.split('\n')[0]).toBe(
-      'timestamp,rpm,temperature_c,ph,level_pct,mixer_running,heater_on,valve_open',
+      'timestamp,run_id,rpm,temperature_c,ph,level_pct,mixer_running,heater_on,valve_open',
     );
-    expect(csv.split('\n')[1]).toBe('2026-01-01T00:00:00.000Z,0.00,24.50,7.000,65,0,0,0');
+    expect(csv.split('\n')[1]).toBe('2026-01-01T00:00:00.000Z,,0.00,24.50,7.000,65,0,0,0');
+    const tagged = telemetryToCsv([
+      sample('2026-01-01T00:00:00.000Z'),
+      toSample(initialState(), '2026-01-01T00:00:05.000Z', 'run-demo'),
+    ]);
+    expect(tagged.split('\n')[2]).toContain('2026-01-01T00:00:05.000Z,run-demo,');
   });
 });
 
