@@ -9,10 +9,15 @@ import {
   type SnapshotCursor,
 } from '@/lib/telemetry';
 import { PRELOAD_WINDOW_MS, mergeHistory, toPoint, type HistoryPoint } from '@/lib/history';
+import {
+  telemetryAgeSeconds,
+  telemetryStatus,
+  type TransportState,
+} from '@/lib/telemetry-freshness';
 
 export type { HistoryPoint };
 
-export type ConnectionStatus = 'Connected' | 'Disconnected' | 'Connecting';
+export type ConnectionStatus = 'Connected' | 'Disconnected' | 'Connecting' | 'Stale';
 
 export interface CommandOutcome {
   ok: boolean;
@@ -26,11 +31,23 @@ export interface CommandOutcome {
  */
 export function useTelemetry() {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
-  const [status, setStatus] = useState<ConnectionStatus>('Connecting');
+  const [transportStatus, setTransportStatus] = useState<TransportState>('Connecting');
+  const [lastReceivedAt, setLastReceivedAt] = useState<number | null>(null);
+  const [nowMs, setNowMs] = useState(0);
+  const [sessionRestarted, setSessionRestarted] = useState(false);
   const [rpmHistory, setRpmHistory] = useState<HistoryPoint[]>([]);
   const [tempHistory, setTempHistory] = useState<HistoryPoint[]>([]);
   const lastCursor = useRef<SnapshotCursor | null>(null);
   const activeRunId = snapshot?.runId;
+  const status = telemetryStatus(transportStatus, lastReceivedAt, nowMs);
+  const lastUpdateAgeSeconds = telemetryAgeSeconds(lastReceivedAt, nowMs);
+
+  // A hung SSE connection may remain OPEN. Periodically check application data age.
+  useEffect(() => {
+    setNowMs(Date.now());
+    const timer = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Only fetch persisted samples after the SSE stream identifies the current run.
   // Re-fetch on engine restart and discard responses from an older run.
@@ -74,20 +91,22 @@ export function useTelemetry() {
     const source = new EventSource('/api/stream');
 
     // Transport establishment alone does not prove that telemetry is valid.
-    source.onopen = () => setStatus('Connecting');
+    source.onopen = () => setTransportStatus('Connecting');
     // EventSource retries on its own; CLOSED means it gave up.
     source.onerror = () =>
-      setStatus(source.readyState === EventSource.CLOSED ? 'Disconnected' : 'Connecting');
+      setTransportStatus(source.readyState === EventSource.CLOSED ? 'Disconnected' : 'Connecting');
     source.onmessage = (event) => {
       const next = parseSnapshotEvent(event.data);
       if (!next) {
         // Keep the last valid process view; do not treat a corrupt payload as live data.
-        setStatus('Disconnected');
+        setTransportStatus('Disconnected');
         return;
       }
       const transition = classifySnapshot(lastCursor.current, next);
-      setStatus('Connected');
       if (transition === 'ignore') return;
+      if (transition === 'new-run') setSessionRestarted(true);
+      setLastReceivedAt(Date.now());
+      setTransportStatus('Connected');
       lastCursor.current = { runId: next.runId, seq: next.seq };
       setSnapshot(next);
 
@@ -120,5 +139,13 @@ export function useTelemetry() {
     }
   }, []);
 
-  return { snapshot, status, rpmHistory, tempHistory, sendCommand };
+  return {
+    snapshot,
+    status,
+    lastUpdateAgeSeconds,
+    sessionRestarted,
+    rpmHistory,
+    tempHistory,
+    sendCommand,
+  };
 }
