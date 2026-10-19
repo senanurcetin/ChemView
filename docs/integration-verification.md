@@ -44,3 +44,12 @@ not only visual container labels.
 A saved test or a green historical PR check is **not** proof that the current
 combined `main` branch passed. Report the current commit SHA, workflow run
 and each job result separately; disclose failures and skipped checks.
+
+## Verified design capture
+
+The reference screenshot in `docs/assets/chemview-dashboard.png` was refreshed by
+GitHub Actions after the final responsive HMI checks. The captured scenario
+shows the simulated mixer and heater in operation; this is not real plant data.
+The temporary workflow job with repository-write permission was removed once
+the screenshot had been committed. Screenshot capture tests remain available in
+Playwright for future visual reviews.

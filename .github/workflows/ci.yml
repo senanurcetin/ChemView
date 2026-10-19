@@ -118,29 +118,3 @@ jobs:
             test-results/
           retention-days: 7
 
-  publish-demo-screenshot:
-    # One-time portfolio refresh; runs only after all three integration gates pass.
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [build, firestore-emulator, e2e]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: chemview-hmi-design-captures
-          path: ./design-captures
-
-      - name: Update repository portfolio image
-        run: |
-          test -s design-captures/chemview-hmi-1440x900.png
-          cp design-captures/chemview-hmi-1440x900.png docs/assets/chemview-dashboard.png
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/assets/chemview-dashboard.png
-          if ! git diff --cached --quiet; then
-            git commit -m "docs(design): refresh verified ChemView portfolio screenshot [skip ci]"
-            git push
-          fi
