@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { telemetryToCsv } from '@/server/csv';
 import { parseHistoryQuery } from '@/server/history-query';
 import { getStore } from '@/server/store';
+import { getEngine } from '@/server/sim/engine';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,7 +11,8 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
   const query = parseHistoryQuery(new URL(request.url).searchParams);
   if (!query.ok) return NextResponse.json({ error: query.error }, { status: 400 });
-  const samples = await getStore().history(query);
+  const runId = query.runId ?? getEngine().getSnapshot().runId;
+  const samples = await getStore().history({ ...query, runId });
   return new Response(telemetryToCsv(samples), {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',

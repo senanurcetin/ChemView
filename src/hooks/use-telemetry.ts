@@ -30,20 +30,25 @@ export function useTelemetry() {
   const [rpmHistory, setRpmHistory] = useState<HistoryPoint[]>([]);
   const [tempHistory, setTempHistory] = useState<HistoryPoint[]>([]);
   const lastCursor = useRef<SnapshotCursor | null>(null);
-  const restartGeneration = useRef(0);
+  const activeRunId = snapshot?.runId;
 
-  // Seed the trends from the server's persisted samples so a page refresh does not start empty.
+  // Only fetch persisted samples after the SSE stream identifies the current run.
+  // Re-fetch on engine restart and discard responses from an older run.
   useEffect(() => {
+    if (!activeRunId) return;
     const controller = new AbortController();
-    const generation = restartGeneration.current;
     const from = new Date(Date.now() - PRELOAD_WINDOW_MS).toISOString();
-    fetch(`/api/history?from=${encodeURIComponent(from)}`, { signal: controller.signal })
+    fetch(
+      `/api/history?from=${encodeURIComponent(from)}&runId=${encodeURIComponent(activeRunId)}`,
+      { signal: controller.signal },
+    )
       .then((res) => (res.ok ? res.json() : null))
       .then((body: unknown) => {
-        const samples = parseHistorySamples(body);
-        if (!samples || generation !== restartGeneration.current) return;
+        if (controller.signal.aborted || lastCursor.current?.runId !== activeRunId) return;
+        const samples = parseHistorySamples(body, activeRunId);
+        if (!samples) return;
         setRpmHistory((prev) =>
-          generation === restartGeneration.current
+          lastCursor.current?.runId === activeRunId
             ? mergeHistory(
                 prev,
                 samples.map((s) => toPoint(s.ts, s.rpm)),
@@ -51,7 +56,7 @@ export function useTelemetry() {
             : prev,
         );
         setTempHistory((prev) =>
-          generation === restartGeneration.current
+          lastCursor.current?.runId === activeRunId
             ? mergeHistory(
                 prev,
                 samples.map((s) => toPoint(s.ts, s.temp)),
@@ -60,10 +65,10 @@ export function useTelemetry() {
         );
       })
       .catch(() => {
-        /* history is a nicety; the live stream still fills the trend */
+        /* History is optional; SSE still supplies live samples. */
       });
     return () => controller.abort();
-  }, []);
+  }, [activeRunId]);
 
   useEffect(() => {
     const source = new EventSource('/api/stream');
@@ -83,7 +88,6 @@ export function useTelemetry() {
       const transition = classifySnapshot(lastCursor.current, next);
       setStatus('Connected');
       if (transition === 'ignore') return;
-      if (transition === 'new-run') restartGeneration.current += 1;
       lastCursor.current = { runId: next.runId, seq: next.seq };
       setSnapshot(next);
 

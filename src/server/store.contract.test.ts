@@ -49,6 +49,28 @@ describe.each(factories)('Store contract: $name', ({ skip, create }) => {
     expect(got.map((s) => s.ts)).toEqual([iso(0), iso(5)]);
   });
 
+  it.skipIf(skip)('isolates sessions before applying the history limit', async () => {
+    const runA = `contract-${Date.now()}-a`;
+    const runB = `contract-${Date.now()}-b`;
+    for (const [offset, runId] of [
+      [40, runB],
+      [40, runA],
+      [45, runB],
+      [50, runA],
+    ] as const) {
+      await store.saveTelemetry(toSample(initialState(), iso(offset), runId));
+    }
+
+    const samplesA = await store.history({ from: iso(40), to: iso(50), runId: runA, limit: 1 });
+    const samplesB = await store.history({ from: iso(40), to: iso(50), runId: runB });
+    expect(samplesA.map((sample) => [sample.ts, sample.runId])).toEqual([[iso(40), runA]]);
+    expect(samplesB.map((sample) => [sample.ts, sample.runId])).toEqual([
+      [iso(40), runB],
+      [iso(45), runB],
+    ]);
+    expect(await store.history({ from: iso(40), to: iso(50) })).toEqual([]);
+  });
+
   it.skipIf(skip)('returns nothing for an empty range', async () => {
     expect(await store.history({ from: iso(100), to: iso(200) })).toEqual([]);
   });

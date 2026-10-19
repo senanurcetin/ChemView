@@ -164,7 +164,7 @@ export class Engine {
     const ts = this.now().toISOString();
     this.commentator?.record(this.state, ts);
     if (++this.tickCount % TELEMETRY_EVERY === 0) {
-      const sample = toSample(this.state, ts);
+      const sample = toSample(this.state, ts, this.runId);
       this.persist((store) => store.saveTelemetry(sample));
     }
     void this.runCommentary();

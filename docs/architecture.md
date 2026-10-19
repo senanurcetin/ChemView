@@ -43,7 +43,13 @@ The simulator clamps accepted RPM and temperature setpoints to the limits in `si
 
 Each snapshot carries a `runId` unique to its in-process `Engine` instance and a monotonic `seq` counter for that run. The browser validates full incoming SSE snapshots before displaying them, ignores duplicate/out-of-order sequences within the same run, and resets rolling trends when the run identity changes. An established EventSource transport is not marked "Gateway Active" until a valid payload arrives. A history preload already in flight is ignored if the run changes before it completes.
 
-Persisted history is time-indexed and **does not contain a run identifier**. Consequently, a fresh page load can still preload samples from an earlier simulated process when both sessions fall within the requested time window. This demo does not claim cross-restart provenance or physical historian guarantees.
+Persisted telemetry now records the engine `runId` on each new sample. The HMI waits for a validated SSE snapshot before requesting history for its specific run and rejects mismatched responses. A restart triggers a new scoped preload. This is session provenance within the simulator, not physical historian traceability.
+
+## Telemetry persistence and legacy records
+
+New records use Firestore paths `sim_runs/<runId>/telemetry/<timestamp>` (or an in-memory record tagged with `runId`). The per-run path prevents timestamp collisions across restarted simulators and allows efficient time-range queries without a composite index. The old top-level `telemetry` collection remains untouched and can still be read by calling the Store without a run filter; it is **not** displayed by the current-session dashboard or included in default API responses.
+
+`GET /api/history` and `GET /api/export` default to the running engine's `runId`. An optional UUID `runId` query parameter selects an archived session; `/api/history` echoes `runId` and validates each returned sample's session on the client. CSV exports add the `run_id` column. This is a compatibility-aware storage transition, not a historical data migration.
 
 ## Alerting model
 

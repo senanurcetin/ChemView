@@ -54,8 +54,14 @@ describe('Engine persistence', () => {
     engine.command({ type: 'start' });
     for (let i = 0; i < TELEMETRY_EVERY * 2; i++) engine.tick();
     await vi.waitFor(async () => {
-      const samples = await store.history({ from: '0000', to: '9999' });
+      const samples = await store.history({
+        from: '0000',
+        to: '9999',
+        runId: engine.getSnapshot().runId,
+      });
       expect(samples).toHaveLength(2);
+      const activeRunId = engine.getSnapshot().runId;
+      expect(samples.every((sample) => sample.runId === activeRunId)).toBe(true);
     });
     expect((await store.recentAudit(5)).map((e) => e.message)).toContain(
       'INFO: Mixer STARTED by Operator',
@@ -104,6 +110,10 @@ describe('history query + csv', () => {
   it('rejects bad input', () => {
     expect(parseHistoryQuery(new URLSearchParams('from=nope'), now).ok).toBe(false);
     expect(parseHistoryQuery(new URLSearchParams('limit=99999'), now).ok).toBe(false);
+    expect(parseHistoryQuery(new URLSearchParams('runId=invalid'), now).ok).toBe(false);
+    const validRunId = '123e4567-e89b-42d3-a456-426614174000';
+    const scopedQuery = new URLSearchParams({ runId: validRunId });
+    expect(parseHistoryQuery(scopedQuery, now)).toMatchObject({ ok: true, runId: validRunId });
     expect(parseHistoryQuery(new URLSearchParams('from=2026-02-01&to=2026-01-01'), now).ok).toBe(
       false,
     );
@@ -111,9 +121,14 @@ describe('history query + csv', () => {
   it('renders a header and one row per sample', () => {
     const csv = telemetryToCsv([sample('2026-01-01T00:00:00.000Z')]);
     expect(csv.split('\n')[0]).toBe(
-      'timestamp,rpm,temperature_c,ph,level_pct,mixer_running,heater_on,valve_open',
+      'timestamp,run_id,rpm,temperature_c,ph,level_pct,mixer_running,heater_on,valve_open',
     );
-    expect(csv.split('\n')[1]).toBe('2026-01-01T00:00:00.000Z,0.00,24.50,7.000,65,0,0,0');
+    expect(csv.split('\n')[1]).toBe('2026-01-01T00:00:00.000Z,,0.00,24.50,7.000,65,0,0,0');
+    const tagged = telemetryToCsv([
+      sample('2026-01-01T00:00:00.000Z'),
+      toSample(initialState(), '2026-01-01T00:00:05.000Z', 'run-demo'),
+    ]);
+    expect(tagged.split('\n')[2]).toContain('2026-01-01T00:00:05.000Z,run-demo,');
   });
 });
 
