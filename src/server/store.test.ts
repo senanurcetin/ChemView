@@ -60,9 +60,7 @@ describe('Engine persistence', () => {
         runId: engine.getSnapshot().runId,
       });
       expect(samples).toHaveLength(2);
-      expect(samples.every((sample) => sample.runId === engine.getSnapshot().runId)).toBe(
-        true,
-      );
+      expect(samples.every((sample) => sample.runId === engine.getSnapshot().runId)).toBe(true);
     });
     expect((await store.recentAudit(5)).map((e) => e.message)).toContain(
       'INFO: Mixer STARTED by Operator',
