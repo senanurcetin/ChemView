@@ -99,6 +99,32 @@ test('manual setpoint sliders follow an external operator session', async ({ pag
   await expect(page.getByText('720 RPM')).toBeVisible();
 });
 
+test('rejected manual setpoint reverts to the server readback', async ({ page, request }) => {
+  await command(request, { type: 'set_rpm_setpoint', value: 500 });
+  await command(request, { type: 'set_mode', manual: true });
+  await page.goto('/');
+  await expect(page.getByText('Gateway Active')).toBeVisible();
+  await expect(page.getByText('500 RPM')).toBeVisible();
+
+  let attemptedWrites = 0;
+  await page.route('**/api/command', async (route) => {
+    const body = route.request().postDataJSON() as Record<string, unknown>;
+    if (body.type !== 'set_rpm_setpoint') return route.continue();
+    attemptedWrites += 1;
+    await route.fulfill({
+      status: 409,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: false, reason: 'Simulated command denial.' }),
+    });
+  });
+
+  await page.getByRole('slider', { name: 'Target RPM' }).focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByText('Action Denied', { exact: true })).toBeVisible();
+  await expect(page.getByText('500 RPM')).toBeVisible();
+  expect(attemptedWrites).toBe(1);
+});
+
 test('manual sliders are disabled when the E-STOP latch is active', async ({ page, request }) => {
   await page.goto('/');
   await expect(page.getByText('Gateway Active')).toBeVisible();
