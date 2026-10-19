@@ -56,6 +56,7 @@ export function useTelemetry() {
   const [rpmHistory, setRpmHistory] = useState<HistoryPoint[]>([]);
   const [tempHistory, setTempHistory] = useState<HistoryPoint[]>([]);
   const lastCursor = useRef<SnapshotCursor | null>(null);
+  const retiredRunIds = useRef<Set<string>>(new Set());
   const activeRunId = snapshot?.runId;
   const status = telemetryStatus(transportStatus, lastReceivedAt, nowMs);
   const lastUpdateAgeSeconds = telemetryAgeSeconds(lastReceivedAt, nowMs);
@@ -169,12 +170,19 @@ export function useTelemetry() {
         setTransportStatus('Disconnected');
         return;
       }
-      const transition = classifySnapshot(lastCursor.current, next);
+      const transition = classifySnapshot(lastCursor.current, next, retiredRunIds.current);
       if (transition === 'ignore') return;
-      if (transition === 'new-run') setSessionRestarted(true);
+      if (transition === 'new-run' && lastCursor.current) {
+        retiredRunIds.current.add(lastCursor.current.runId);
+        setSessionRestarted(true);
+      }
       setLastReceivedAt(Date.now());
       setTransportStatus('Connected');
-      lastCursor.current = { runId: next.runId, seq: next.seq };
+      lastCursor.current = {
+        runId: next.runId,
+        seq: next.seq,
+        estopEpoch: next.estopEpoch,
+      };
       setSnapshot(next);
       setAuditHistory((previous) =>
         transition === 'new-run'

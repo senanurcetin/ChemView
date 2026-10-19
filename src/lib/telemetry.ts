@@ -30,7 +30,7 @@ const auditEntrySchema: z.ZodType<AuditEntry> = z.object({
 
 /** Validate the entire SSE payload before updating any operator-visible state. */
 const snapshotSchema: z.ZodType<Snapshot> = z.object({
-  runId: z.string().min(1),
+  runId: z.string().uuid(),
   estopEpoch: z.number().int().nonnegative(),
   seq: z.number().int().nonnegative(),
   timestamp,
@@ -151,13 +151,20 @@ export function parseSnapshotEvent(raw: string): Snapshot | null {
   try {
     const payload: unknown = JSON.parse(raw);
     const parsed = snapshotSchema.safeParse(payload);
-    return parsed.success ? parsed.data : null;
+    if (!parsed.success) return null;
+    const snapshot = parsed.data;
+    // A syntactically valid SSE message must never smuggle another run's
+    // audit or alarm records into the current operator session.
+    if (snapshot.alerts.some((alert) => alert.runId !== snapshot.runId)) return null;
+    if (snapshot.audit.some((entry) => entry.runId !== snapshot.runId)) return null;
+    return snapshot;
   } catch {
     return null;
   }
 }
 
-export type SnapshotCursor = Pick<Snapshot, 'runId' | 'seq'>;
+export type SnapshotCursor = Pick<Snapshot, 'runId' | 'seq'> &
+  Partial<Pick<Snapshot, 'estopEpoch'>>;
 export type SnapshotTransition = 'initial' | 'advance' | 'new-run' | 'ignore';
 
 /**
@@ -167,8 +174,19 @@ export type SnapshotTransition = 'initial' | 'advance' | 'new-run' | 'ignore';
 export function classifySnapshot(
   previous: SnapshotCursor | null,
   next: SnapshotCursor,
+  retiredRunIds: ReadonlySet<string> = new Set(),
 ): SnapshotTransition {
+  if (retiredRunIds.has(next.runId)) return 'ignore';
   if (!previous) return 'initial';
   if (next.runId !== previous.runId) return 'new-run';
+  // An E-STOP generation cannot decrease within a running engine, even
+  // when a replayed packet has a larger SSE sequence.
+  if (
+    previous.estopEpoch !== undefined &&
+    next.estopEpoch !== undefined &&
+    next.estopEpoch < previous.estopEpoch
+  ) {
+    return 'ignore';
+  }
   return next.seq > previous.seq ? 'advance' : 'ignore';
 }

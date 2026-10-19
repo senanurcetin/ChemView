@@ -21,6 +21,31 @@ describe('parseSnapshotEvent', () => {
     expect(parseSnapshotEvent(JSON.stringify(snapshot))).toEqual(snapshot);
   });
 
+  it('rejects cross-run and untagged audit or alarm data in SSE packets', () => {
+    const engine = new Engine({ seed: 1 });
+    engine.command({ type: 'start' });
+    engine.tick();
+    const snapshot = engine.getSnapshot();
+    expect(snapshot.audit.length).toBeGreaterThan(0);
+    expect(snapshot.alerts.length).toBeGreaterThan(0);
+    expect(parseSnapshotEvent(JSON.stringify(snapshot))).toEqual(snapshot);
+    for (const kind of ['audit', 'alerts'] as const) {
+      const invalid = snapshot[kind].map((item) => ({
+        ...item,
+        runId: '123e4567-e89b-42d3-a456-426614174001',
+      }));
+      expect(parseSnapshotEvent(JSON.stringify({ ...snapshot, [kind]: invalid }))).toBeNull();
+      expect(
+        parseSnapshotEvent(
+          JSON.stringify({
+            ...snapshot,
+            [kind]: snapshot[kind].map(({ runId: _runId, ...item }) => item),
+          }),
+        ),
+      ).toBeNull();
+    }
+  });
+
   it('rejects malformed JSON without throwing', () => {
     expect(parseSnapshotEvent('{')).toBeNull();
     expect(parseSnapshotEvent('null')).toBeNull();
@@ -29,6 +54,7 @@ describe('parseSnapshotEvent', () => {
   it('rejects missing run identity and invalid nested telemetry', () => {
     const snapshot = sampleSnapshot();
     expect(parseSnapshotEvent(JSON.stringify({ ...snapshot, runId: '' }))).toBeNull();
+    expect(parseSnapshotEvent(JSON.stringify({ ...snapshot, runId: 'not-a-uuid' }))).toBeNull();
     expect(parseSnapshotEvent(JSON.stringify({ ...snapshot, seq: -1 }))).toBeNull();
     expect(parseSnapshotEvent(JSON.stringify({ ...snapshot, estopEpoch: -1 }))).toBeNull();
     expect(parseSnapshotEvent(JSON.stringify({ ...snapshot, estopEpoch: 0.5 }))).toBeNull();
@@ -84,6 +110,25 @@ describe('classifySnapshot', () => {
   it('recognizes an engine restart even if its new sequence is larger', () => {
     expect(classifySnapshot(previous, { runId: 'engine-B', seq: 0 })).toBe('new-run');
     expect(classifySnapshot(previous, { runId: 'engine-B', seq: 500 })).toBe('new-run');
+  });
+
+  it('never reactivates a retired run when its delayed packets are replayed', () => {
+    const active = { runId: 'engine-B', seq: 3, estopEpoch: 0 };
+    const retired = new Set(['engine-A']);
+    expect(
+      classifySnapshot(active, { runId: 'engine-A', seq: 100, estopEpoch: 0 }, retired),
+    ).toBe('ignore');
+    expect(classifySnapshot(active, { runId: 'engine-C', seq: 0 }, retired)).toBe('new-run');
+  });
+
+  it('rejects a regressing emergency-stop epoch despite advancing sequence', () => {
+    const current = { runId: 'engine-B', seq: 8, estopEpoch: 3 };
+    expect(classifySnapshot(current, { runId: 'engine-B', seq: 9, estopEpoch: 2 })).toBe(
+      'ignore',
+    );
+    expect(classifySnapshot(current, { runId: 'engine-B', seq: 9, estopEpoch: 3 })).toBe(
+      'advance',
+    );
   });
 });
 

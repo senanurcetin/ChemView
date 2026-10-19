@@ -65,6 +65,10 @@ Legacy untagged Firestore records in `telemetry` are **not deleted or migrated**
 
 ## HMI telemetry freshness
 
+Cross-session and malformed SSE audit/alarm events are rejected before HMI
+rendering. After a simulator restart the browser ignores late packets from
+previously observed run IDs, so old process data cannot override new readback.
+
 The operator display shows the current simulator session and the age of the latest validated telemetry snapshot. If an SSE connection stays open but delivers no advancing samples for 6 seconds, the header switches to `Gateway Stale` and a visible warning labels the displayed process readings as **last known values**. A new accepted sample clears the stale status; reconnecting the transport alone does not imply current data. An engine-session change is shown explicitly. These indicators are for this simulated HMI only and must not be mistaken for field-device or safety-system health.
 
 ## Shared-process operator readback

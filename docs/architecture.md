@@ -41,6 +41,12 @@ The simulator clamps accepted RPM and temperature setpoints to the limits in `si
 
 ## SSE stream consistency
 
+A validated live snapshot must carry a UUID `runId` and its embedded audit and
+alarm events must all belong to that same run. The browser maintains retired run
+IDs for the duration of the mounted HMI: late packets from a retired run cannot
+reactivate old trends or operator readback. In one run, a regressing E-STOP
+generation is rejected even if the packet carries a larger SSE sequence.
+
 Each snapshot carries a `runId` unique to its in-process `Engine` instance and a monotonic `seq` counter for that run. The browser validates full incoming SSE snapshots before displaying them, ignores duplicate/out-of-order sequences within the same run, and resets rolling trends when the run identity changes. An established EventSource transport is not marked "Gateway Active" until a valid payload arrives. A history preload already in flight is ignored if the run changes before it completes.
 
 Persisted telemetry now records the engine `runId` on each new sample. The HMI waits for a validated SSE snapshot before requesting history for its specific run and rejects mismatched responses. A restart triggers a new scoped preload. This is session provenance within the simulator, not physical historian traceability.
