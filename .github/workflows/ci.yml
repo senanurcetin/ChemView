@@ -45,11 +45,6 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Preview style corrections
-        run: |
-          npx prettier --write README.md src/components/chemical-mixing/Dashboard.tsx
-          git diff -- README.md src/components/chemical-mixing/Dashboard.tsx
-
       - name: Format check
         run: npm run format:check
 

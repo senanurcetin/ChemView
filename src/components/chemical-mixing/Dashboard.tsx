@@ -223,7 +223,10 @@ export function Dashboard() {
               SESSION: {snapshot ? snapshot.runId.slice(0, 8) : 'WAITING'}
             </span>
           </div>
-          <div className="flex items-center gap-2 border-l border-white/10 pl-3" aria-label="Nexus brand">
+          <div
+            className="flex items-center gap-2 border-l border-white/10 pl-3"
+            aria-label="Nexus brand"
+          >
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground">by</span>
             <Image
               src="/nexus-logo.png"
@@ -259,7 +262,10 @@ export function Dashboard() {
 
       <main className="grid min-w-0 flex-1 grid-cols-1 items-start gap-4 xl:grid-cols-12">
         {/* Left Column: Telemetry & Visualization */}
-        <section aria-label="Process telemetry" className="flex min-w-0 flex-col gap-4 xl:col-span-8">
+        <section
+          aria-label="Process telemetry"
+          className="flex min-w-0 flex-col gap-4 xl:col-span-8"
+        >
           <StatusDisplay
             mixingSpeed={rpm}
             temperature={temp}
@@ -303,7 +309,10 @@ export function Dashboard() {
         </section>
 
         {/* Right Column: Controls & Intelligence */}
-        <section aria-label="Operator controls" className="flex min-w-0 flex-col gap-4 xl:col-span-4">
+        <section
+          aria-label="Operator controls"
+          className="flex min-w-0 flex-col gap-4 xl:col-span-4"
+        >
           <NetworkStats
             packetCount={network.packetCount}
             latency={network.latencyMs}
