@@ -26,7 +26,7 @@ All plant state lives in the server `Engine` (`src/server/sim/engine.ts`). The c
 | `sim/commentary.ts`              | Guards around the Genkit flow: trigger gating near limits, 30 s global rate limit, 5 min repeat suppression, 8 s timeout, zod validation, silent fallback.      |
 | `sim/thresholds.ts`              | Single source for process limits, shared by the rules, the interlocks and the Genkit flow.                                                                      |
 | `store.ts`, `firestore-store.ts` | `Store` interface; Firestore when `FIREBASE_*` are set, otherwise a bounded `MemoryStore`. Writes are best-effort and never block a tick.                       |
-| `rate-limit.ts`                  | Per-IP fixed window for `/api/command` (E-STOP is exempt).                                                                                                      |
+| `rate-limit.ts`                  | Shared fixed window for `/api/command` across the simulator (E-STOP exempt).                                                                                    |
 
 ## HTTP API
 
@@ -36,6 +36,8 @@ All plant state lives in the server `Engine` (`src/server/sim/engine.ts`). The c
 | `POST /api/command`              | Body validated by zod (`sim/schema.ts`). `200` ok, `409` interlock denial with `reason`, `400` invalid, `429` throttled. |
 | `GET /api/history?from&to&limit` | Persisted telemetry (one sample per 5 s). Defaults to the last hour.                                                     |
 | `GET /api/export?from&to`        | Same data as CSV.                                                                                                        |
+
+The simulator clamps accepted RPM and temperature setpoints to the limits in `sim/thresholds.ts`. Its simulated Modbus FC 06 trace records the **effective applied value**, rather than an out-of-range value originally requested by the operator. This keeps the accepted process state and trace consistent; it does not represent a physical Modbus write.
 
 ## SSE stream consistency
 

@@ -136,6 +136,40 @@ describe('Engine', () => {
     expect(e.getSnapshot().network.packetCount).toBe(1);
   });
 
+  it('encodes the effective clamped setpoint in simulated Modbus writes', () => {
+    const e = make();
+    const cases = [
+      {
+        command: { type: 'set_rpm_setpoint', value: 9999 } as const,
+        applied: { type: 'set_rpm_setpoint', value: 1500 } as const,
+      },
+      {
+        command: { type: 'set_rpm_setpoint', value: -50 } as const,
+        applied: { type: 'set_rpm_setpoint', value: 0 } as const,
+      },
+      {
+        command: { type: 'set_temp_setpoint', value: 500 } as const,
+        applied: { type: 'set_temp_setpoint', value: 100 } as const,
+      },
+      {
+        command: { type: 'set_temp_setpoint', value: -5 } as const,
+        applied: { type: 'set_temp_setpoint', value: 20 } as const,
+      },
+    ];
+
+    cases.forEach(({ command, applied }, index) => {
+      const result = e.command(command);
+      expect(result.ok).toBe(true);
+      expect(result.wrote).toBe(true);
+      expect(e.getSnapshot().traffic[index].frame).toBe(commandFrame(index + 1, applied));
+    });
+    expect(e.getSnapshot().state).toMatchObject({
+      targetRpmManual: 0,
+      targetTempManual: 20,
+    });
+    expect(e.getSnapshot().network.packetCount).toBe(cases.length);
+  });
+
   it('caps log buffers at 50 entries', () => {
     const e = make();
     for (let i = 0; i < 40; i++) e.tick();
