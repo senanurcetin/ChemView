@@ -353,6 +353,10 @@ describe('Engine', () => {
     expect(accepted.ok).toBe(true);
     expect(engine.getSnapshot().state.estopLatched).toBe(false);
     expect(engine.getSnapshot().estopEpoch).toBe(2);
+    // A later E-STOP must always work, even after the prior latch was reset.
+    expect(engine.command({ type: 'estop' }).ok).toBe(true);
+    expect(engine.getSnapshot().estopEpoch).toBe(3);
+    expect(engine.getSnapshot().state.estopLatched).toBe(true);
   });
 
   it('guards a stale START/STOP transition but allows current readback', () => {

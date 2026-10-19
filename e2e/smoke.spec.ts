@@ -237,6 +237,8 @@ test('an old heater HTTP rejection cannot appear after E-STOP', async ({ page })
 
   releaseHeater?.();
   await expect.poll(() => replied).toBe(true);
+  // Let the completed fetch settle through the browser's promise handlers.
+  await page.waitForTimeout(200);
   await expect(page.getByText('Delayed heater denial')).not.toBeVisible();
   await expect(page.getByText('Action Denied', { exact: true })).not.toBeVisible();
 });

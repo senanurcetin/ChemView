@@ -132,6 +132,33 @@ describe('POST /api/command — HTTP contract', () => {
     expect(conflict.status).toBe(409);
   });
 
+  it('passes the E-STOP generation on reset and maps a newer-latch conflict to 409', async () => {
+    const { POST } = await import('./route');
+    const command = {
+      type: 'reset_estop',
+      expectedRunId: '123e4567-e89b-42d3-a456-426614174000',
+      expectedEstopEpoch: 3,
+    };
+    engineCommand.mockReturnValueOnce({
+      ok: false,
+      reason: 'A newer E-STOP occurred. Review the current latch before resetting.',
+    });
+    const stale = await postCommand(POST, command);
+    expect(stale.status).toBe(409);
+    expect(engineCommand).toHaveBeenCalledWith(command);
+    expect(await stale.json()).toMatchObject({
+      ok: false,
+      reason: 'A newer E-STOP occurred. Review the current latch before resetting.',
+    });
+
+    const invalid = await postCommand(POST, {
+      type: 'reset_estop',
+      expectedEstopEpoch: -1,
+    });
+    expect(invalid.status).toBe(400);
+    expect(engineCommand).toHaveBeenCalledTimes(1);
+  });
+
   it('shares the 60-command budget across spoofed IPs but always admits E-STOP', async () => {
     const { POST } = await import('./route');
 
