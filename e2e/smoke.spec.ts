@@ -22,6 +22,67 @@ test('dashboard connects to the gateway without page errors', async ({ page }) =
   expect(errors).toEqual([]);
 });
 
+test('dashboard displays the current simulation session and data age', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByText('Gateway Active')).toBeVisible();
+  await expect(page.getByTestId('telemetry-run-id')).toContainText(/SESSION: [0-9a-f]{8}/i);
+  await expect(page.getByTestId('telemetry-age')).toContainText(/LAST DATA: \d+s AGO/i);
+});
+
+test('stalled SSE data is marked stale even when the connection stays open', async ({ page }) => {
+  // Supply a single valid SSE snapshot, then simulate an open but silent stream.
+  await page.addInitScript(() => {
+    class SilentEventSource {
+      onopen: (() => void) | null = null;
+      onmessage: ((event: { data: string }) => void) | null = null;
+      onerror: (() => void) | null = null;
+      readyState = 1;
+
+      constructor() {
+        setTimeout(() => {
+          this.onopen?.();
+          this.onmessage?.({
+            data: JSON.stringify({
+              runId: '123e4567-e89b-42d3-a456-426614174000',
+              seq: 1,
+              timestamp: new Date().toISOString(),
+              state: {
+                isRunning: false,
+                estopLatched: false,
+                isManualMode: false,
+                isHeaterOn: false,
+                valveOpen: false,
+                rpm: 0,
+                temp: 24.5,
+                ph: 7,
+                level: 65,
+                targetRpmManual: 500,
+                targetTempManual: 60,
+              },
+              network: { packetCount: 0, latencyMs: 15, errorCount: 0 },
+              traffic: [],
+              audit: [],
+              alerts: [],
+              aiBusy: false,
+            }),
+          });
+        }, 50);
+      }
+
+      close() {
+        this.readyState = 2;
+      }
+    }
+    Object.defineProperty(window, 'EventSource', { value: SilentEventSource });
+  });
+
+  await page.goto('/');
+  await expect(page.getByText('Gateway Active')).toBeVisible();
+  await expect(page.getByText('Gateway Stale')).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByTestId('telemetry-warning')).toContainText('TELEMETRY NOT LIVE');
+  await expect(page.getByTestId('telemetry-run-id')).toContainText('123e4567');
+});
+
 test('starting the mixer spins the rotor up', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByText('Gateway Active')).toBeVisible();
