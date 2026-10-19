@@ -2,7 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Command, Snapshot } from '@/server/sim/types';
-import type { TelemetrySample } from '@/server/store';
+import {
+  classifySnapshot,
+  parseHistorySamples,
+  parseSnapshotEvent,
+  type SnapshotCursor,
+} from '@/lib/telemetry';
 import { PRELOAD_WINDOW_MS, mergeHistory, toPoint, type HistoryPoint } from '@/lib/history';
 
 export type { HistoryPoint };
@@ -24,27 +29,34 @@ export function useTelemetry() {
   const [status, setStatus] = useState<ConnectionStatus>('Connecting');
   const [rpmHistory, setRpmHistory] = useState<HistoryPoint[]>([]);
   const [tempHistory, setTempHistory] = useState<HistoryPoint[]>([]);
-  const lastSeq = useRef(-1);
+  const lastCursor = useRef<SnapshotCursor | null>(null);
+  const restartGeneration = useRef(0);
 
   // Seed the trends from the server's persisted samples so a page refresh does not start empty.
   useEffect(() => {
     const controller = new AbortController();
+    const generation = restartGeneration.current;
     const from = new Date(Date.now() - PRELOAD_WINDOW_MS).toISOString();
     fetch(`/api/history?from=${encodeURIComponent(from)}`, { signal: controller.signal })
       .then((res) => (res.ok ? res.json() : null))
-      .then((body: { samples: TelemetrySample[] } | null) => {
-        if (!body) return;
+      .then((body: unknown) => {
+        const samples = parseHistorySamples(body);
+        if (!samples || generation !== restartGeneration.current) return;
         setRpmHistory((prev) =>
-          mergeHistory(
-            prev,
-            body.samples.map((s) => toPoint(s.ts, s.rpm)),
-          ),
+          generation === restartGeneration.current
+            ? mergeHistory(
+                prev,
+                samples.map((s) => toPoint(s.ts, s.rpm)),
+              )
+            : prev,
         );
         setTempHistory((prev) =>
-          mergeHistory(
-            prev,
-            body.samples.map((s) => toPoint(s.ts, s.temp)),
-          ),
+          generation === restartGeneration.current
+            ? mergeHistory(
+                prev,
+                samples.map((s) => toPoint(s.ts, s.temp)),
+              )
+            : prev,
         );
       })
       .catch(() => {
@@ -56,24 +68,35 @@ export function useTelemetry() {
   useEffect(() => {
     const source = new EventSource('/api/stream');
 
-    source.onopen = () => setStatus('Connected');
+    // Transport establishment alone does not prove that telemetry is valid.
+    source.onopen = () => setStatus('Connecting');
     // EventSource retries on its own; CLOSED means it gave up.
     source.onerror = () =>
       setStatus(source.readyState === EventSource.CLOSED ? 'Disconnected' : 'Connecting');
     source.onmessage = (event) => {
-      const next = JSON.parse(event.data) as Snapshot;
-      if (next.seq === lastSeq.current) return;
-      // A lower seq means the server restarted: start the trends over.
-      if (next.seq < lastSeq.current) {
-        setRpmHistory([]);
-        setTempHistory([]);
+      const next = parseSnapshotEvent(event.data);
+      if (!next) {
+        // Keep the last valid process view; do not treat a corrupt payload as live data.
+        setStatus('Disconnected');
+        return;
       }
-      lastSeq.current = next.seq;
+      const transition = classifySnapshot(lastCursor.current, next);
       setStatus('Connected');
+      if (transition === 'ignore') return;
+      if (transition === 'new-run') restartGeneration.current += 1;
+      lastCursor.current = { runId: next.runId, seq: next.seq };
       setSnapshot(next);
 
-      setRpmHistory((prev) => mergeHistory(prev, [toPoint(next.timestamp, next.state.rpm)]));
-      setTempHistory((prev) => mergeHistory(prev, [toPoint(next.timestamp, next.state.temp)]));
+      setRpmHistory((prev) =>
+        transition === 'new-run'
+          ? [toPoint(next.timestamp, next.state.rpm)]
+          : mergeHistory(prev, [toPoint(next.timestamp, next.state.rpm)]),
+      );
+      setTempHistory((prev) =>
+        transition === 'new-run'
+          ? [toPoint(next.timestamp, next.state.temp)]
+          : mergeHistory(prev, [toPoint(next.timestamp, next.state.temp)]),
+      );
     };
 
     return () => source.close();

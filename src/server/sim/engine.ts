@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { evaluateRules, NOMINAL_MESSAGE } from './alerts';
 import { Commentator } from './commentary';
 import { applyCommand } from './interlocks';
@@ -86,7 +87,7 @@ export class Engine {
   private lastAlertKey: string | null = null;
   private readonly commentator?: Commentator;
   private readonly store?: Store;
-  private readonly runId = Date.now().toString(36);
+  private readonly runId = randomUUID();
   private tickCount = 0;
   private listeners = new Set<Listener>();
   private timer: ReturnType<typeof setInterval> | null = null;
@@ -210,6 +211,7 @@ export class Engine {
 
   getSnapshot(): Snapshot {
     return {
+      runId: this.runId,
       seq: this.seq,
       timestamp: this.now().toISOString(),
       state: this.state,

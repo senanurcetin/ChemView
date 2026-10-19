@@ -39,6 +39,12 @@ All plant state lives in the server `Engine` (`src/server/sim/engine.ts`). The c
 
 The simulator clamps accepted RPM and temperature setpoints to the limits in `sim/thresholds.ts`. Its simulated Modbus FC 06 trace records the **effective applied value**, rather than an out-of-range value originally requested by the operator. This keeps the accepted process state and trace consistent; it does not represent a physical Modbus write.
 
+## SSE stream consistency
+
+Each snapshot carries a `runId` unique to its in-process `Engine` instance and a monotonic `seq` counter for that run. The browser validates full incoming SSE snapshots before displaying them, ignores duplicate/out-of-order sequences within the same run, and resets rolling trends when the run identity changes. An established EventSource transport is not marked "Gateway Active" until a valid payload arrives. A history preload already in flight is ignored if the run changes before it completes.
+
+Persisted history is time-indexed and **does not contain a run identifier**. Consequently, a fresh page load can still preload samples from an earlier simulated process when both sessions fall within the requested time window. This demo does not claim cross-restart provenance or physical historian guarantees.
+
 ## Alerting model
 
 Safety alarms are deterministic and raised on the tick the condition appears. Gemini commentary (`source: "ai"`) is additive: it adds trend-aware context and a recommendation when the plant is on or near a limit, and its failure changes nothing visible except the absence of the comment.

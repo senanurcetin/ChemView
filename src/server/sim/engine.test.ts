@@ -110,6 +110,14 @@ describe('modbus frames', () => {
 describe('Engine', () => {
   const make = () => new Engine({ seed: 7, now: () => new Date('2026-01-01T00:00:00Z') });
 
+  it('exposes a stable engine run identifier that changes for a new engine', () => {
+    const first = make();
+    const second = make();
+    expect(first.getSnapshot().runId).toBeTruthy();
+    expect(first.tick().runId).toBe(first.getSnapshot().runId);
+    expect(second.getSnapshot().runId).not.toBe(first.getSnapshot().runId);
+  });
+
   it('each tick logs one TX request and one RX response', () => {
     const e = make();
     const snap = e.tick();

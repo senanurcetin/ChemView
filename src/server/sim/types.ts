@@ -68,6 +68,8 @@ export interface Alert {
 
 /** One telemetry message pushed to clients every tick. */
 export interface Snapshot {
+  /** Stable identity of this engine instance; changes on simulator restart. */
+  runId: string;
   seq: number;
   timestamp: string;
   state: SimState;
