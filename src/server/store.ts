@@ -3,6 +3,8 @@ import type { Alert, AuditEntry, SimState } from './sim/types';
 export interface TelemetrySample {
   /** ISO timestamp. */
   ts: string;
+  /** Optional only for records written before run-scoped storage was introduced. */
+  runId?: string;
   rpm: number;
   temp: number;
   ph: number;
@@ -12,20 +14,29 @@ export interface TelemetrySample {
   valveOpen: boolean;
 }
 
+export interface HistoryRange {
+  from: string;
+  to: string;
+  limit?: number;
+  /** When supplied, return only telemetry belonging to this engine run. */
+  runId?: string;
+}
+
 export interface Store {
   readonly kind: string;
   saveTelemetry(sample: TelemetrySample): Promise<void>;
   saveAlert(alert: Alert): Promise<void>;
   saveAudit(entry: AuditEntry): Promise<void>;
   /** Samples with `from <= ts <= to`, oldest first; at most `limit` of them (the oldest in range). */
-  history(range: { from: string; to: string; limit?: number }): Promise<TelemetrySample[]>;
+  history(range: HistoryRange): Promise<TelemetrySample[]>;
   /** Most recent audit entries, newest first. */
   recentAudit(limit: number): Promise<AuditEntry[]>;
 }
 
-export function toSample(state: SimState, ts: string): TelemetrySample {
+export function toSample(state: SimState, ts: string, runId?: string): TelemetrySample {
   return {
     ts,
+    ...(runId ? { runId } : {}),
     rpm: Math.round(state.rpm * 100) / 100,
     temp: Math.round(state.temp * 100) / 100,
     ph: Math.round(state.ph * 1000) / 1000,
@@ -62,9 +73,9 @@ export class MemoryStore implements Store {
     if (this.audit.length > this.maxAudit) this.audit.length = this.maxAudit;
   }
 
-  async history({ from, to, limit = 5000 }: { from: string; to: string; limit?: number }) {
+  async history({ from, to, limit = 5000, runId }: HistoryRange) {
     return this.samples
-      .filter((s) => s.ts >= from && s.ts <= to)
+      .filter((s) => s.ts >= from && s.ts <= to && s.runId === runId)
       .sort((a, b) => a.ts.localeCompare(b.ts))
       .slice(0, limit);
   }
@@ -103,7 +114,7 @@ class LazyStore implements Store {
   async saveAudit(entry: AuditEntry) {
     return (await this.inner).saveAudit(entry);
   }
-  async history(range: { from: string; to: string; limit?: number }) {
+  async history(range: HistoryRange) {
     return (await this.inner).history(range);
   }
   async recentAudit(limit: number) {
