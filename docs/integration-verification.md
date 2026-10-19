@@ -15,6 +15,10 @@ avoid redundant full-suite executions.
 - **Persistence:** `npm run test:firestore` against the Firestore emulator
 - **Browser:** `npm run test:e2e` with Playwright Chromium
 
+GitHub-hosted jobs use Node.js 22, matching the Firebase Admin SDK's
+runtime requirement. The browser tests exercise accessible slider handles,
+not only visual container labels.
+
 ## Acceptance scenarios
 
 - The HMI waits for a validated, current SSE payload before unlocking controls.
