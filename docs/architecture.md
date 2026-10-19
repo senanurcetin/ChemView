@@ -37,6 +37,8 @@ All plant state lives in the server `Engine` (`src/server/sim/engine.ts`). The c
 | `GET /api/history?from&to&limit` | Persisted telemetry (one sample per 5 s). Defaults to the last hour.                                                     |
 | `GET /api/export?from&to`        | Same data as CSV.                                                                                                        |
 
+The simulator clamps accepted RPM and temperature setpoints to the limits in `sim/thresholds.ts`. Its simulated Modbus FC 06 trace records the **effective applied value**, rather than an out-of-range value originally requested by the operator. This keeps the accepted process state and trace consistent; it does not represent a physical Modbus write.
+
 ## Alerting model
 
 Safety alarms are deterministic and raised on the tick the condition appears. Gemini commentary (`source: "ai"`) is additive: it adds trend-aware context and a recommendation when the plant is on or near a limit, and its failure changes nothing visible except the absence of the comment.
