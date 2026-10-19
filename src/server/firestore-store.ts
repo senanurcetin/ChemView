@@ -1,6 +1,6 @@
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
-import type { Store, TelemetrySample } from './store';
+import type { HistoryRange, Store, TelemetrySample } from './store';
 import type { Alert, AuditEntry } from './sim/types';
 
 interface Credentials {
@@ -28,7 +28,12 @@ export class FirestoreStore implements Store {
   }
 
   async saveTelemetry(sample: TelemetrySample) {
-    await this.db.collection('telemetry').doc(sample.ts).set(sample);
+    // Run-specific document paths prevent different simulator sessions from
+    // overwriting one another when their timestamps happen to match.
+    const collection = sample.runId
+      ? this.db.collection('sim_runs').doc(sample.runId).collection('telemetry')
+      : this.db.collection('telemetry'); // Pre-migration records only.
+    await collection.doc(sample.ts).set(sample);
   }
 
   async saveAlert(alert: Alert) {
@@ -39,9 +44,11 @@ export class FirestoreStore implements Store {
     await this.db.collection('audit').doc(entry.id).set(entry);
   }
 
-  async history({ from, to, limit = 5000 }: { from: string; to: string; limit?: number }) {
-    const snap = await this.db
-      .collection('telemetry')
+  async history({ from, to, limit = 5000, runId }: HistoryRange) {
+    const collection = runId
+      ? this.db.collection('sim_runs').doc(runId).collection('telemetry')
+      : this.db.collection('telemetry');
+    const snap = await collection
       .where('ts', '>=', from)
       .where('ts', '<=', to)
       .orderBy('ts', 'asc')
