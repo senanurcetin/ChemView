@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import type { AuditEntry } from './sim/types';
+import type { Alert, AuditEntry } from './sim/types';
 import { MemoryStore, toSample, type Store } from './store';
 import { initialState } from './sim/state';
 
@@ -83,6 +83,21 @@ describe.each(factories)('Store contract: $name', ({ skip, create }) => {
     await store.saveTelemetry(sample);
     const [got] = await store.history({ from: iso(30), to: iso(30) });
     expect(got).toEqual(sample);
+  });
+
+  it.skipIf(skip)('returns bounded alert history isolated by simulator run', async () => {
+    const runA = `alert-contract-${Date.now()}-a`;
+    const runB = `alert-contract-${Date.now()}-b`;
+    const alerts: Alert[] = [
+      { id: `${runA}-1`, runId: runA, timestamp: iso(500), source: 'rule', message: 'A1', urgency: 'high' },
+      { id: `${runB}-1`, runId: runB, timestamp: iso(501), source: 'ai', message: 'B1', urgency: 'medium' },
+      { id: `${runA}-2`, runId: runA, timestamp: iso(502), source: 'rule', message: 'A2', urgency: 'low' },
+    ];
+    for (const alert of alerts) await store.saveAlert(alert);
+    const recentA = await store.recentAlerts(1, runA);
+    expect(recentA).toEqual([alerts[2]]);
+    const recentB = await store.recentAlerts(10, runB);
+    expect(recentB).toEqual([alerts[1]]);
   });
 
   it.skipIf(skip)('recentAudit returns newest first and honors the limit', async () => {

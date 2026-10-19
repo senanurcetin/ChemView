@@ -59,6 +59,8 @@ export interface NetworkCounters {
 
 export interface Alert {
   id: string;
+  /** Optional for alerts recorded before run-scoped history was introduced. */
+  runId?: string;
   timestamp: string;
   /** `rule` = deterministic safety alarm, `ai` = Genkit-generated commentary. */
   source: 'rule' | 'ai';

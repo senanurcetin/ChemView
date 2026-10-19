@@ -40,6 +40,36 @@ describe('MemoryStore', () => {
   });
 });
 
+describe('alert history', () => {
+  it('keeps a bounded run-scoped memory log independently of live snapshots', async () => {
+    const store = new MemoryStore(10, 10, 3);
+    const runA = 'run-A';
+    const runB = 'run-B';
+    for (const [id, runId] of [
+      ['a1', runA],
+      ['b1', runB],
+      ['a2', runA],
+      ['a3', runA],
+      ['a4', runA],
+    ]) {
+      await store.saveAlert({
+        id,
+        runId,
+        timestamp: '2026-01-01T00:00:00.000Z',
+        source: 'rule',
+        urgency: 'low',
+        message: id,
+      });
+    }
+    expect((await store.recentAlerts(10, runA)).map((a) => a.id)).toEqual([
+      'a4',
+      'a3',
+      'a2',
+    ]);
+    expect((await store.recentAlerts(10, runB)).map((a) => a.id)).toEqual([]);
+  });
+});
+
 describe('createStore', () => {
   it('uses memory when Firebase credentials are missing', async () => {
     expect((await createStore({})).kind).toBe('memory');
@@ -74,6 +104,7 @@ describe('Engine persistence', () => {
       kind: 'broken',
       saveTelemetry: () => Promise.reject(new Error('down')),
       saveAlert: () => Promise.reject(new Error('down')),
+      recentAlerts: () => Promise.reject(new Error('down')),
       saveAudit: () => Promise.reject(new Error('down')),
       history: () => Promise.reject(new Error('down')),
       recentAudit: () => Promise.reject(new Error('down')),

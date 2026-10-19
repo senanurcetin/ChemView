@@ -10,7 +10,7 @@ interface Credentials {
   privateKey?: string;
 }
 
-/** Firestore-backed store. Collections: `telemetry`, `alerts`, `audit` (doc id = entry id). */
+/** Firestore-backed store. New telemetry and alerts are separated by simulator run. */
 export class FirestoreStore implements Store {
   readonly kind = 'firestore';
   private readonly db: Firestore;
@@ -37,7 +37,18 @@ export class FirestoreStore implements Store {
   }
 
   async saveAlert(alert: Alert) {
-    await this.db.collection('alerts').doc(alert.id).set(alert);
+    const collection = alert.runId
+      ? this.db.collection('sim_runs').doc(alert.runId).collection('alerts')
+      : this.db.collection('alerts'); // Legacy alerts only.
+    await collection.doc(alert.id).set(alert);
+  }
+
+  async recentAlerts(limit: number, runId?: string) {
+    const collection = runId
+      ? this.db.collection('sim_runs').doc(runId).collection('alerts')
+      : this.db.collection('alerts');
+    const snap = await collection.orderBy('timestamp', 'desc').limit(limit).get();
+    return snap.docs.map((doc) => doc.data() as Alert);
   }
 
   async saveAudit(entry: AuditEntry) {

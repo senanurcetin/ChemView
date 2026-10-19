@@ -26,6 +26,8 @@ export interface Store {
   readonly kind: string;
   saveTelemetry(sample: TelemetrySample): Promise<void>;
   saveAlert(alert: Alert): Promise<void>;
+  /** Alert events, newest first. When runId is omitted, only legacy alerts are returned. */
+  recentAlerts(limit: number, runId?: string): Promise<Alert[]>;
   saveAudit(entry: AuditEntry): Promise<void>;
   /** Samples with `from <= ts <= to`, oldest first; at most `limit` of them (the oldest in range). */
   history(range: HistoryRange): Promise<TelemetrySample[]>;
@@ -52,10 +54,12 @@ export class MemoryStore implements Store {
   readonly kind = 'memory';
   private samples: TelemetrySample[] = [];
   private audit: AuditEntry[] = [];
+  private alerts: Alert[] = [];
 
   constructor(
     private readonly maxSamples = 5000,
     private readonly maxAudit = 500,
+    private readonly maxAlerts = 200,
   ) {}
 
   async saveTelemetry(sample: TelemetrySample) {
@@ -64,8 +68,16 @@ export class MemoryStore implements Store {
       this.samples.splice(0, this.samples.length - this.maxSamples);
   }
 
-  async saveAlert() {
-    // Alerts are already part of every snapshot; nothing extra to keep in memory.
+  async saveAlert(alert: Alert) {
+    this.alerts.unshift(alert);
+    if (this.alerts.length > this.maxAlerts) this.alerts.length = this.maxAlerts;
+  }
+
+  async recentAlerts(limit: number, runId?: string) {
+    return this.alerts
+      .filter((alert) => alert.runId === runId)
+      .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+      .slice(0, limit);
   }
 
   async saveAudit(entry: AuditEntry) {
@@ -110,6 +122,9 @@ class LazyStore implements Store {
   }
   async saveAlert(alert: Alert) {
     return (await this.inner).saveAlert(alert);
+  }
+  async recentAlerts(limit: number, runId?: string) {
+    return (await this.inner).recentAlerts(limit, runId);
   }
   async saveAudit(entry: AuditEntry) {
     return (await this.inner).saveAudit(entry);

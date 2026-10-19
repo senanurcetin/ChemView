@@ -130,8 +130,9 @@ export class Engine {
   }
 
   private pushAlert(alert: Alert) {
-    this.alerts = [alert, ...this.alerts].slice(0, ALERT_LIMIT);
-    this.persist((store) => store.saveAlert(alert));
+    const tagged = { ...alert, runId: this.runId };
+    this.alerts = [tagged, ...this.alerts].slice(0, ALERT_LIMIT);
+    this.persist((store) => store.saveAlert(tagged));
   }
 
   /** Raises a rule alert only when the active condition changes (edge-triggered). */
