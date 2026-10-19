@@ -81,6 +81,12 @@ test('stalled SSE data is marked stale even when the connection stays open', asy
   await expect(page.getByText('Gateway Stale')).toBeVisible({ timeout: 10_000 });
   await expect(page.getByTestId('telemetry-warning')).toContainText('TELEMETRY NOT LIVE');
   await expect(page.getByTestId('telemetry-run-id')).toContainText('123e4567');
+  await expect(page.getByRole('button', { name: /^start$/i })).toBeDisabled();
+  await expect(page.getByRole('switch', { name: 'Manual mode' })).toBeDisabled();
+  await expect(page.getByRole('switch', { name: 'Heater' })).toBeDisabled();
+  await expect(page.getByRole('switch', { name: 'Discharge valve' })).toBeDisabled();
+  await expect(page.getByRole('slider', { name: 'Target RPM' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: /^e-stop$/i })).toBeEnabled();
 });
 
 test('manual setpoint sliders follow an external operator session', async ({ page, request }) => {
@@ -146,6 +152,34 @@ test('alarm archive defaults to current simulator session', async ({ page, reque
   expect(Array.isArray(body.alerts)).toBe(true);
   expect(body.alerts.length).toBeLessThanOrEqual(10);
   for (const alert of body.alerts) expect(alert.runId).toBe(body.runId);
+});
+
+test('ordinary controls stay locked until an SSE snapshot is validated', async ({ page }) => {
+  await page.addInitScript(() => {
+    class SilentEventSource {
+      onopen: (() => void) | null = null;
+      onmessage: ((event: { data: string }) => void) | null = null;
+      onerror: (() => void) | null = null;
+      readyState = 1;
+
+      constructor() {
+        setTimeout(() => this.onopen?.(), 50);
+      }
+
+      close() {
+        this.readyState = 2;
+      }
+    }
+
+    Object.defineProperty(window, 'EventSource', { value: SilentEventSource });
+  });
+
+  await page.goto('/');
+  await expect(page.getByText('Gateway Connecting')).toBeVisible();
+  await expect(page.getByRole('button', { name: /^start$/i })).toBeDisabled();
+  await expect(page.getByRole('switch', { name: 'Heater' })).toBeDisabled();
+  await expect(page.getByRole('switch', { name: 'Discharge valve' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: /^e-stop$/i })).toBeEnabled();
 });
 
 test('starting the mixer spins the rotor up', async ({ page }) => {

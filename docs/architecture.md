@@ -61,7 +61,7 @@ The HMI shows an abbreviated `runId` and the elapsed seconds since the most rece
 
 RPM and heater setpoint sliders mirror the server-owned `Snapshot.state` values whenever they are idle. During a local drag, the operator sees a temporary draft value; a **single** command is sent on slider commit rather than on each drag movement. The draft remains marked `(PENDING)` until a newer SSE snapshot confirms the applied value. Denied commands and a missing readback cause the local draft to revert, so an unconfirmed operator request is never presented indefinitely as the applied setting.
 
-Setpoint editing is disabled in automatic mode, while E-STOP is latched, or when validated telemetry is not currently connected. The simulated E-STOP action itself remains available. Concurrent operators can still overwrite each other's accepted values; this demo does not provide exclusive operator locks or a safety-rated control channel.
+Normal operator controls (mixer, mode, heater, valve, E-STOP reset and manual setpoints) are disabled while no validated current telemetry is available. The simulated E-STOP action itself remains available. The command handler on the client also checks freshness so a pending event cannot bypass the disabled controls; server-side interlocks and authentication remain authoritative. Valve control uses an accessible labeled switch rather than a click handler on an unlabeled container. Concurrent operators can still overwrite each other's accepted values; this demo does not provide exclusive operator locks or a safety-rated control channel.
 
 ## Alarm history and telemetry data-quality validation
 

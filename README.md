@@ -69,7 +69,7 @@ The operator display shows the current simulator session and the age of the late
 
 ## Shared-process operator readback
 
-The setpoint sliders follow server-owned values, including accepted writes from another browser. When an operator drags a manual-mode slider, the HMI displays a draft and sends one command on release; an unconfirmed setpoint is labeled `(PENDING)` until the SSE stream echoes its applied value. Denied or unconfirmed drafts revert to server readback. Manual setpoints are disabled if telemetry is stale/disconnected or E-STOP is latched, while the E-STOP action itself stays available.
+The setpoint sliders follow server-owned values, including accepted writes from another browser. When an operator drags a manual-mode slider, the HMI displays a draft and sends one command on release; an unconfirmed setpoint is labeled `(PENDING)` until the SSE stream echoes its applied value. Denied or unconfirmed drafts revert to server readback. Normal operator controls are disabled if telemetry is stale/disconnected or E-STOP is latched, while the E-STOP action itself stays available. An operator action racing a stale connection is also rejected client-side, though server-side interlocks remain authoritative.
 
 ## Session-scoped alarm history
 

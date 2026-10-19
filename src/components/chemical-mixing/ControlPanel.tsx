@@ -68,8 +68,8 @@ export function ControlPanel({
   // Safety Interlocks
   const valveLocked = isRunning || currentRpm >= 1;
   const mixerLocked = valveOpen || estopLatched;
-  const manualWriteEnabled =
-    isManualMode && !estopLatched && connectionStatus === 'Connected';
+  const controlsAvailable = connectionStatus === 'Connected';
+  const manualWriteEnabled = isManualMode && !estopLatched && controlsAvailable;
 
   return (
     <div className="flex flex-col gap-4">
@@ -83,7 +83,7 @@ export function ControlPanel({
                   variant={isRunning ? 'secondary' : 'default'}
                   size="lg"
                   onClick={onToggle}
-                  disabled={estopLatched}
+                  disabled={estopLatched || !controlsAvailable}
                   className={cn(
                     'h-16 w-full text-sm font-bold gap-3 transition-all duration-300',
                     !isRunning &&
@@ -130,7 +130,13 @@ export function ControlPanel({
           className="rounded border border-red-500/50 bg-red-950/40 p-3 text-xs text-red-200 flex items-center justify-between gap-3"
         >
           <span>E-STOP LATCHED — reset before restarting.</span>
-          <Button type="button" variant="outline" size="sm" onClick={onResetEmergencyStop}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onResetEmergencyStop}
+            disabled={!controlsAvailable}
+          >
             RESET E-STOP
           </Button>
         </div>
@@ -146,7 +152,9 @@ export function ControlPanel({
             </Label>
           </div>
           <Switch
+            aria-label="Manual mode"
             checked={isManualMode}
+            disabled={!controlsAvailable || estopLatched}
             onCheckedChange={onToggleMode}
             className="data-[state=checked]:bg-primary"
           />
@@ -161,7 +169,9 @@ export function ControlPanel({
             </div>
             <div className="flex justify-center">
               <Switch
+                aria-label="Heater"
                 checked={isHeaterOn}
+                disabled={!controlsAvailable || estopLatched}
                 onCheckedChange={onToggleHeater}
                 className="data-[state=checked]:bg-orange-600"
               />
@@ -172,9 +182,8 @@ export function ControlPanel({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  onClick={onToggleValve}
                   className={cn(
-                    'p-3 border rounded-md bg-zinc-900/30 flex flex-col gap-3 transition-colors cursor-pointer',
+                    'p-3 border rounded-md bg-zinc-900/30 flex flex-col gap-3 transition-colors',
                     valveLocked ? 'border-red-500/20 opacity-50' : 'border-white/5',
                   )}
                 >
@@ -189,10 +198,11 @@ export function ControlPanel({
                   <div className="flex justify-center items-center gap-2">
                     {valveLocked && <Lock className="w-3 h-3 text-red-500" />}
                     <Switch
+                      aria-label="Discharge valve"
                       checked={valveOpen}
-                      // Keep interactive so the click triggers the warning toast in parent
-                      onCheckedChange={() => onToggleValve()}
-                      className="data-[state=checked]:bg-primary pointer-events-none"
+                      disabled={!controlsAvailable || estopLatched}
+                      onCheckedChange={onToggleValve}
+                      className="data-[state=checked]:bg-primary"
                     />
                   </div>
                 </div>

@@ -64,8 +64,16 @@ export function Dashboard() {
   const txActive = useFlash(lastTx);
   const rxActive = useFlash(lastRx);
 
+  const controlsAvailable = Boolean(snapshot) && status === 'Connected';
   const run = useCallback(
     async (command: Command) => {
+      // The panel is disabled when readback is stale, but also reject events
+      // that race with a status change. E-STOP must remain callable.
+      if (command.type !== 'estop' && !controlsAvailable) {
+        const reason = 'Telemetry is not current. Wait for a fresh gateway snapshot.';
+        toast({ variant: 'destructive', title: 'Action Denied', description: reason });
+        return { ok: false, reason };
+      }
       const outcome = await sendCommand(command);
       if (!outcome.ok) {
         toast({
@@ -76,11 +84,11 @@ export function Dashboard() {
       }
       return outcome;
     },
-    [sendCommand, toast],
+    [controlsAvailable, sendCommand, toast],
   );
 
   const setpointsEditable =
-    Boolean(snapshot) && status === 'Connected' && state.isManualMode && !state.estopLatched;
+    controlsAvailable && state.isManualMode && !state.estopLatched;
   const rpmSetpoint = useSyncedSetpoint({
     appliedValue: state.targetRpmManual,
     runId: snapshot?.runId ?? null,
