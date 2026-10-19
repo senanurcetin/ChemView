@@ -61,16 +61,10 @@ describe.each(factories)('Store contract: $name', ({ skip, create }) => {
       await store.saveTelemetry(toSample(initialState(), iso(offset), runId));
     }
 
-    expect(
-      (await store.history({ from: iso(40), to: iso(50), runId: runA, limit: 1 })).map(
-        (sample) => [sample.ts, sample.runId],
-      ),
-    ).toEqual([[iso(40), runA]]);
-    expect(
-      (await store.history({ from: iso(40), to: iso(50), runId: runB })).map(
-        (sample) => [sample.ts, sample.runId],
-      ),
-    ).toEqual([
+    const samplesA = await store.history({ from: iso(40), to: iso(50), runId: runA, limit: 1 });
+    const samplesB = await store.history({ from: iso(40), to: iso(50), runId: runB });
+    expect(samplesA.map((sample) => [sample.ts, sample.runId])).toEqual([[iso(40), runA]]);
+    expect(samplesB.map((sample) => [sample.ts, sample.runId])).toEqual([
       [iso(40), runB],
       [iso(45), runB],
     ]);
