@@ -60,10 +60,8 @@ describe('Engine persistence', () => {
         runId: engine.getSnapshot().runId,
       });
       expect(samples).toHaveLength(2);
-      const correctRun = samples.every(
-        (sample) => sample.runId === engine.getSnapshot().runId,
-      );
-      expect(correctRun).toBe(true);
+      const activeRunId = engine.getSnapshot().runId;
+      expect(samples.every((sample) => sample.runId === activeRunId)).toBe(true);
     });
     expect((await store.recentAudit(5)).map((e) => e.message)).toContain(
       'INFO: Mixer STARTED by Operator',
@@ -115,10 +113,7 @@ describe('history query + csv', () => {
     expect(parseHistoryQuery(new URLSearchParams('runId=invalid'), now).ok).toBe(false);
     const validRunId = '123e4567-e89b-42d3-a456-426614174000';
     const scopedQuery = new URLSearchParams({ runId: validRunId });
-    expect(parseHistoryQuery(scopedQuery, now)).toMatchObject({
-      ok: true,
-      runId: validRunId,
-    });
+    expect(parseHistoryQuery(scopedQuery, now)).toMatchObject({ ok: true, runId: validRunId });
     expect(parseHistoryQuery(new URLSearchParams('from=2026-02-01&to=2026-01-01'), now).ok).toBe(
       false,
     );
