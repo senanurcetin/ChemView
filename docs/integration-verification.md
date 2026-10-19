@@ -26,6 +26,8 @@ not only visual container labels.
 - Telemetry, alarm events and audit records are scoped by `runId`.
 - Simulated E-STOP is unconditional and cannot be cleared by a stale RESET.
 - Stale multi-operator commands cannot silently overwrite current process state.
+- A denied slider write returns the readback to the server-owned value; a later
+  operator write is not hidden by an old local draft.
 - A delayed AI response cannot override a newer command or alarm condition.
 - Deterministic alarms still fire independently of optional Gemini responses.
 - No test reaches a real PLC, Modbus TCP device or production Firebase instance.
