@@ -208,6 +208,39 @@ test('concurrent heater commands reject an obsolete operator readback', async ({
   expect(stale.status()).toBe(409);
 });
 
+test('an old heater HTTP rejection cannot appear after E-STOP', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByText('Gateway Active')).toBeVisible();
+
+  let releaseHeater: (() => void) | undefined;
+  let intercepted = false;
+  let replied = false;
+  await page.route('**/api/command', async (route) => {
+    const body = route.request().postDataJSON() as Record<string, unknown>;
+    if (body.type !== 'set_heater') return route.continue();
+    intercepted = true;
+    await new Promise<void>((resolve) => {
+      releaseHeater = resolve;
+    });
+    await route.fulfill({
+      status: 409,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: false, reason: 'Delayed heater denial' }),
+    });
+    replied = true;
+  });
+
+  await page.getByRole('switch', { name: 'Heater' }).click();
+  await expect.poll(() => intercepted).toBe(true);
+  await page.getByRole('button', { name: /^e-stop$/i }).click();
+  await expect(page.locator('footer')).toContainText('STATE: E-STOP LATCHED');
+
+  releaseHeater?.();
+  await expect.poll(() => replied).toBe(true);
+  await expect(page.getByText('Delayed heater denial')).not.toBeVisible();
+  await expect(page.getByText('Action Denied', { exact: true })).not.toBeVisible();
+});
+
 test('HMI rejects a local setpoint edit superseded by another operator', async ({
   page,
   request,

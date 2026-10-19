@@ -65,6 +65,13 @@ export function Dashboard() {
   const rxActive = useFlash(lastRx);
 
   const controlsAvailable = Boolean(snapshot) && status === 'Connected';
+  // Only the latest intent for a given control may show a delayed failure.
+  // An E-STOP invalidates feedback from all older ordinary commands.
+  const commandRequests = useRef({
+    next: 0,
+    estopGeneration: 0,
+    lastByType: {} as Partial<Record<Command['type'], number>>,
+  });
   const run = useCallback(
     async (command: Command) => {
       // The panel is disabled when readback is stale, but also reject events
@@ -74,7 +81,21 @@ export function Dashboard() {
         toast({ variant: 'destructive', title: 'Action Denied', description: reason });
         return { ok: false, reason };
       }
+      const requests = commandRequests.current;
+      const requestId = ++requests.next;
+      if (command.type === 'estop') requests.estopGeneration += 1;
+      else requests.lastByType[command.type] = requestId;
+      const startedBeforeEstopGeneration = requests.estopGeneration;
+
       const outcome = await sendCommand(command);
+      if (
+        command.type !== 'estop' &&
+        (outcome.obsolete ||
+          requests.estopGeneration !== startedBeforeEstopGeneration ||
+          requests.lastByType[command.type] !== requestId)
+      ) {
+        return { ...outcome, obsolete: true };
+      }
       if (!outcome.ok) {
         toast({
           variant: 'destructive',

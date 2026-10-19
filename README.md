@@ -91,6 +91,15 @@ occurred before processing. E-STOP itself remains unconditional, including
 during connection interruptions; older API clients that omit the optional
 reset precondition remain supported.
 
+## Delayed command responses
+
+HTTP command replies are asynchronous and may arrive after a simulation restart,
+a later operator action, or an E-STOP. The HMI discards obsolete ordinary-command
+feedback so the current process display does not show an error from an earlier
+session or a superseded request. E-STOP failures still surface to the operator.
+The process state remains server-owned and is refreshed only through validated
+SSE snapshots.
+
 ## Scope and operational boundaries
 
 The process, Modbus register map, interlocks, and telemetry are simulated. No physical PLC, fieldbus gateway, safety-rated controller, or plant equipment is connected. This is an engineering demonstration, **not a certified safety system**. Production use would require independent industrial safety assessment, hardened access controls and validated equipment integration.

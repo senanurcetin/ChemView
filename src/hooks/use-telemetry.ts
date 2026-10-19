@@ -24,6 +24,18 @@ export type ConnectionStatus = 'Connected' | 'Disconnected' | 'Connecting' | 'St
 export interface CommandOutcome {
   ok: boolean;
   reason?: string;
+  /** The reply belongs to a previous simulator run, not the current screen. */
+  obsolete?: boolean;
+}
+
+/** An old ordinary-command response must not report on a newer engine run. */
+export function isObsoleteCommandResponse(
+  command: Command,
+  sentOnRun: string | null,
+  currentRun: string | null,
+): boolean {
+  // E-STOP failure must still be reported even if the engine restarted meanwhile.
+  return command.type !== 'estop' && sentOnRun !== currentRun;
 }
 
 /**
@@ -159,15 +171,30 @@ export function useTelemetry() {
   }, []);
 
   const sendCommand = useCallback(async (command: Command): Promise<CommandOutcome> => {
+    const sentOnRun = lastCursor.current?.runId ?? null;
+    const wasSuperseded = () =>
+      isObsoleteCommandResponse(command, sentOnRun, lastCursor.current?.runId ?? null);
     try {
       const res = await fetch('/api/command', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(command),
       });
-      const body = (await res.json()) as CommandOutcome;
-      return { ok: res.ok && body.ok, reason: body.reason };
+      const payload: unknown = await res.json();
+      if (wasSuperseded()) return { ok: false, obsolete: true };
+      if (!payload || typeof payload !== 'object' || !('ok' in payload)) {
+        return { ok: false, reason: 'Invalid gateway command response.' };
+      }
+      const body = payload as { ok: unknown; reason?: unknown };
+      if (typeof body.ok !== 'boolean') {
+        return { ok: false, reason: 'Invalid gateway command response.' };
+      }
+      return {
+        ok: res.ok && body.ok,
+        reason: typeof body.reason === 'string' ? body.reason : undefined,
+      };
     } catch {
+      if (wasSuperseded()) return { ok: false, obsolete: true };
       return { ok: false, reason: 'Gateway unreachable.' };
     }
   }, []);

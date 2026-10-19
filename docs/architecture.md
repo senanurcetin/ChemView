@@ -89,6 +89,17 @@ observed the latch, so an old delayed reset cannot clear a newer E-STOP.
 Legacy reset callers may omit the precondition. This is in-process simulation
 safety logic, not a hardware emergency-stop implementation.
 
+## Delayed HTTP response handling
+
+The telemetry hook tags an in-flight command response with the simulator run
+observed when it was sent. It ignores ordinary-command replies from an earlier
+run, even if their HTTP request completes after reconnecting. Within the HMI,
+only the most recently initiated request of each command type may surface an
+operator-facing error. Starting a new E-STOP suppresses feedback from older
+non-emergency commands, while E-STOP failures always remain reportable.
+No response changes process state optimistically; only validated SSE snapshots
+update readback. Malformed command API responses fail closed.
+
 ## Alerting model
 
 Safety alarms are deterministic and raised on the tick the condition appears. Gemini commentary (`source: "ai"`) is additive: it adds trend-aware context and a recommendation when the plant is on or near a limit, and its failure changes nothing visible except the absence of the comment.
