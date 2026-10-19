@@ -115,15 +115,20 @@ test('a restarted simulator ignores old-run SSE replays and mismatched audit eve
   });
 
   await page.goto('/');
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          typeof (
+            window as unknown as { __emitChemViewTestSnapshot?: (value: string) => void }
+          ).__emitChemViewTestSnapshot,
+      ),
+    )
+    .toBe('function');
   const firstRun = '123e4567-e89b-42d3-a456-426614174000';
   const secondRun = '123e4567-e89b-42d3-a456-426614174001';
 
-  const emit = async (
-    runId: string,
-    seq: number,
-    label: string,
-    eventRunId: string = runId,
-  ) => {
+  const emit = async (runId: string, seq: number, label: string, eventRunId = runId) => {
     await page.evaluate(
       ({ runId, seq, label, eventRunId }) => {
         const timestamp = new Date().toISOString();
@@ -148,10 +153,23 @@ test('a restarted simulator ignores old-run SSE replays and mismatched audit eve
           network: { packetCount: 0, latencyMs: 15, errorCount: 0 },
           traffic: [],
           audit: [
-            { id: `${label}-audit`, runId: eventRunId, timestamp, message: `${label}-AUDIT`, level: 'low' },
+            {
+              id: `${label}-audit`,
+              runId: eventRunId,
+              timestamp,
+              message: `${label}-AUDIT`,
+              level: 'low',
+            },
           ],
           alerts: [
-            { id: `${label}-alert`, runId: eventRunId, timestamp, message: `${label}-ALERT`, source: 'rule', urgency: 'medium' },
+            {
+              id: `${label}-alert`,
+              runId: eventRunId,
+              timestamp,
+              message: `${label}-ALERT`,
+              source: 'rule',
+              urgency: 'medium',
+            },
           ],
           aiBusy: false,
         };
