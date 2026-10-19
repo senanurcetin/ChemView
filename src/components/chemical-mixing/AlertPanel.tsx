@@ -25,6 +25,7 @@ export function AlertPanel({ alerts, isGenerating }: AlertPanelProps) {
             Operational Insights
           </h3>
         </div>
+        <span className="text-[9px] font-mono text-muted-foreground">LAST 50 EVENTS</span>
         {isGenerating && (
           <div className="flex items-center gap-2">
             <span className="text-[10px] text-primary animate-pulse uppercase">Analyzing...</span>
@@ -40,7 +41,7 @@ export function AlertPanel({ alerts, isGenerating }: AlertPanelProps) {
                 <Info className="w-6 h-6 text-zinc-600" />
               </div>
               <p className="text-xs text-muted-foreground max-w-[200px]">
-                System parameters are within normal operating thresholds. No active alerts.
+                No recorded alerts for this simulation session.
               </p>
             </div>
           ) : (

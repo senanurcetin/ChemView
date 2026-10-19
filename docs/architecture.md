@@ -63,6 +63,12 @@ RPM and heater setpoint sliders mirror the server-owned `Snapshot.state` values 
 
 Setpoint editing is disabled in automatic mode, while E-STOP is latched, or when validated telemetry is not currently connected. The simulated E-STOP action itself remains available. Concurrent operators can still overwrite each other's accepted values; this demo does not provide exclusive operator locks or a safety-rated control channel.
 
+## Alarm history and telemetry data-quality validation
+
+Deterministic rule alarms and optional AI commentary are tagged with the simulator `runId`. Both `MemoryStore` (last 200 events) and Firestore persist these records separately by session; legacy Firestore alarm records remain untouched. `GET /api/alerts?runId=<uuid>&limit=50` returns the most recent events for the chosen run, defaulting to the active run. The HMI merges this archive with its live SSE events by alarm ID, presents up to 50 chronological events, and excludes records from earlier sessions. This is an **event history**, not an acknowledgement workflow or a list of currently active fault conditions.
+
+Incoming SSE snapshots and persisted history are rejected when numeric readings violate basic physical domains (negative RPM, pH outside 0–14, fill outside 0–100%, and configured setpoint bounds). Temperature remains valid above the 80 °C rule-alarm threshold so a real simulated overheating condition is displayed rather than discarded. These input checks catch impossible values, not subtle sensor drift or field-device failures. The alarm API is read-only and follows the existing publicly readable demo endpoints.
+
 ## Alerting model
 
 Safety alarms are deterministic and raised on the tick the condition appears. Gemini commentary (`source: "ai"`) is additive: it adds trend-aware context and a recommendation when the plant is on or near a limit, and its failure changes nothing visible except the absence of the comment.

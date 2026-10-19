@@ -1,9 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Command, Snapshot } from '@/server/sim/types';
+import type { Alert, Command, Snapshot } from '@/server/sim/types';
 import {
   classifySnapshot,
+  mergeAlertHistory,
+  parseAlertHistory,
   parseHistorySamples,
   parseSnapshotEvent,
   type SnapshotCursor,
@@ -35,6 +37,7 @@ export function useTelemetry() {
   const [lastReceivedAt, setLastReceivedAt] = useState<number | null>(null);
   const [nowMs, setNowMs] = useState(0);
   const [sessionRestarted, setSessionRestarted] = useState(false);
+  const [alertHistory, setAlertHistory] = useState<Alert[]>([]);
   const [rpmHistory, setRpmHistory] = useState<HistoryPoint[]>([]);
   const [tempHistory, setTempHistory] = useState<HistoryPoint[]>([]);
   const lastCursor = useRef<SnapshotCursor | null>(null);
@@ -87,6 +90,31 @@ export function useTelemetry() {
     return () => controller.abort();
   }, [activeRunId]);
 
+  // Load persisted events for the currently validated simulator run.
+  // Keep the last live SSE events if an older persisted response arrives afterward.
+  useEffect(() => {
+    if (!activeRunId) return;
+    const controller = new AbortController();
+    fetch(`/api/alerts?runId=${encodeURIComponent(activeRunId)}&limit=50`, {
+      signal: controller.signal,
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((body: unknown) => {
+        if (controller.signal.aborted || lastCursor.current?.runId !== activeRunId) return;
+        const alerts = parseAlertHistory(body, activeRunId);
+        if (!alerts) return;
+        setAlertHistory((previous) =>
+          lastCursor.current?.runId === activeRunId
+            ? mergeAlertHistory(previous, alerts)
+            : previous,
+        );
+      })
+      .catch(() => {
+        /* The live stream still provides the latest alarm events. */
+      });
+    return () => controller.abort();
+  }, [activeRunId]);
+
   useEffect(() => {
     const source = new EventSource('/api/stream');
 
@@ -109,6 +137,11 @@ export function useTelemetry() {
       setTransportStatus('Connected');
       lastCursor.current = { runId: next.runId, seq: next.seq };
       setSnapshot(next);
+      setAlertHistory((previous) =>
+        transition === 'new-run'
+          ? mergeAlertHistory([], next.alerts)
+          : mergeAlertHistory(previous, next.alerts),
+      );
 
       setRpmHistory((prev) =>
         transition === 'new-run'
@@ -141,6 +174,7 @@ export function useTelemetry() {
 
   return {
     snapshot,
+    alerts: alertHistory.filter((alert) => alert.runId === activeRunId),
     status,
     lastUpdateAgeSeconds,
     sessionRestarted,

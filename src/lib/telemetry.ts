@@ -1,10 +1,24 @@
 import { z } from 'zod';
-import type { Snapshot } from '@/server/sim/types';
+import type { Alert, Snapshot } from '@/server/sim/types';
+import { THRESHOLDS } from '@/server/sim/thresholds';
 import type { TelemetrySample } from '@/server/store';
 
 const finite = z.number().finite();
 const level = z.enum(['low', 'medium', 'high']);
+const rpm = finite.min(0).max(THRESHOLDS.rpmMax);
+const temperature = finite.min(-273.15).max(300);
+const ph = finite.min(0).max(14);
+const fillLevel = finite.min(0).max(100);
 const timestamp = z.string().datetime({ offset: true });
+
+const alertSchema: z.ZodType<Alert> = z.object({
+  id: z.string().min(1),
+  runId: z.string().uuid().optional(),
+  timestamp,
+  source: z.enum(['rule', 'ai']),
+  message: z.string(),
+  urgency: level,
+});
 
 /** Validate the entire SSE payload before updating any operator-visible state. */
 const snapshotSchema: z.ZodType<Snapshot> = z.object({
@@ -17,16 +31,16 @@ const snapshotSchema: z.ZodType<Snapshot> = z.object({
     isManualMode: z.boolean(),
     isHeaterOn: z.boolean(),
     valveOpen: z.boolean(),
-    rpm: finite,
-    temp: finite,
-    ph: finite,
-    level: finite,
-    targetRpmManual: finite,
-    targetTempManual: finite,
+    rpm,
+    temp: temperature,
+    ph,
+    level: fillLevel,
+    targetRpmManual: rpm,
+    targetTempManual: finite.min(THRESHOLDS.tempMin).max(THRESHOLDS.tempMax),
   }),
   network: z.object({
     packetCount: z.number().int().nonnegative(),
-    latencyMs: finite,
+    latencyMs: finite.nonnegative(),
     errorCount: z.number().int().nonnegative(),
   }),
   traffic: z.array(
@@ -45,25 +59,17 @@ const snapshotSchema: z.ZodType<Snapshot> = z.object({
       level,
     }),
   ),
-  alerts: z.array(
-    z.object({
-      id: z.string(),
-      timestamp,
-      source: z.enum(['rule', 'ai']),
-      message: z.string(),
-      urgency: level,
-    }),
-  ),
+  alerts: z.array(alertSchema),
   aiBusy: z.boolean(),
 });
 
 const historySampleSchema: z.ZodType<TelemetrySample> = z.object({
   ts: timestamp,
   runId: z.string().uuid().optional(),
-  rpm: finite,
-  temp: finite,
-  ph: finite,
-  level: finite,
+  rpm,
+  temp: temperature,
+  ph,
+  level: fillLevel,
   isRunning: z.boolean(),
   isHeaterOn: z.boolean(),
   valveOpen: z.boolean(),
@@ -85,6 +91,30 @@ export function parseHistorySamples(
   // Never merge samples from another run, including legacy untagged records.
   if (parsed.data.samples.some((sample) => sample.runId !== parsed.data.runId)) return null;
   return parsed.data.samples;
+}
+
+const alertHistorySchema = z.object({
+  runId: z.string().uuid(),
+  alerts: z.array(alertSchema),
+});
+
+/** Reject malformed, cross-run or untagged archived alarm records. */
+export function parseAlertHistory(payload: unknown, expectedRunId: string): Alert[] | null {
+  const parsed = alertHistorySchema.safeParse(payload);
+  if (!parsed.success || parsed.data.runId !== expectedRunId) return null;
+  if (parsed.data.alerts.some((alert) => alert.runId !== expectedRunId)) return null;
+  return parsed.data.alerts;
+}
+
+/** Combine persisted and live alerts, newest first, with one entry per event ID. */
+export function mergeAlertHistory(previous: Alert[], incoming: Alert[], limit = 50): Alert[] {
+  const unique = new Map<string, Alert>();
+  for (const alert of [...incoming, ...previous]) {
+    if (!unique.has(alert.id)) unique.set(alert.id, alert);
+  }
+  return [...unique.values()]
+    .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+    .slice(0, limit);
 }
 
 export function parseSnapshotEvent(raw: string): Snapshot | null {

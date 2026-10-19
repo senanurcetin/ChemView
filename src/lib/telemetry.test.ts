@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { Engine } from '@/server/sim/engine';
 import { initialState } from '@/server/sim/state';
 import { toSample } from '@/server/store';
-import { classifySnapshot, parseHistorySamples, parseSnapshotEvent } from './telemetry';
+import {
+  classifySnapshot,
+  mergeAlertHistory,
+  parseAlertHistory,
+  parseHistorySamples,
+  parseSnapshotEvent,
+} from './telemetry';
 
 const sampleSnapshot = () =>
   new Engine({ seed: 7, now: () => new Date('2026-10-18T12:00:00Z') }).getSnapshot();
@@ -36,6 +42,28 @@ describe('parseSnapshotEvent', () => {
   });
 });
 
+  // This regression protects the HMI against impossible sensor readings.
+describe('telemetry physical ranges', () => {
+  it('rejects out-of-range physical values but preserves valid process alarms', () => {
+    const snapshot = sampleSnapshot();
+    const invalidStates = [
+      { rpm: -1 },
+      { rpm: 2000 },
+      { temp: -300 },
+      { ph: 15 },
+      { level: 101 },
+      { targetRpmManual: -1 },
+      { targetTempManual: 150 },
+    ];
+    for (const override of invalidStates) {
+      const state = { ...snapshot.state, ...override };
+      expect(parseSnapshotEvent(JSON.stringify({ ...snapshot, state }))).toBeNull();
+    }
+    const warning = { ...snapshot.state, temp: 85, ph: 5.5, level: 0 };
+    expect(parseSnapshotEvent(JSON.stringify({ ...snapshot, state: warning }))).not.toBeNull();
+  });
+});
+
 describe('classifySnapshot', () => {
   const previous = { runId: 'engine-A', seq: 20 };
 
@@ -52,6 +80,37 @@ describe('classifySnapshot', () => {
   it('recognizes an engine restart even if its new sequence is larger', () => {
     expect(classifySnapshot(previous, { runId: 'engine-B', seq: 0 })).toBe('new-run');
     expect(classifySnapshot(previous, { runId: 'engine-B', seq: 500 })).toBe('new-run');
+  });
+});
+
+describe('alarm history transport', () => {
+  const runId = '123e4567-e89b-42d3-a456-426614174000';
+  const alert = (id: string, timestamp: string, selectedRunId = runId) => ({
+    id,
+    runId: selectedRunId,
+    timestamp,
+    source: 'rule' as const,
+    message: id,
+    urgency: 'high' as const,
+  });
+
+  it('rejects legacy, malformed, or cross-run alarm payloads', () => {
+    const first = alert('a', '2026-10-18T12:00:01Z');
+    expect(parseAlertHistory({ runId, alerts: [first] }, runId)).toEqual([first]);
+    expect(parseAlertHistory({ runId, alerts: [{}] }, runId)).toBeNull();
+    expect(parseAlertHistory({ runId, alerts: [first] }, 'another-run')).toBeNull();
+    expect(parseAlertHistory({ runId, alerts: [{ ...first, runId: undefined }] }, runId)).toBeNull();
+    expect(parseAlertHistory({ runId, alerts: [alert('b', first.timestamp, 'other')] }, runId)).toBeNull();
+  });
+
+  it('deduplicates SSE/archive overlap and keeps newest bounded events', () => {
+    const early = alert('a', '2026-10-18T12:00:01Z');
+    const later = alert('b', '2026-10-18T12:00:03Z');
+    const recent = alert('c', '2026-10-18T12:00:05Z');
+    expect(mergeAlertHistory([early, later], [later, recent], 2).map((x) => x.id)).toEqual([
+      'c',
+      'b',
+    ]);
   });
 });
 

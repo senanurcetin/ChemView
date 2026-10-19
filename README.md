@@ -71,6 +71,10 @@ The operator display shows the current simulator session and the age of the late
 
 The setpoint sliders follow server-owned values, including accepted writes from another browser. When an operator drags a manual-mode slider, the HMI displays a draft and sends one command on release; an unconfirmed setpoint is labeled `(PENDING)` until the SSE stream echoes its applied value. Denied or unconfirmed drafts revert to server readback. Manual setpoints are disabled if telemetry is stale/disconnected or E-STOP is latched, while the E-STOP action itself stays available.
 
+## Session-scoped alarm history
+
+The simulator records its rule-based and optional AI alarm events by `runId`; `GET /api/alerts` returns the last 50 events for the current process run (or `?runId=<uuid>&limit=<1..100>` for a selected archived run). The dashboard merges archived events with live SSE events, showing up to 50 distinct entries. Memory storage keeps the most recent 200 alarm events; Firestore uses `sim_runs/<runId>/alerts`. Older top-level Firestore alerts are retained but excluded from the current-session API. These events are historical observations, not safety-rated alarm acknowledgements. Incoming telemetries with impossible physical readings are rejected before updating the HMI.
+
 ## Scope and operational boundaries
 
 The process, Modbus register map, interlocks, and telemetry are simulated. No physical PLC, fieldbus gateway, safety-rated controller, or plant equipment is connected. This is an engineering demonstration, **not a certified safety system**. Production use would require independent industrial safety assessment, hardened access controls and validated equipment integration.
