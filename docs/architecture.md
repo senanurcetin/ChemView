@@ -49,6 +49,12 @@ New records use Firestore paths `sim_runs/<runId>/telemetry/<timestamp>` (or an 
 
 `GET /api/history` and `GET /api/export` default to the running engine's `runId`. An optional UUID `runId` query parameter selects an archived session; `/api/history` echoes `runId` and validates each returned sample's session on the client. CSV exports add the `run_id` column. This is a compatibility-aware storage transition, not a historical data migration.
 
+## Operator telemetry freshness
+
+The browser tracks the local receipt time of each validated, advancing SSE snapshot. An EventSource connection being `OPEN` does **not** by itself imply that application telemetry is current. If no advancing snapshot arrives for 6 seconds (the nominal simulation tick is 1 second), the gateway is marked `Stale` even if the browser socket remains open. Transport errors remain `Connecting` or `Disconnected`, and recovery requires a new valid advancing snapshot. The last known readings remain visible with an explicit warning, rather than being presented as live data.
+
+The HMI shows an abbreviated `runId` and the elapsed seconds since the most recently accepted snapshot. After the first detected engine-session change on the current page it also displays a persistent session-change notice; trend history is already session-scoped by the preceding history changes. This is an operator **display-health indicator**, not a physical sensor heartbeat, network certification, or control interlock. E-STOP is never disabled by this UI status.
+
 ## Alerting model
 
 Safety alarms are deterministic and raised on the tick the condition appears. Gemini commentary (`source: "ai"`) is additive: it adds trend-aware context and a recommendation when the plant is on or near a limit, and its failure changes nothing visible except the absence of the comment.
