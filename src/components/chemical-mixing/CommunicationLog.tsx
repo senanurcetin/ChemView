@@ -47,12 +47,16 @@ export function CommunicationLog({ logs }: CommunicationLogProps) {
       <ScrollArea className="min-h-0 flex-1" ref={scrollRef}>
         <div className="space-y-1 py-1">
           {logs.map((log) => (
-            <div key={log.id} className="flex min-w-0 gap-3 text-[11px] whitespace-nowrap">
+            <div key={log.id} className="flex min-w-0 items-start gap-2 text-[11px]">
               <span className="shrink-0 text-zinc-400">[{formatClock(log.timestamp)}]</span>
-              <span className={log.direction === 'TX' ? 'text-orange-500' : 'text-primary'}>
+              <span
+                className={log.direction === 'TX' ? 'shrink-0 text-orange-500' : 'shrink-0 text-primary'}
+              >
                 {log.direction === 'TX' ? 'SEND >' : 'RECV <'}
               </span>
-              <span className="text-zinc-300 tracking-wide">{log.frame}</span>
+              <span className="min-w-0 break-all font-mono leading-relaxed tracking-normal text-zinc-300">
+                {log.frame}
+              </span>
             </div>
           ))}
           {logs.length === 0 && (

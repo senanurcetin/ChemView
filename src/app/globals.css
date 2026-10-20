@@ -78,3 +78,11 @@
 .text-accent-red {
   color: #ff4500;
 }
+
+/* Respect reduced-motion settings for the simulated mechanical illustration. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-liquid,
+  .hmi-mixer-blades {
+    animation: none !important;
+  }
+}

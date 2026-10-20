@@ -34,21 +34,33 @@ const BUBBLES = [
 
 export function TankSimulation({
   rpm,
+  temperature,
+  ph,
   isRunning,
   isHeaterOn,
   liquidLevel = 65,
 }: TankSimulationProps) {
   // Rotate speed mapping: RPM 0-1000 -> duration 5s - 0.2s
   const rotationDuration = isRunning && rpm > 0 ? Math.max(0.1, 4 - rpm / 300) : 0;
+  const fillLevel = Math.max(0, Math.min(100, liquidLevel));
 
   return (
-    <div className="relative w-full min-h-[340px] flex flex-1 items-center justify-center bg-black/20 rounded-xl border border-primary/5 overflow-hidden">
+    <div
+      aria-label="Simulated chemical reactor schematic"
+      className="relative flex min-h-[340px] w-full flex-1 items-center justify-center overflow-hidden rounded-xl border border-primary/10 bg-black/20 px-3 py-14 sm:px-7"
+    >
+      <div className="absolute left-3 top-3 font-mono text-[11px] font-semibold uppercase tracking-wider text-zinc-300">
+        Reactor 01 · Simulated vessel
+      </div>
       {/* Tank Container */}
-      <div className="relative w-48 h-64 border-2 border-gray-600 rounded-b-2xl overflow-hidden bg-gray-900/30">
+      <div
+        data-testid="reactor-vessel"
+        className="relative h-72 w-52 overflow-hidden rounded-b-2xl border-2 border-gray-500 bg-gray-900/30 shadow-[0_0_30px_rgba(0,255,255,0.05)] xl:h-80 xl:w-64"
+      >
         {/* Liquid Layer */}
         <div
           className="absolute bottom-0 left-0 w-full bg-primary/10 transition-all duration-1000 ease-in-out"
-          style={{ height: `${liquidLevel}%` }}
+          style={{ height: `${fillLevel}%` }}
         >
           {/* Surface Animation */}
           <div
@@ -80,7 +92,7 @@ export function TankSimulation({
         </div>
 
         {/* Heating Coil Visual */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-40 h-8">
+        <div className="absolute bottom-4 left-1/2 h-8 w-[85%] -translate-x-1/2">
           <svg viewBox="0 0 200 60" className="w-full h-full opacity-40">
             <path
               d="M10,30 Q20,10 30,30 T50,30 T70,30 T90,30 T110,30 T130,30 T150,30 T170,30 T190,30"
@@ -94,9 +106,9 @@ export function TankSimulation({
         </div>
 
         {/* Mixer Logic */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-52 bg-gray-700 z-10">
+        <div className="absolute left-1/2 top-0 z-10 h-[82%] w-1 -translate-x-1/2 bg-gray-700">
           <div
-            className="absolute bottom-10 left-1/2 -translate-x-1/2"
+            className="hmi-mixer-blades absolute bottom-10 left-1/2 -translate-x-1/2"
             style={{
               animation:
                 rotationDuration > 0 ? `spin ${rotationDuration}s linear infinite` : 'none',
@@ -112,8 +124,16 @@ export function TankSimulation({
 
       {/* HUD Overlay */}
       <div className="absolute top-2 right-2 text-right bg-black/40 p-1.5 rounded border border-white/5">
-        <div className="text-[10px] uppercase text-zinc-500 font-bold">Mixer RPM</div>
+        <div className="text-[11px] font-bold uppercase text-zinc-300">Mixer RPM</div>
         <div className="text-sm font-bold text-primary tabular-nums">{rpm.toFixed(0)}</div>
+      </div>
+      <div className="absolute bottom-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-2 font-mono text-[11px] text-zinc-300">
+        <span>FILL: {fillLevel.toFixed(0)}%</span>
+        <span>TEMP: {temperature.toFixed(1)} °C</span>
+        <span>pH: {ph.toFixed(1)}</span>
+        <span className={isHeaterOn ? 'text-orange-400' : 'text-zinc-400'}>
+          HEATER: {isHeaterOn ? 'ON' : 'OFF'}
+        </span>
       </div>
     </div>
   );

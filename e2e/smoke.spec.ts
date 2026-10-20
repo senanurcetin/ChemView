@@ -33,6 +33,7 @@ test('NEXUS identity and operator panels remain accessible on shorter desktops',
   for (const size of [
     { width: 1366, height: 768 },
     { width: 1440, height: 900 },
+    { width: 1920, height: 1080 },
   ]) {
     await page.setViewportSize(size);
     await page.goto('/');
@@ -42,15 +43,22 @@ test('NEXUS identity and operator panels remain accessible on shorter desktops',
     await expect(page.getByText('Simulated Process')).toBeVisible();
     await expect(page.getByRole('button', { name: /^e-stop$/i })).toBeVisible();
     await expect(page.getByText('System Event Audit Log')).toBeAttached();
+    await expect(page.getByText('Reactor 01 · Simulated vessel')).toBeVisible();
+    await expect(page.getByText(/FILL: \d+%/)).toBeVisible();
+    const vesselBounds = await page.getByTestId('reactor-vessel').boundingBox();
+    expect(vesselBounds?.width).toBeGreaterThanOrEqual(200);
 
     const dimensions = await page.evaluate(() => ({
       documentWidth: document.documentElement.scrollWidth,
       viewportWidth: window.innerWidth,
+      containerWidth: document.querySelector('main')?.scrollWidth ?? 0,
+      containerClientWidth: document.querySelector('main')?.clientWidth ?? 0,
       verticalOverflow: getComputedStyle(document.body).overflowY,
       documentHeight: document.documentElement.scrollHeight,
       viewportHeight: window.innerHeight,
     }));
     expect(dimensions.documentWidth).toBeLessThanOrEqual(dimensions.viewportWidth);
+    expect(dimensions.containerWidth).toBeLessThanOrEqual(dimensions.containerClientWidth + 1);
     expect(dimensions.verticalOverflow).not.toBe('hidden');
     expect(dimensions.documentHeight).toBeGreaterThan(dimensions.viewportHeight);
     const auditHeading = page.getByText('System Event Audit Log');
