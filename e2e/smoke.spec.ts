@@ -626,7 +626,6 @@ test('process schematic exposes server readbacks without horizontal page overflo
   expect(snapshot.page).toBeLessThanOrEqual(snapshot.viewport);
 });
 
-
 test('model benchmark shows inspectable synthetic reference comparisons', async ({ page }) => {
   await page.goto('/');
   await page.getByText('Model benchmark — numerical accuracy').click();
