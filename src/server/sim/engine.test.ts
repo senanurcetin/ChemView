@@ -590,7 +590,13 @@ describe('rule alerts', () => {
   it('flags overheating with a high alert and an audit entry', () => {
     expect(evaluateRules(base({ temp: 81 }))).toMatchObject({ key: 'temp-high', urgency: 'high' });
     expect(evaluateRules(base({ ph: 5.5 }))).toMatchObject({ key: 'ph-range', urgency: 'medium' });
-    expect(evaluateRules(base({ valveOpen: true, level: 0 }))).toMatchObject({ key: 'tank-empty' });
+    expect(evaluateRules(base({ valveOpen: true, level: 0 }))).toMatchObject({
+      key: 'level-low',
+      urgency: 'medium',
+    });
+    expect(
+      evaluateAllRules(base({ valveOpen: true, level: 0 })).map((rule) => rule.key),
+    ).toContain('tank-empty');
     expect(evaluateRules(base())).toBeNull();
     expect(evaluateRules(base({ temp: 81, ph: 5.5, valveOpen: true, level: 0 }))).toMatchObject({
       key: 'temp-high',
