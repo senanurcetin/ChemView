@@ -607,3 +607,20 @@ test('experiment lab isolates runs and reproduces a synthetic high alarm', async
   await page.getByRole('button', { name: 'Load synthetic experiment' }).click();
   await expect(page.getByTestId('active-scenario')).toContainText('Normal batch');
 });
+
+test('process schematic exposes server readbacks without horizontal page overflow', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await page.goto('/');
+  await expect(page.getByText('Gateway Active')).toBeVisible();
+  await page.getByText('Simulated P&ID — instrumentation and signal paths').click();
+  await expect(
+    page.getByRole('img', { name: 'Synthetic reactor process and instrumentation diagram' }),
+  ).toBeVisible();
+  const snapshot = await page.evaluate(() => ({
+    page: document.documentElement.scrollWidth,
+    viewport: window.innerWidth,
+  }));
+  expect(snapshot.page).toBeLessThanOrEqual(snapshot.viewport);
+});

@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { TankSimulation } from './TankSimulation';
+import { ProcessSchematic } from './ProcessSchematic';
 import { TrendChart } from './TrendChart';
 import { ControlPanel } from './ControlPanel';
 import { ScenarioLab } from './ScenarioLab';
@@ -335,6 +336,20 @@ export function Dashboard() {
               </div>
             </div>
           </div>
+          <details className="hmi-panel min-w-0" data-testid="pid-expander">
+            <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-primary">
+              Simulated P&ID — instrumentation and signal paths
+            </summary>
+            <ProcessSchematic
+              rpm={rpm}
+              temperature={temp}
+              ph={ph}
+              level={state.level}
+              mixerRunning={isRunning}
+              heaterOn={isHeaterOn}
+              valveOpen={valveOpen}
+            />
+          </details>
         </section>
 
         {/* Right Column: Controls & Intelligence */}

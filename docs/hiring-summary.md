@@ -23,6 +23,12 @@ ChemView runs a mixing-process simulation on the server, presents controls and p
 - Validation of full SSE snapshots, per-run event provenance and replay rejection after restart.
 - Optimistic concurrency guards on ordinary operator controls, plus E-STOP/reset event ordering.
 
+## Scientific scope
+
+The [synthetic reactor equations and analytical checks](science-validation.md)
+are documented separately. Numerical agreement verifies a chosen model, not
+calibration against industrial measurements. Scenarios are seeded and reproducible.
+
 ## Engineering limits
 
 The latest integrated main-branch changes still need a consolidated CI/Playwright/Firestore-emulator run before claiming full verification. There is no real PLC, fieldbus gateway or certified safety instrumented system. Neither the simulated E-STOP nor the LLM commentary provides safety protection in the real world. External deployment would need independent access control, networking and industrial safety review.

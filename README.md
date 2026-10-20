@@ -18,6 +18,9 @@ The refreshed portfolio image was captured on the running demo after the 1366×7
 
 Portfolio case study: [senanur-cetin.vercel.app/projects/chemview](https://senanur-cetin.vercel.app/projects/chemview)
 
+**Scientific verification:** [Equations, closed-form references, scenario matrix and limitations](docs/science-validation.md).
+The HMI also has an optional [annotated instrumentation diagram](docs/design-qa.md).
+
 ## Synthetic experiment laboratory
 
 The HMI contains a small **Experiment Laboratory** for reproducible, seeded
