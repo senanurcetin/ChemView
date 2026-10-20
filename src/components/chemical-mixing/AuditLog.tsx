@@ -29,7 +29,7 @@ export function AuditLog({ logs }: AuditLogProps) {
     <div className="hmi-panel bg-zinc-950/50 border-white/5 flex min-w-0 flex-col h-[280px]">
       <div className="flex items-center gap-2 mb-4 border-b border-white/5 pb-4">
         <History className="w-4 h-4 text-primary" />
-        <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
           System Event Audit Log
         </h3>
       </div>
@@ -37,7 +37,7 @@ export function AuditLog({ logs }: AuditLogProps) {
       <ScrollArea className="min-h-0 flex-1 pr-4">
         <div className="space-y-2">
           {logs.length === 0 ? (
-            <p className="text-[11px] text-muted-foreground text-center py-8">
+            <p className="text-xs text-muted-foreground text-center py-8">
               No historical events recorded.
             </p>
           ) : (
@@ -68,7 +68,7 @@ export function AuditLog({ logs }: AuditLogProps) {
                         {log.level}
                       </span>
                     </div>
-                    <p className="text-[11px] leading-tight text-zinc-300 font-medium">
+                    <p className="text-xs leading-relaxed text-zinc-200 font-medium">
                       {log.message}
                     </p>
                   </div>

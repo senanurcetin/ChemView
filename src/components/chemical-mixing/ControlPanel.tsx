@@ -230,7 +230,7 @@ export function ControlPanel({
         <div
           className={cn(
             'space-y-6 transition-all duration-300',
-            !manualWriteEnabled ? 'opacity-30 pointer-events-none grayscale' : 'opacity-100',
+            !manualWriteEnabled ? 'opacity-60 grayscale' : 'opacity-100',
           )}
         >
           <div className="space-y-3">

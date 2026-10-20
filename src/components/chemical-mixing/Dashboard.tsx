@@ -175,7 +175,7 @@ export function Dashboard() {
               />
             </div>
             <div className="flex flex-col items-center">
-              <span className="text-[7px] font-bold text-zinc-500 uppercase">TX</span>
+              <span className="text-[10px] font-bold text-zinc-400 uppercase">TX</span>
               <div
                 className={cn(
                   'w-1.5 h-1.5 rounded-full transition-all',

@@ -25,7 +25,7 @@ export function AlertPanel({ alerts, isGenerating }: AlertPanelProps) {
             Operational Insights
           </h3>
         </div>
-        <span className="text-[10px] font-mono text-muted-foreground">LAST 50 EVENTS</span>
+        <span className="text-[11px] font-mono text-muted-foreground">LAST 50 EVENTS</span>
         {isGenerating && (
           <div className="flex items-center gap-2">
             <span className="text-[10px] text-primary animate-pulse uppercase">Analyzing...</span>
@@ -65,14 +65,14 @@ export function AlertPanel({ alerts, isGenerating }: AlertPanelProps) {
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <Icon className="w-4 h-4" />
-                      <span className="text-[10px] font-bold uppercase tracking-wider">
+                      <span className="text-[11px] font-bold uppercase tracking-wider">
                         {alert.urgency} PRIORITY
                       </span>
-                      <span className="text-[10px] font-mono px-1 rounded border border-current/30 opacity-70">
+                      <span className="text-[11px] font-mono px-1 rounded border border-current/30 opacity-80">
                         {alert.source === 'ai' ? 'AI' : 'RULE'}
                       </span>
                     </div>
-                    <span className="text-[10px] font-mono text-muted-foreground">
+                    <span className="text-[11px] font-mono text-muted-foreground">
                       {formatTime(alert.timestamp)}
                     </span>
                   </div>
