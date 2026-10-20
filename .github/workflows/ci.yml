@@ -46,10 +46,7 @@ jobs:
         run: npm run lint
 
       - name: Format check
-        run: |
-          npx prettier --write docs/scientific-model.md
-          git diff -- docs/scientific-model.md
-          npm run format:check
+        run: npm run format:check
 
       - name: Unit tests
         run: npm test

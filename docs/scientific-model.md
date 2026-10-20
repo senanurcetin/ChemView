@@ -9,7 +9,7 @@ The numerical solver uses a fixed one-second step, with a volume-capacity surrog
 - Energy: `m Cp ΔT/Δt = Qheater − UA(T − Tambient)`, where `m = ρ V`, `V = capacity × fill/100` and the numerical thermal mass is floored at 10% capacity to avoid division by zero.
 - Mixing: `rpm(t+Δt) = target + (rpm(t) − target) exp(−Δt/τ)` while energized; shutdown uses a simple 15 RPM/s braking surrogate. Neither power draw nor turbulent mixing quality is inferred.
 - Discharge: `Δfill = −k sqrt(fill) Δt` when the valve is open (Torricelli-like surrogate). It is not an orifice equation calibrated from geometry or fluid viscosity.
-- pH: fixed without reagent feed. The pH-excursion experiment changes the initial synthetic observable; sensor-drift experiments add a *measurement bias*, not a chemical reaction.
+- pH: fixed without reagent feed. The pH-excursion experiment changes the initial synthetic observable; sensor-drift experiments add a _measurement bias_, not a chemical reaction.
 - Heater: only contributes positive power if fill exceeds 10%, heater is enabled and the synthetic temperature is below its commanded setpoint. A separate server interlock prevents enabling the heater at or below 10% fill; crossing the boundary while heating disables it.
 
 Model parameters are in `src/server/sim/physics.ts` and alarm limits in `src/server/sim/thresholds.ts`. All engineering units, known limitations, and model equations must remain consistent with that source.
