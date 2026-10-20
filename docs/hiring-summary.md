@@ -1,18 +1,18 @@
 # ChemView — engineering reviewer brief
 
-**Focus:** Industrial HMI engineering, deterministic process simulation, numerical verification, operator feedback and synthetic telemetry provenance. **Status:** CI-verified *portfolio demonstration*, not a real connected reactor or commercially deployed process controller.
+**Focus:** Industrial HMI engineering, deterministic process simulation, numerical verification, operator feedback and synthetic telemetry provenance. **Status:** CI-verified _portfolio demonstration_, not a real connected reactor or commercially deployed process controller.
 
 ## Inspectable evidence
 
-| Reviewer question | Where to inspect |
-| --- | --- |
-| Is the implemented interface real? | [Current NEXUS HMI capture](assets/chemview-dashboard.png) and [all workstation views](design-qa.md) |
-| What process model is demonstrated? | [Physical assumptions, analytical benchmarks and reproducible experiments](science-validation.md) |
-| Is simulated command admission safe by design? | [Server-side interlocks and E-STOP ordering](architecture.md) plus checked-in Vitest/Playwright tests |
-| Can it run offline without an LLM or persistent backend? | [Local setup](../README.md#run-locally); rule alarms and in-memory storage |
-| Can parallel operators overwrite one another silently? | [Server-side concurrency preconditions](architecture.md#concurrent-setpoint-admission) |
-| Are session histories isolated? | [Telemetry and event provenance](architecture.md#telemetry-persistence-and-legacy-records) |
-| Is the latest dependency review perfect? | No. [Security policy](../SECURITY.md) and [open issue #16](https://github.com/senanurcetin/ChemView/issues/16) describe remaining advisory/exposure constraints. |
+| Reviewer question                                        | Where to inspect                                                                                                                                                 |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Is the implemented interface real?                       | [Current NEXUS HMI capture](assets/chemview-dashboard.png) and [all workstation views](design-qa.md)                                                             |
+| What process model is demonstrated?                      | [Physical assumptions, analytical benchmarks and reproducible experiments](science-validation.md)                                                                |
+| Is simulated command admission safe by design?           | [Server-side interlocks and E-STOP ordering](architecture.md) plus checked-in Vitest/Playwright tests                                                            |
+| Can it run offline without an LLM or persistent backend? | [Local setup](../README.md#run-locally); rule alarms and in-memory storage                                                                                       |
+| Can parallel operators overwrite one another silently?   | [Server-side concurrency preconditions](architecture.md#concurrent-setpoint-admission)                                                                           |
+| Are session histories isolated?                          | [Telemetry and event provenance](architecture.md#telemetry-persistence-and-legacy-records)                                                                       |
+| Is the latest dependency review perfect?                 | No. [Security policy](../SECURITY.md) and [open issue #16](https://github.com/senanurcetin/ChemView/issues/16) describe remaining advisory/exposure constraints. |
 
 ## Engineering decisions
 

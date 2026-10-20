@@ -7,7 +7,7 @@ This log records meaningful engineering-demo milestones, **not commercial produc
 - Added inspectable continuous-time reference comparisons for passive cooling, constant-power heating, free discharge and manual motor response in the NEXUS HMI ([PR #17](https://github.com/senanurcetin/ChemView/pull/17)).
 - Tested numerical differences with reproducible unit tests and an accessible Playwright HMI check. This is model verification, not process-data validation.
 - Pinned patched `handlebars@4.7.10` and `websocket-driver@0.7.5` transitively; regenerated the lockfile with npm ([PR #18](https://github.com/senanurcetin/ChemView/pull/18)).
-- Patch-audit evidence: zero critical *production* package advisories; remaining high/moderate production and critical development-tool findings are tracked in [security issue #16](https://github.com/senanurcetin/ChemView/issues/16). This is not an assurance of zero vulnerabilities.
+- Patch-audit evidence: zero critical _production_ package advisories; remaining high/moderate production and critical development-tool findings are tracked in [security issue #16](https://github.com/senanurcetin/ChemView/issues/16). This is not an assurance of zero vulnerabilities.
 - Consolidated repository documentation and refreshed workstation captures from successful Playwright runs (see [design QA](docs/design-qa.md)).
 
 ## 2026-10-18–20 — Reproducible synthetic reactor and operator HMI

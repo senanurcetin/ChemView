@@ -18,11 +18,11 @@
 
 ## Demonstration gallery
 
-| Workstation width | Screenshot | Purpose |
-| --- | --- | --- |
-| 1366 px | [Compact workstation](docs/assets/chemview-1366x768.png) | Panel visibility and vertical scrolling |
-| 1440 px | [Primary portfolio screenshot](docs/assets/chemview-dashboard.png) | Balanced process/control workspace |
-| 1920 px | [Wide workstation](docs/assets/chemview-1920x1080.png) | Expanded reactor graphics and event history |
+| Workstation width | Screenshot                                                         | Purpose                                     |
+| ----------------- | ------------------------------------------------------------------ | ------------------------------------------- |
+| 1366 px           | [Compact workstation](docs/assets/chemview-1366x768.png)           | Panel visibility and vertical scrolling     |
+| 1440 px           | [Primary portfolio screenshot](docs/assets/chemview-dashboard.png) | Balanced process/control workspace          |
+| 1920 px           | [Wide workstation](docs/assets/chemview-1920x1080.png)             | Expanded reactor graphics and event history |
 
 These are actual Playwright full-page screenshots of a **simulated** running process, not design mockups. See [capture provenance and viewport checks](docs/design-qa.md).
 
@@ -52,13 +52,13 @@ npm run test:e2e       # requires Playwright Chromium
 
 ## API and operator constraints
 
-| Endpoint | Demonstration contract |
-| --- | --- |
-| `GET /api/stream` | Validated server-sent synthetic snapshots |
-| `POST /api/command` | Server-validated operator commands; E-STOP always exempt from throttling |
-| `POST /api/scenario` | Load a named seeded laboratory scenario; never bypasses E-STOP |
-| `GET /api/history` / `GET /api/export` | Current-run telemetry or explicitly selected archived run; CSV export |
-| `GET /api/alerts` / `GET /api/audit` | Read-only current-run or archived synthetic event history |
+| Endpoint                               | Demonstration contract                                                   |
+| -------------------------------------- | ------------------------------------------------------------------------ |
+| `GET /api/stream`                      | Validated server-sent synthetic snapshots                                |
+| `POST /api/command`                    | Server-validated operator commands; E-STOP always exempt from throttling |
+| `POST /api/scenario`                   | Load a named seeded laboratory scenario; never bypasses E-STOP           |
+| `GET /api/history` / `GET /api/export` | Current-run telemetry or explicitly selected archived run; CSV export    |
+| `GET /api/alerts` / `GET /api/audit`   | Read-only current-run or archived synthetic event history                |
 
 The shared simulator permits up to **60 ordinary commands per 10 seconds**. It rejects stale browser preconditions when another operator changes a control. A validated SSE sample must advance before the browser marks telemetry live; after 6 seconds without advancing data it shows **stale**. Archived event records are observational, not certified audit evidence.
 

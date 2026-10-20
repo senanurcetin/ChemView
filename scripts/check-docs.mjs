@@ -44,10 +44,12 @@ for (const [name, targetWidth, minHeight] of images) {
     continue;
   }
   const bytes = readFileSync(filename);
-  if (bytes.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a' ||
-      bytes.length < 24 ||
-      bytes.readUInt32BE(16) !== targetWidth ||
-      bytes.readUInt32BE(20) < minHeight) {
+  if (
+    bytes.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a' ||
+    bytes.length < 24 ||
+    bytes.readUInt32BE(16) !== targetWidth ||
+    bytes.readUInt32BE(20) < minHeight
+  ) {
     violations.push(name + ': invalid PNG signature or capture dimensions');
   }
 }
@@ -62,6 +64,11 @@ if (violations.length) {
   for (const item of violations) console.error('DOC CHECK: ' + item);
   process.exitCode = 1;
 } else {
-  console.log('Verified ' + markdown.length + ' Markdown files and ' +
-    images.length + ' committed HMI screenshots.');
+  console.log(
+    'Verified ' +
+      markdown.length +
+      ' Markdown files and ' +
+      images.length +
+      ' committed HMI screenshots.',
+  );
 }

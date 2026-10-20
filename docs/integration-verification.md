@@ -4,18 +4,18 @@ This is the source of truth for **how to verify a specific commit**. A historica
 
 ## Quality gates
 
-| Gate | Local command | GitHub Actions job |
-| --- | --- | --- |
-| Dependency integrity | `npm ci` | build, firestore-emulator, e2e |
-| TypeScript | `npm run typecheck` | build |
-| ESLint | `npm run lint` | build |
-| Prettier | `npm run format:check` | build |
-| Documentation references and images | `npm run docs:check` | build |
-| Simulation and API unit tests | `npm test` | build |
-| Next production compilation | `npm run build` | build |
-| Firestore store-contract tests (Java 21) | `npm run test:firestore` | firestore-emulator |
-| Chromium HMI/regression tests | `npm run test:e2e` | e2e |
-| Independent Node quality | CircleCI `node-quality` | CircleCI |
+| Gate                                     | Local command            | GitHub Actions job             |
+| ---------------------------------------- | ------------------------ | ------------------------------ |
+| Dependency integrity                     | `npm ci`                 | build, firestore-emulator, e2e |
+| TypeScript                               | `npm run typecheck`      | build                          |
+| ESLint                                   | `npm run lint`           | build                          |
+| Prettier                                 | `npm run format:check`   | build                          |
+| Documentation references and images      | `npm run docs:check`     | build                          |
+| Simulation and API unit tests            | `npm test`               | build                          |
+| Next production compilation              | `npm run build`          | build                          |
+| Firestore store-contract tests (Java 21) | `npm run test:firestore` | firestore-emulator             |
+| Chromium HMI/regression tests            | `npm run test:e2e`       | e2e                            |
+| Independent Node quality                 | CircleCI `node-quality`  | CircleCI                       |
 
 GitHub Actions uses Node 22. The Playwright suite runs sequentially because one server-owned synthetic process is shared by all browser pages.
 

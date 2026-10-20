@@ -6,11 +6,11 @@ ChemView retains the cyan/orange, dark-workstation hierarchy of its original HMI
 
 Screenshots below come from the **actual running Playwright demo**, not Figma mockups, AI-rendered images or equipment photographs. The mixer and simulated heater were operating in the capture fixture.
 
-| Viewport | Full-page capture | Checked properties |
-| --- | --- | --- |
-| 1366×768 | [Compact HMI](assets/chemview-1366x768.png) | NEXUS identity, control access and scrollability without horizontal document overflow |
-| 1440×900 | [Default portfolio image](assets/chemview-dashboard.png) | Balanced left-hand process visualization, trends and right-hand control/laboratory panels |
-| 1920×1080 | [Wide workstation](assets/chemview-1920x1080.png) | Expanded reactor graphic and legible lower-page event/audit sections |
+| Viewport  | Full-page capture                                        | Checked properties                                                                        |
+| --------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| 1366×768  | [Compact HMI](assets/chemview-1366x768.png)              | NEXUS identity, control access and scrollability without horizontal document overflow     |
+| 1440×900  | [Default portfolio image](assets/chemview-dashboard.png) | Balanced left-hand process visualization, trends and right-hand control/laboratory panels |
+| 1920×1080 | [Wide workstation](assets/chemview-1920x1080.png)        | Expanded reactor graphic and legible lower-page event/audit sections                      |
 
 ![1440px ChemView workstation — synthetic process only](assets/chemview-dashboard.png)
 
