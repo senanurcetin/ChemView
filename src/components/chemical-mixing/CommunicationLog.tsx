@@ -50,7 +50,7 @@ export function CommunicationLog({ logs }: CommunicationLogProps) {
             <div key={log.id} className="flex min-w-0 items-start gap-2 text-[11px]">
               <span className="shrink-0 text-zinc-400">[{formatClock(log.timestamp)}]</span>
               <span
-                className={log.direction === 'TX' ? 'shrink-0 text-orange-500' : 'shrink-0 text-primary'}
+                className={log.direction === 'TX' ? 'text-orange-500' : 'text-primary'}
               >
                 {log.direction === 'TX' ? 'SEND >' : 'RECV <'}
               </span>

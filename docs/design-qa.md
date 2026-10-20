@@ -9,11 +9,9 @@ a **simulation**, not a real PLC display.
 The Playwright scenario `NEXUS identity and operator panels remain accessible on shorter desktops`
 captures full-page images for all three workstation sizes:
 
-| Viewport | Primary review |
-| --- | --- |
-| 1366 × 768 | Header and status legibility, no horizontal overflow; panel access by vertical scroll |
-| 1440 × 900 | Balanced two-column process and control layout |
-| 1920 × 1080 | Wide-screen scale, reactor schematic and event-log readability |
+- **1366 × 768:** Header and status legibility, no horizontal overflow; panel access by vertical scroll.
+- **1440 × 900:** Balanced two-column process and control layout.
+- **1920 × 1080:** Wide-screen scale, reactor schematic and event-log readability.
 
 The GitHub Actions `e2e` job publishes the PNG files as the
 `chemview-hmi-design-captures` artifact. The test checks document and main
