@@ -26,6 +26,22 @@ history and minimum reactor graphic width.
 - Event history and controls retain their existing server-side safety behavior.
 - The simulated mixer animation respects OS reduced-motion preferences.
 
+## Screenshot inspection
+
+GitHub Actions [run 39503098768](https://github.com/senanurcetin/ChemView/actions/runs/39503098768)
+produced PNG captures at all three sizes, with the simulated mixing process active.
+The images were reviewed for alignment and readable controls:
+
+- **1366 × 768:** Header, E-STOP, setpoints and protocol history remain visible;
+  the complete event history is reachable by vertical scrolling.
+- **1440 × 900:** Process visualization, charts and right-hand controls retain
+  their two-column hierarchy.
+- **1920 × 1080:** The enlarged reactor schematic is centered; NEXUS branding,
+  telemetry and event history remain aligned without horizontal clipping.
+
+The screenshot is a full-page capture, not proof that everything fits
+above the fold. Responsive checks verify access through normal scrolling.
+
 ## Limitations
 
 These checks establish layout stability, not WCAG conformance or a measured
