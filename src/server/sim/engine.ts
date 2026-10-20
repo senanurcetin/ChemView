@@ -5,6 +5,7 @@ import { applyCommand } from './interlocks';
 import { commandFrame, readRequestFrame, readResponseFrame } from './modbus';
 import { createRng, type Rng } from './rng';
 import { initialState } from './state';
+import { scenarioInitialState } from './scenarios';
 import { advancePhysicalState, MIN_HEATER_LEVEL_PERCENT } from './physics';
 import { getStore, toSample, type Store } from '../store';
 import type {
@@ -16,6 +17,7 @@ import type {
   SimState,
   Snapshot,
   TrafficEntry,
+  ScenarioId,
 } from './types';
 
 export { initialState };
@@ -51,7 +53,7 @@ type Listener = (snapshot: Snapshot) => void;
  */
 export class Engine {
   private state: SimState = initialState();
-  private readonly rng: Rng;
+  private rng: Rng;
   private readonly now: () => Date;
   private seq = 0;
   private estopEpoch = 0;
@@ -66,7 +68,9 @@ export class Engine {
   private hasEvaluatedAlarms = false;
   private readonly commentator?: Commentator;
   private readonly store?: Store;
-  private readonly runId = randomUUID();
+  private runId = randomUUID();
+  private scenario: ScenarioId = 'nominal';
+  private scenarioSeed: number | undefined;
   private tickCount = 0;
   private listeners = new Set<Listener>();
   private timer: ReturnType<typeof setInterval> | null = null;
@@ -76,6 +80,43 @@ export class Engine {
     this.now = options.now ?? (() => new Date());
     this.commentator = options.commentator;
     this.store = options.store;
+  }
+
+  /**
+   * A lab experiment starts a fresh in-memory simulator run. It is not an
+   * ordinary Modbus command and must never bypass an E-STOP latch.
+   */
+  loadScenario(
+    scenario: ScenarioId,
+    seed: number,
+    expectedRunId?: string,
+  ): { ok: boolean; reason?: string; runId: string } {
+    if (expectedRunId !== undefined && expectedRunId !== this.runId) {
+      return { ok: false, reason: 'Simulator session changed.', runId: this.runId };
+    }
+    if (this.state.estopLatched) {
+      return { ok: false, reason: 'Reset E-STOP before loading an experiment.', runId: this.runId };
+    }
+    this.runId = randomUUID();
+    this.rng = createRng(seed);
+    this.scenario = scenario;
+    this.scenarioSeed = seed;
+    this.state = scenarioInitialState(scenario);
+    this.seq = 0;
+    this.estopEpoch = 0;
+    this.commandRevision += 1; // invalidate old in-flight commentary
+    this.txId = 0;
+    this.idCounter = 0;
+    this.network = { packetCount: 0, latencyMs: 15.2, errorCount: 0 };
+    this.traffic = [];
+    this.audit = [];
+    this.alerts = [];
+    this.lastAlertKeys = new Set();
+    this.hasEvaluatedAlarms = false;
+    this.tickCount = 0;
+    this.pushAudit({ message: `LAB SCENARIO: ${scenario} (seed ${seed})`, level: 'low' });
+    this.emit();
+    return { ok: true, runId: this.runId };
   }
 
   private nextId(): string {
@@ -165,7 +206,17 @@ export class Engine {
     const txId = ++this.txId;
     this.pushTraffic('TX', readRequestFrame(txId));
     this.network.latencyMs = 12 + this.rng() * 6;
-    this.pushTraffic('RX', readResponseFrame(txId, this.state));
+    if (this.scenario === 'comms_timeout' && (this.tickCount + 1) % 4 === 0) {
+      this.network.errorCount += 1;
+      if (this.network.errorCount === 1) {
+        this.pushAudit({
+          message: 'SIMULATED MODBUS TIMEOUT: polling response omitted.',
+          level: 'medium',
+        });
+      }
+    } else {
+      this.pushTraffic('RX', readResponseFrame(txId, this.state));
+    }
     this.evaluateAlerts();
     const ts = this.now().toISOString();
     this.commentator?.record(this.state, ts);
@@ -183,6 +234,7 @@ export class Engine {
     if (!commentator || commentator.busy || this.state.estopLatched) return;
 
     const observedRevision = this.commandRevision;
+    const observedRunId = this.runId;
     const observedEstopEpoch = this.estopEpoch;
     const observedTrigger = triggerKey(this.state);
     const pending = commentator.maybeComment(this.state);
@@ -194,6 +246,7 @@ export class Engine {
     const result = await pending;
     if (
       result &&
+      this.runId === observedRunId &&
       !this.state.estopLatched &&
       this.commandRevision === observedRevision &&
       this.estopEpoch === observedEstopEpoch &&
@@ -207,9 +260,8 @@ export class Engine {
         urgency: result.urgency,
       });
     }
-    // Publish analysis completion, including timeout/failure, without presenting
-    // a stale model response as a current-process alarm.
-    this.emit();
+    // Do not inject an old run's completion into the next experiment.
+    if (this.runId === observedRunId) this.emit();
   }
 
   command(cmd: Command): CommandResult {
@@ -317,6 +369,8 @@ export class Engine {
   getSnapshot(): Snapshot {
     return {
       runId: this.runId,
+      scenario: this.scenario,
+      scenarioSeed: this.scenarioSeed,
       estopEpoch: this.estopEpoch,
       seq: this.seq,
       timestamp: this.now().toISOString(),

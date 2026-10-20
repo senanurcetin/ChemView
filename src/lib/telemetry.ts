@@ -31,6 +31,14 @@ const auditEntrySchema: z.ZodType<AuditEntry> = z.object({
 /** Validate the entire SSE payload before updating any operator-visible state. */
 const snapshotSchema: z.ZodType<Snapshot> = z.object({
   runId: z.string().uuid(),
+  scenario: z.enum([
+    'nominal',
+    'thermal_excursion',
+    'low_inventory',
+    'ph_excursion',
+    'comms_timeout',
+  ]).optional(),
+  scenarioSeed: z.number().int().nonnegative().optional(),
   estopEpoch: z.number().int().nonnegative(),
   seq: z.number().int().nonnegative(),
   timestamp,

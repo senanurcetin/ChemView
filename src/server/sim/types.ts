@@ -1,5 +1,12 @@
 export type Level = 'low' | 'medium' | 'high';
 
+export type ScenarioId =
+  | 'nominal'
+  | 'thermal_excursion'
+  | 'low_inventory'
+  | 'ph_excursion'
+  | 'comms_timeout';
+
 export interface SimState {
   isRunning: boolean;
   /** Stays locked after E-STOP until an explicit reset command. */
@@ -90,6 +97,9 @@ export interface Alert {
 export interface Snapshot {
   /** Stable identity of this engine instance; changes on simulator restart. */
   runId: string;
+  /** Lab metadata is absent from older externally synthesized snapshots. */
+  scenario?: ScenarioId;
+  scenarioSeed?: number;
   /** Increments on each E-STOP, including while already latched. */
   estopEpoch: number;
   seq: number;

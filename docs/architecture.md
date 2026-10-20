@@ -178,3 +178,18 @@ when a running discharge crosses that limit. Every simultaneously active
 rule condition is raised independently. Analytical energy solution tests,
 monotonic discharge invariants and an explicit low-level interlock test
 exercise these assumptions; they do not constitute empirical validation.
+
+## Repeatable experiment laboratory
+
+The `Experiment Laboratory` panel calls `POST /api/scenario` with a named
+scenario, deterministic integer random seed and expected run UUID. It is
+validated, optionally bearer-protected (like operator mode changes), rate
+limited, and denied while the simulated E-STOP latch is active. An accepted
+scenario resets the **simulated** state, establishes a new UUID, and clears only
+the new run's live history; previous persisted runs are retained.
+
+Scenarios: nominal baseline, thermal excursion, low inventory/heater cutout,
+independently out-of-range pH observation, and Modbus RX timeout (every fourth
+poll request has no response). The last case increments simulated transport
+errors but does **not** sever SSE telemetry or represent a physical cable fault.
+This is a controlled experiment reset, not a production operator command.

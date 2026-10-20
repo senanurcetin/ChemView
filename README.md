@@ -18,6 +18,14 @@ The refreshed portfolio image was captured on the running demo after the 1366×7
 
 Portfolio case study: [senanur-cetin.vercel.app/projects/chemview](https://senanur-cetin.vercel.app/projects/chemview)
 
+## Synthetic experiment laboratory
+
+The HMI contains a small **Experiment Laboratory** for reproducible, seeded
+scenarios: baseline, overheating, draining to the low-level heater cutout,
+out-of-range pH and a simulated Modbus response timeout. Each experiment starts
+a new simulator `runId`, preserving prior persisted sessions. Loading is
+blocked while the E-STOP latch is active. No real Modbus or PLC is used.
+
 ## What it does
 
 - Runs the mixing-tank simulation **on the server** (physics, safety interlocks, simulated Modbus register map) and streams a snapshot to the browser every second over Server-Sent Events.

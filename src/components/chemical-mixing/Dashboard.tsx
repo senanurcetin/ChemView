@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { TankSimulation } from './TankSimulation';
 import { TrendChart } from './TrendChart';
 import { ControlPanel } from './ControlPanel';
+import { ScenarioLab } from './ScenarioLab';
 import { StatusDisplay } from './StatusDisplay';
 import { AlertPanel } from './AlertPanel';
 import { AuditLog } from './AuditLog';
@@ -18,7 +19,7 @@ import { useSyncedSetpoint } from '@/hooks/use-synced-setpoint';
 import { cn } from '@/lib/utils';
 import { GATEWAY_ADDRESS, OPERATOR_ID } from '@/lib/config';
 import { initialState } from '@/server/sim/state';
-import type { Command } from '@/server/sim/types';
+import type { Command, ScenarioId } from '@/server/sim/types';
 
 const ACTIVITY_FLASH_MS = 150;
 
@@ -107,6 +108,34 @@ export function Dashboard() {
       return outcome;
     },
     [controlsAvailable, sendCommand, toast],
+  );
+
+  const loadScenario = useCallback(
+    async (scenario: ScenarioId, seed: number) => {
+      if (!controlsAvailable || !snapshot || snapshot.state.estopLatched) return;
+      try {
+        const response = await fetch('/api/scenario', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scenario, seed, expectedRunId: snapshot.runId }),
+        });
+        const body: unknown = await response.json();
+        if (!response.ok) {
+          const reason =
+            body && typeof body === 'object' && 'reason' in body && typeof body.reason === 'string'
+              ? body.reason
+              : 'Scenario load was rejected.';
+          toast({ variant: 'destructive', title: 'Scenario Denied', description: reason });
+        }
+      } catch {
+        toast({
+          variant: 'destructive',
+          title: 'Scenario Denied',
+          description: 'Simulation gateway unreachable.',
+        });
+      }
+    },
+    [controlsAvailable, snapshot, toast],
   );
 
   const setpointsEditable = controlsAvailable && state.isManualMode && !state.estopLatched;
@@ -378,6 +407,12 @@ export function Dashboard() {
                 expectedRunId: snapshot?.runId,
               })
             }
+          />
+          <ScenarioLab
+            currentScenario={snapshot?.scenario ?? 'nominal'}
+            currentSeed={snapshot?.scenarioSeed}
+            disabled={!controlsAvailable || state.estopLatched}
+            onLoad={loadScenario}
           />
         </section>
 
