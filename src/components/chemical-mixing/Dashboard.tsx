@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { TankSimulation } from './TankSimulation';
 import { ProcessSchematic } from './ProcessSchematic';
+import { ModelBenchmark } from './ModelBenchmark';
 import { TrendChart } from './TrendChart';
 import { ControlPanel } from './ControlPanel';
 import { ScenarioLab } from './ScenarioLab';
@@ -350,6 +351,7 @@ export function Dashboard() {
               valveOpen={valveOpen}
             />
           </details>
+          <ModelBenchmark />
         </section>
 
         {/* Right Column: Controls & Intelligence */}
