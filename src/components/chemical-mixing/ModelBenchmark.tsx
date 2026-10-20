@@ -30,7 +30,7 @@ export function ModelBenchmark() {
                 Experiment
               </th>
               <th scope="col" className="px-2 py-2 text-right font-semibold">
-                Euler
+                Simulator
               </th>
               <th scope="col" className="px-2 py-2 text-right font-semibold">
                 Analytical
