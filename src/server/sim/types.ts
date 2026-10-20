@@ -1,7 +1,12 @@
 export type Level = 'low' | 'medium' | 'high';
 
 export type ScenarioId =
-  'nominal' | 'thermal_excursion' | 'low_inventory' | 'ph_excursion' | 'sensor_drift' | 'comms_timeout';
+  | 'nominal'
+  | 'thermal_excursion'
+  | 'low_inventory'
+  | 'ph_excursion'
+  | 'sensor_drift'
+  | 'comms_timeout';
 
 export interface SimState {
   isRunning: boolean;

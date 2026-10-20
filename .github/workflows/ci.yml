@@ -48,12 +48,6 @@ jobs:
       - name: Format check
         run: npm run format:check
 
-      - name: Print scientific patch formatting on failure
-        if: failure()
-        run: |
-          npx prettier --write docs/architecture.md docs/science-validation.md README.md src/server/sim/types.ts src/server/sim/scenarios.ts src/server/sim/engine.ts src/server/sim/engine.test.ts src/lib/telemetry.ts src/components/chemical-mixing/ScenarioLab.tsx src/components/chemical-mixing/Dashboard.tsx
-          git diff -- docs/architecture.md docs/science-validation.md README.md src/server/sim/types.ts src/server/sim/scenarios.ts src/server/sim/engine.ts src/server/sim/engine.test.ts src/lib/telemetry.ts src/components/chemical-mixing/ScenarioLab.tsx src/components/chemical-mixing/Dashboard.tsx
-
       - name: Unit tests
         run: npm test
 

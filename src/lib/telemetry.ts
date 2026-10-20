@@ -32,12 +32,17 @@ const auditEntrySchema: z.ZodType<AuditEntry> = z.object({
 const snapshotSchema: z.ZodType<Snapshot> = z.object({
   runId: z.string().uuid(),
   scenario: z
-    .enum(['nominal', 'thermal_excursion', 'low_inventory', 'ph_excursion', 'sensor_drift', 'comms_timeout'])
+    .enum([
+      'nominal',
+      'thermal_excursion',
+      'low_inventory',
+      'ph_excursion',
+      'sensor_drift',
+      'comms_timeout',
+    ])
     .optional(),
   scenarioSeed: z.number().int().nonnegative().optional(),
-  sensorDiagnostics: z
-    .object({ phReference: ph, phBias: finite.min(-14).max(14) })
-    .optional(),
+  sensorDiagnostics: z.object({ phReference: ph, phBias: finite.min(-14).max(14) }).optional(),
   estopEpoch: z.number().int().nonnegative(),
   seq: z.number().int().nonnegative(),
   timestamp,
