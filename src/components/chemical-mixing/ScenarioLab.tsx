@@ -8,12 +8,19 @@ import type { ScenarioId } from '@/server/sim/types';
 interface ScenarioLabProps {
   currentScenario: ScenarioId;
   currentSeed?: number;
+  sensorDiagnostics?: { phReference: number; phBias: number };
   disabled: boolean;
   onLoad: (scenario: ScenarioId, seed: number) => Promise<void>;
 }
 
 /** A controlled laboratory reset; not part of a physical HMI command channel. */
-export function ScenarioLab({ currentScenario, currentSeed, disabled, onLoad }: ScenarioLabProps) {
+export function ScenarioLab({
+  currentScenario,
+  currentSeed,
+  sensorDiagnostics,
+  disabled,
+  onLoad,
+}: ScenarioLabProps) {
   const [scenario, setScenario] = useState<ScenarioId>('nominal');
   const [seed, setSeed] = useState(42);
   const [busy, setBusy] = useState(false);
@@ -32,6 +39,13 @@ export function ScenarioLab({ currentScenario, currentSeed, disabled, onLoad }: 
       <div className="text-[11px] font-mono uppercase text-zinc-400" data-testid="active-scenario">
         ACTIVE: {SCENARIO_LIBRARY[currentScenario].label} · SEED {currentSeed ?? 'DEFAULT'}
       </div>
+      {currentScenario === 'sensor_drift' && sensorDiagnostics && (
+        <p data-testid="sensor-drift-diagnostic" className="text-xs text-amber-200">
+          SYNTHETIC REFERENCE pH {sensorDiagnostics.phReference.toFixed(2)}
+          {' · '}
+          MEASUREMENT BIAS +{sensorDiagnostics.phBias.toFixed(2)}
+        </p>
+      )}
       <label className="flex flex-col gap-1 text-xs text-zinc-300">
         Scenario
         <select

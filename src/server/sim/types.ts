@@ -1,7 +1,7 @@
 export type Level = 'low' | 'medium' | 'high';
 
 export type ScenarioId =
-  'nominal' | 'thermal_excursion' | 'low_inventory' | 'ph_excursion' | 'comms_timeout';
+  'nominal' | 'thermal_excursion' | 'low_inventory' | 'ph_excursion' | 'sensor_drift' | 'comms_timeout';
 
 export interface SimState {
   isRunning: boolean;
@@ -96,6 +96,8 @@ export interface Snapshot {
   /** Lab metadata is absent from older externally synthesized snapshots. */
   scenario?: ScenarioId;
   scenarioSeed?: number;
+  /** Lab-only reference; no real HMI can measure the inaccessible ground truth. */
+  sensorDiagnostics?: { phReference: number; phBias: number };
   /** Increments on each E-STOP, including while already latched. */
   estopEpoch: number;
   seq: number;

@@ -6,6 +6,7 @@ export const SCENARIO_IDS = [
   'thermal_excursion',
   'low_inventory',
   'ph_excursion',
+  'sensor_drift',
   'comms_timeout',
 ] as const satisfies readonly ScenarioId[];
 
@@ -25,6 +26,10 @@ export const SCENARIO_LIBRARY: Record<ScenarioId, { label: string; summary: stri
   ph_excursion: {
     label: 'pH excursion',
     summary: 'Injects an out-of-range pH observation without inventing a dose reaction.',
+  },
+  sensor_drift: {
+    label: 'pH sensor drift',
+    summary: 'Growing synthetic pH sensor bias; unchanged underlying chemical pH.',
   },
   comms_timeout: {
     label: 'Modbus timeout',
@@ -63,6 +68,8 @@ export function scenarioInitialState(name: ScenarioId): SimState {
       };
     case 'ph_excursion':
       return { ...base, ph: 8.4, isRunning: true };
+    case 'sensor_drift':
+      return { ...base, ph: 7, isRunning: true };
     case 'comms_timeout':
       return { ...base, isRunning: true };
   }

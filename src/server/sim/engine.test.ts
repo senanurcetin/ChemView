@@ -484,6 +484,25 @@ describe('Engine', () => {
     expect(engine.command({ type: 'set_heater', on: true }).ok).toBe(false);
   });
 
+  it('separates synthetic sensor bias from the actual reactor pH', () => {
+    const engine = make();
+    expect(engine.loadScenario('sensor_drift', 23).ok).toBe(true);
+    expect(engine.getSnapshot().sensorDiagnostics).toMatchObject({
+      phReference: 7,
+      phBias: 0,
+    });
+    for (let i = 0; i < 35; i++) engine.tick();
+    const snapshot = engine.getSnapshot();
+    expect(snapshot.sensorDiagnostics?.phReference).toBe(7);
+    expect(snapshot.sensorDiagnostics?.phBias).toBeCloseTo(1.4, 8);
+    expect(snapshot.state.ph).toBeCloseTo(8.4, 8);
+    expect(
+      snapshot.alerts.some((alert) => alert.source === 'rule' && alert.message.includes('pH out')),
+    ).toBe(true);
+    expect(engine.loadScenario('sensor_drift', 23).ok).toBe(true);
+    expect(engine.getSnapshot().state.ph).toBe(7);
+  });
+
   it('Modbus timeout experiment omits the fourth RX without losing SSE ticks', () => {
     const engine = make();
     const run = engine.loadScenario('comms_timeout', 99);

@@ -193,3 +193,12 @@ independently out-of-range pH observation, and Modbus RX timeout (every fourth
 poll request has no response). The last case increments simulated transport
 errors but does **not** sever SSE telemetry or represent a physical cable fault.
 This is a controlled experiment reset, not a production operator command.
+
+### Synthetic sensor drift
+
+The `sensor_drift` experiment adds +0.04 pH/s instrument bias, capped at
++1.5. True synthetic reactor pH remains 7.00. Modbus, SSE, stored telemetry,
+AI commentary and rule alarms consume the biased measurement. The lab panel
+alone discloses model truth and bias for teaching purposes; actual operators
+cannot directly observe inaccessible ground truth. This is not an empirically
+validated sensor-ageing or chemical kinetics model.

@@ -73,3 +73,11 @@ Independent measurements of temperature, volume, agitation, flows and
 fluid composition would be required for parameter fitting, uncertainty
 quantification, residual analysis and uncertainty bounds. These activities
 are explicitly outside the current no-hardware demonstration.
+
+### Sensor bias experiment
+
+A deterministic +0.04 pH/s instrument bias grows to a maximum +1.5 while the
+underlying chemical pH remains exactly 7.00. Only measured pH triggers rule
+alarms and enters Modbus/SSE/persistent samples; true pH is shown exclusively
+in the laboratory as synthetic ground truth. A numerical test verifies that
+the measurement can cross pH 8 without an actual chemical composition change.

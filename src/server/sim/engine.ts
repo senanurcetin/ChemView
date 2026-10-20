@@ -71,6 +71,7 @@ export class Engine {
   private runId = randomUUID();
   private scenario: ScenarioId = 'nominal';
   private scenarioSeed: number | undefined;
+  private phSensorBias = 0;
   private tickCount = 0;
   private listeners = new Set<Listener>();
   private timer: ReturnType<typeof setInterval> | null = null;
@@ -101,6 +102,7 @@ export class Engine {
     this.rng = createRng(seed);
     this.scenario = scenario;
     this.scenarioSeed = seed;
+    this.phSensorBias = 0;
     this.state = scenarioInitialState(scenario);
     this.seq = 0;
     this.estopEpoch = 0;
@@ -117,6 +119,15 @@ export class Engine {
     this.pushAudit({ message: `LAB SCENARIO: ${scenario} (seed ${seed})`, level: 'low' });
     this.emit();
     return { ok: true, runId: this.runId };
+  }
+
+  /** Synthetic pH sensor readback; physical/chemical pH remains unchanged. */
+  private observedState(): SimState {
+    if (this.phSensorBias === 0) return this.state;
+    return {
+      ...this.state,
+      ph: Math.min(14, Math.max(0, this.state.ph + this.phSensorBias)),
+    };
   }
 
   private nextId(): string {
@@ -163,7 +174,7 @@ export class Engine {
 
   /** Each active fault has an independent edge, so simultaneous faults survive. */
   private evaluateAlerts() {
-    const rules = evaluateAllRules(this.state);
+    const rules = evaluateAllRules(this.observedState());
     const current = new Set(rules.map((rule) => rule.key));
     for (const rule of rules) {
       if (this.lastAlertKeys.has(rule.key)) continue;
@@ -203,6 +214,10 @@ export class Engine {
         level: 'high',
       });
     }
+    if (this.scenario === 'sensor_drift') {
+      this.phSensorBias = Math.min(1.5, this.phSensorBias + 0.04);
+    }
+    const observed = this.observedState();
     const txId = ++this.txId;
     this.pushTraffic('TX', readRequestFrame(txId));
     this.network.latencyMs = 12 + this.rng() * 6;
@@ -215,13 +230,13 @@ export class Engine {
         });
       }
     } else {
-      this.pushTraffic('RX', readResponseFrame(txId, this.state));
+      this.pushTraffic('RX', readResponseFrame(txId, observed));
     }
     this.evaluateAlerts();
     const ts = this.now().toISOString();
-    this.commentator?.record(this.state, ts);
+    this.commentator?.record(observed, ts);
     if (++this.tickCount % TELEMETRY_EVERY === 0) {
-      const sample = toSample(this.state, ts, this.runId);
+      const sample = toSample(observed, ts, this.runId);
       this.persist((store) => store.saveTelemetry(sample));
     }
     void this.runCommentary();
@@ -236,8 +251,8 @@ export class Engine {
     const observedRevision = this.commandRevision;
     const observedRunId = this.runId;
     const observedEstopEpoch = this.estopEpoch;
-    const observedTrigger = triggerKey(this.state);
-    const pending = commentator.maybeComment(this.state);
+    const observedTrigger = triggerKey(this.observedState());
+    const pending = commentator.maybeComment(this.observedState());
     // maybeComment sets busy synchronously only if it actually started an AI call.
     // Suppressed/nominal ticks must not emit a second phantom SSE snapshot.
     if (!commentator.busy) return;
@@ -250,7 +265,7 @@ export class Engine {
       !this.state.estopLatched &&
       this.commandRevision === observedRevision &&
       this.estopEpoch === observedEstopEpoch &&
-      triggerKey(this.state) === observedTrigger
+      triggerKey(this.observedState()) === observedTrigger
     ) {
       this.pushAlert({
         id: this.nextId(),
@@ -371,10 +386,14 @@ export class Engine {
       runId: this.runId,
       scenario: this.scenario,
       scenarioSeed: this.scenarioSeed,
+      sensorDiagnostics:
+        this.scenario === 'sensor_drift'
+          ? { phReference: this.state.ph, phBias: this.phSensorBias }
+          : undefined,
       estopEpoch: this.estopEpoch,
       seq: this.seq,
       timestamp: this.now().toISOString(),
-      state: this.state,
+      state: this.observedState(),
       network: { ...this.network },
       traffic: this.traffic,
       audit: this.audit,

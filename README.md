@@ -25,7 +25,7 @@ The HMI also has an optional [annotated instrumentation diagram](docs/design-qa.
 
 The HMI contains a small **Experiment Laboratory** for reproducible, seeded
 scenarios: baseline, overheating, draining to the low-level heater cutout,
-out-of-range pH and a simulated Modbus response timeout. Each experiment starts
+out-of-range pH, pH sensor bias and a simulated Modbus response timeout. Each experiment starts
 a new simulator `runId`, preserving prior persisted sessions. Loading is
 blocked while the E-STOP latch is active. No real Modbus or PLC is used.
 

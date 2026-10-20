@@ -426,6 +426,7 @@ export function Dashboard() {
           <ScenarioLab
             currentScenario={snapshot?.scenario ?? 'nominal'}
             currentSeed={snapshot?.scenarioSeed}
+            sensorDiagnostics={snapshot?.sensorDiagnostics}
             disabled={!controlsAvailable || state.estopLatched}
             onLoad={loadScenario}
           />
