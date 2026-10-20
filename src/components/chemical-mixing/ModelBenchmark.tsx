@@ -15,9 +15,9 @@ export function ModelBenchmark() {
         Model benchmark — numerical accuracy
       </summary>
       <p className="mt-3 text-xs text-zinc-300">
-        Fixed synthetic reference experiments. The model is compared with exact
-        continuous-time solutions under simplified conditions, not with plant
-        measurements. Values and errors use the units shown.
+        Fixed synthetic reference experiments. The model is compared with exact continuous-time
+        solutions under simplified conditions, not with plant measurements. Values and errors use
+        the units shown.
       </p>
       <div className="mt-3 max-w-full overflow-x-auto">
         <table className="w-full min-w-[550px] text-left text-xs tabular-nums">
@@ -49,12 +49,8 @@ export function ModelBenchmark() {
                     {benchmark.durationSeconds} s · {benchmark.unit}
                   </span>
                 </th>
-                <td className="px-2 py-2 text-right">
-                  {benchmark.simulated.toFixed(3)}
-                </td>
-                <td className="px-2 py-2 text-right">
-                  {benchmark.reference.toFixed(3)}
-                </td>
+                <td className="px-2 py-2 text-right">{benchmark.simulated.toFixed(3)}</td>
+                <td className="px-2 py-2 text-right">{benchmark.reference.toFixed(3)}</td>
                 <td className="px-2 py-2 text-right text-primary">
                   {benchmark.absoluteError.toFixed(3)}
                 </td>
@@ -64,8 +60,8 @@ export function ModelBenchmark() {
         </table>
       </div>
       <p className="mt-3 text-[11px] text-amber-200">
-        Numerical verification only. No calibration, uncertainty bound,
-        measured process fidelity or physical safety claim is implied.
+        Numerical verification only. No calibration, uncertainty bound, measured process fidelity or
+        physical safety claim is implied.
       </p>
     </details>
   );
