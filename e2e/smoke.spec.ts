@@ -625,3 +625,15 @@ test('process schematic exposes server readbacks without horizontal page overflo
   }));
   expect(snapshot.page).toBeLessThanOrEqual(snapshot.viewport);
 });
+
+
+test('model benchmark shows inspectable synthetic reference comparisons', async ({ page }) => {
+  await page.goto('/');
+  await page.getByText('Model benchmark — numerical accuracy').click();
+  const benchmark = page.getByTestId('science-benchmark');
+  await expect(benchmark.getByRole('table')).toBeVisible();
+  await expect(benchmark.getByRole('row')).toHaveCount(5);
+  await expect(benchmark.getByText('Passive cooling')).toBeVisible();
+  await expect(benchmark.getByText('Free tank discharge')).toBeVisible();
+  await expect(benchmark).toContainText('No calibration, uncertainty bound');
+});
