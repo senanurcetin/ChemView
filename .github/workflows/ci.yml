@@ -117,3 +117,21 @@ jobs:
             playwright-report/
             test-results/
           retention-days: 7
+
+  documentation-inventory:
+    if: github.event_name == 'pull_request' && github.head_ref == 'chore/repository-docs-visual-refresh-20261021'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - name: Inspect tracked files and document links
+        run: |
+          git ls-files > chemview-inventory.txt
+          echo '--- documentation and image files ---' >> chemview-inventory.txt
+          git ls-files | grep -E '(^docs/|\\.(md|png|jpg|svg|webp)$)' >> chemview-inventory.txt || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chemview-maintenance-inventory
+          path: chemview-inventory.txt
+          retention-days: 3
