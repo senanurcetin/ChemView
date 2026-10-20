@@ -195,6 +195,22 @@ describe('audit history transport', () => {
   });
 });
 
+describe('scenario snapshot metadata', () => {
+  it('accepts named synthetic scenario metadata and rejects unknown experiment types', () => {
+    const engine = new Engine({ seed: 1 });
+    engine.loadScenario('ph_excursion', 42);
+    const data = engine.getSnapshot();
+    expect(parseSnapshotEvent(JSON.stringify(data))).toMatchObject({
+      runId: data.runId,
+      scenario: 'ph_excursion',
+      scenarioSeed: 42,
+    });
+    expect(
+      parseSnapshotEvent(JSON.stringify({ ...data, scenario: 'real-plant' })),
+    ).toBeNull();
+  });
+});
+
 describe('parseHistorySamples', () => {
   it('accepts persisted samples for the trend preload', () => {
     const runId = sampleSnapshot().runId;

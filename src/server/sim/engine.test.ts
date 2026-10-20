@@ -439,6 +439,68 @@ describe('Engine', () => {
     expect(engine.command({ type: 'stop', expectedRunning: true, expectedRunId }).ok).toBe(true);
   });
 
+  it('isolates repeated seeded experiments and preserves the E-STOP latch', () => {
+    const engine = make();
+    const firstRun = engine.getSnapshot().runId;
+    const first = engine.loadScenario('thermal_excursion', 29, firstRun);
+    expect(first.ok).toBe(true);
+    expect(first.runId).not.toBe(firstRun);
+    const firstSequence = Array.from({ length: 15 }, () => {
+      const state = engine.tick().state;
+      return [state.rpm, state.temp, state.level];
+    });
+    const stale = engine.loadScenario('nominal', 12, firstRun);
+    expect(stale.ok).toBe(false);
+    expect(engine.getSnapshot().scenario).toBe('thermal_excursion');
+    const second = engine.loadScenario('thermal_excursion', 29, first.runId);
+    expect(second.ok).toBe(true);
+    const secondSequence = Array.from({ length: 15 }, () => {
+      const state = engine.tick().state;
+      return [state.rpm, state.temp, state.level];
+    });
+    expect(secondSequence).toEqual(firstSequence);
+    expect(engine.getSnapshot().scenarioSeed).toBe(29);
+    expect(engine.getSnapshot().seq).toBe(16);
+
+    engine.command({ type: 'estop' });
+    const latched = engine.getSnapshot();
+    expect(engine.loadScenario('nominal', 42, latched.runId).ok).toBe(false);
+    expect(engine.getSnapshot()).toEqual(latched);
+    engine.command({ type: 'reset_estop' });
+    expect(engine.loadScenario('nominal', 42).ok).toBe(true);
+    expect(engine.getSnapshot().scenario).toBe('nominal');
+  });
+
+  it('low-inventory experiment auto-trips the heater and reports both causes', () => {
+    const engine = make();
+    expect(engine.loadScenario('low_inventory', 10).ok).toBe(true);
+    for (let i = 0; i < 6; i++) engine.tick();
+    const snapshot = engine.getSnapshot();
+    expect(snapshot.state.level).toBeLessThanOrEqual(10);
+    expect(snapshot.state.isHeaterOn).toBe(false);
+    expect(snapshot.audit.some((x) => x.message.includes('automatically disabled'))).toBe(true);
+    expect(snapshot.alerts.some((x) => x.message.includes('Low reactor inventory'))).toBe(
+      true,
+    );
+    expect(engine.command({ type: 'set_heater', on: true }).ok).toBe(false);
+  });
+
+  it('Modbus timeout experiment omits the fourth RX without losing SSE ticks', () => {
+    const engine = make();
+    const run = engine.loadScenario('comms_timeout', 99);
+    expect(run.ok).toBe(true);
+    const seen: number[] = [];
+    for (let n = 0; n < 8; n++) seen.push(engine.tick().seq);
+    const snapshot = engine.getSnapshot();
+    expect(seen).toEqual([2, 3, 4, 5, 6, 7, 8, 9]);
+    expect(snapshot.network.errorCount).toBe(2);
+    expect(snapshot.network.packetCount).toBe(14);
+    expect(snapshot.traffic.filter((entry) => entry.direction === 'RX')).toHaveLength(6);
+    expect(snapshot.audit.some((entry) => entry.message.includes('MODBUS TIMEOUT'))).toBe(
+      true,
+    );
+  });
+
   it('caps log buffers at 50 entries', () => {
     const e = make();
     for (let i = 0; i < 40; i++) e.tick();

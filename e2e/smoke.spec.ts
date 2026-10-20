@@ -571,3 +571,39 @@ test('trend history survives a page reload', async ({ page }) => {
     });
   expect(segments).toBeGreaterThanOrEqual(2);
 });
+
+
+test('experiment lab isolates runs and reproduces a synthetic high alarm', async ({
+  page,
+  request,
+}) => {
+  await page.goto('/');
+  await expect(page.getByText('Gateway Active')).toBeVisible();
+  const firstRun = await page.getByTestId('telemetry-run-id').getAttribute('title');
+
+  await page.getByRole('combobox', { name: 'Experiment scenario' }).selectOption('thermal_excursion');
+  await page.getByRole('spinbutton', { name: 'Experiment seed' }).fill('42');
+  await page.getByRole('button', { name: 'Load synthetic experiment' }).click();
+  await expect(page.getByTestId('active-scenario')).toContainText('Thermal excursion · SEED 42');
+  await expect(page.getByTestId('telemetry-run-id')).not.toHaveAttribute('title', firstRun ?? '');
+  await expect(page.getByText(/Overheating detected/).first()).toBeVisible({
+    timeout: 15_000,
+  });
+
+  // A previous run must not be able to rewrite this experiment.
+  const stale = await request.post('/api/scenario', {
+    data: { scenario: 'nominal', seed: 42, expectedRunId: firstRun },
+  });
+  expect(stale.status()).toBe(409);
+
+  await page.getByRole('button', { name: /^e-stop$/i }).click();
+  await expect(page.locator('footer')).toContainText('E-STOP LATCHED');
+  await expect(page.getByRole('button', { name: 'Load synthetic experiment' })).toBeDisabled();
+
+  // Restore a nominal baseline for the next browser run.
+  await page.getByRole('button', { name: /^reset e-stop$/i }).click();
+  await expect(page.getByRole('button', { name: 'Load synthetic experiment' })).toBeEnabled();
+  await page.getByRole('combobox', { name: 'Experiment scenario' }).selectOption('nominal');
+  await page.getByRole('button', { name: 'Load synthetic experiment' }).click();
+  await expect(page.getByTestId('active-scenario')).toContainText('Normal batch');
+});
