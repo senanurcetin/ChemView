@@ -39,6 +39,9 @@ firestore-debug.log
 *-debug.log
 .firebase/
 
+# Generated Playwright captures; reviewed images belong in docs/assets/
+/artifacts/
+
 # Playwright
 test-results/
 playwright-report/
