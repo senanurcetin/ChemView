@@ -5,12 +5,7 @@ describe('synthetic continuous-time reference comparisons', () => {
   it('is finite, deterministic and independent of real process data', () => {
     const rows = buildSyntheticBenchmarks();
     expect(rows).toEqual(buildSyntheticBenchmarks());
-    expect(rows.map((row) => row.id)).toEqual([
-      'cooling',
-      'heating',
-      'draining',
-      'motor',
-    ]);
+    expect(rows.map((row) => row.id)).toEqual(['cooling', 'heating', 'draining', 'motor']);
     for (const row of rows) {
       expect(row.durationSeconds).toBeGreaterThan(0);
       expect(Number.isFinite(row.simulated)).toBe(true);
