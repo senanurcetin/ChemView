@@ -9,10 +9,7 @@ export const SCENARIO_IDS = [
   'comms_timeout',
 ] as const satisfies readonly ScenarioId[];
 
-export const SCENARIO_LIBRARY: Record<
-  ScenarioId,
-  { label: string; summary: string }
-> = {
+export const SCENARIO_LIBRARY: Record<ScenarioId, { label: string; summary: string }> = {
   nominal: {
     label: 'Normal batch',
     summary: 'Idle reactor with an ordinary, reproducible telemetry baseline.',

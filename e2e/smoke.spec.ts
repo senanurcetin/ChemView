@@ -572,7 +572,6 @@ test('trend history survives a page reload', async ({ page }) => {
   expect(segments).toBeGreaterThanOrEqual(2);
 });
 
-
 test('experiment lab isolates runs and reproduces a synthetic high alarm', async ({
   page,
   request,
@@ -581,7 +580,9 @@ test('experiment lab isolates runs and reproduces a synthetic high alarm', async
   await expect(page.getByText('Gateway Active')).toBeVisible();
   const firstRun = await page.getByTestId('telemetry-run-id').getAttribute('title');
 
-  await page.getByRole('combobox', { name: 'Experiment scenario' }).selectOption('thermal_excursion');
+  await page
+    .getByRole('combobox', { name: 'Experiment scenario' })
+    .selectOption('thermal_excursion');
   await page.getByRole('spinbutton', { name: 'Experiment seed' }).fill('42');
   await page.getByRole('button', { name: 'Load synthetic experiment' }).click();
   await expect(page.getByTestId('active-scenario')).toContainText('Thermal excursion · SEED 42');

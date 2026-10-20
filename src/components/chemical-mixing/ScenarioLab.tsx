@@ -42,13 +42,13 @@ export function ScenarioLab({ currentScenario, currentSeed, disabled, onLoad }: 
           className="w-full rounded-md border border-white/20 bg-zinc-900 px-3 py-2 text-sm text-white"
         >
           {SCENARIO_IDS.map((id) => (
-            <option key={id} value={id}>{SCENARIO_LIBRARY[id].label}</option>
+            <option key={id} value={id}>
+              {SCENARIO_LIBRARY[id].label}
+            </option>
           ))}
         </select>
       </label>
-      <p className="min-h-8 text-xs text-muted-foreground">
-        {SCENARIO_LIBRARY[scenario].summary}
-      </p>
+      <p className="min-h-8 text-xs text-muted-foreground">{SCENARIO_LIBRARY[scenario].summary}</p>
       <label className="flex flex-col gap-1 text-xs text-zinc-300">
         Random seed
         <input

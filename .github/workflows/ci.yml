@@ -48,12 +48,6 @@ jobs:
       - name: Format check
         run: npm run format:check
 
-      - name: Print suggested formatting changes on failure
-        if: failure()
-        run: |
-          npx prettier --write docs/science-validation.md e2e/smoke.spec.ts src/app/api/scenario src/components/chemical-mixing/ProcessSchematic.tsx src/components/chemical-mixing/ScenarioLab.tsx src/lib/telemetry.test.ts src/lib/telemetry.ts src/server/sim/engine.test.ts src/server/sim/physics.ts src/server/sim/scenarios.ts src/server/sim/types.ts
-          git diff -- docs/science-validation.md e2e/smoke.spec.ts src/app/api/scenario src/components/chemical-mixing/ProcessSchematic.tsx src/components/chemical-mixing/ScenarioLab.tsx src/lib/telemetry.test.ts src/lib/telemetry.ts src/server/sim/engine.test.ts src/server/sim/physics.ts src/server/sim/scenarios.ts src/server/sim/types.ts
-
       - name: Unit tests
         run: npm test
 

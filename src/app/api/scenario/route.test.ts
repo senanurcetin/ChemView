@@ -60,10 +60,7 @@ describe('POST /api/scenario', () => {
       reason: 'Reset E-STOP before loading an experiment.',
       runId,
     });
-    const forbidden = await post(
-      { scenario: 'thermal_excursion', seed: 3 },
-      'Bearer test-token',
-    );
+    const forbidden = await post({ scenario: 'thermal_excursion', seed: 3 }, 'Bearer test-token');
     expect(forbidden.status).toBe(409);
   });
 });

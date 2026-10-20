@@ -41,24 +41,15 @@ export function advancePhysicalState(state: SimState, rng: Rng): SimState {
         (1 - Math.exp(-PHYSICS.tickSeconds / PHYSICS.motorTimeConstantSeconds))
     : Math.max(0, state.rpm - PHYSICS.brakingRpmPerSecond * PHYSICS.tickSeconds);
 
-  const activeMassFraction = Math.max(
-    PHYSICS.thermalMassFloorFraction,
-    state.level / 100,
-  );
+  const activeMassFraction = Math.max(PHYSICS.thermalMassFloorFraction, state.level / 100);
   const thermalMassKJK =
-    PHYSICS.capacityM3 *
-    PHYSICS.densityKgM3 *
-    activeMassFraction *
-    PHYSICS.specificHeatKJKgK;
+    PHYSICS.capacityM3 * PHYSICS.densityKgM3 * activeMassFraction * PHYSICS.specificHeatKJKgK;
   const heaterSetpoint = state.isManualMode ? state.targetTempManual : 75;
   const heating =
-    state.isHeaterOn &&
-    state.level > MIN_HEATER_LEVEL_PERCENT &&
-    state.temp < heaterSetpoint
+    state.isHeaterOn && state.level > MIN_HEATER_LEVEL_PERCENT && state.temp < heaterSetpoint
       ? PHYSICS.heaterKW
       : 0;
-  const netPowerKW =
-    heating - PHYSICS.heatLossKWPerK * (state.temp - PHYSICS.ambientC);
+  const netPowerKW = heating - PHYSICS.heatLossKWPerK * (state.temp - PHYSICS.ambientC);
   const temp = Math.max(
     PHYSICS.ambientC,
     state.temp + (netPowerKW * PHYSICS.tickSeconds) / thermalMassKJK,

@@ -47,13 +47,13 @@ model equations, **not validation of the equations against experimental data**.
 
 ## Scenario acceptance matrix
 
-| Experiment | Expected evidence |
-| --- | --- |
-| Normal batch | Initial idle state, nominal deterministic alert, new run UUID |
-| Thermal excursion | With heater enabled, temperature exceeds 80 °C; high rule alarm |
-| Low inventory | Level drops through 10%, heater cuts off, medium level alarm |
-| pH excursion | pH above 8; independent medium rule alarm |
-| Modbus timeout | Every fourth simulated RX omitted, error counter increases; SSE remains connected |
+| Experiment        | Expected evidence                                                                 |
+| ----------------- | --------------------------------------------------------------------------------- |
+| Normal batch      | Initial idle state, nominal deterministic alert, new run UUID                     |
+| Thermal excursion | With heater enabled, temperature exceeds 80 °C; high rule alarm                   |
+| Low inventory     | Level drops through 10%, heater cuts off, medium level alarm                      |
+| pH excursion      | pH above 8; independent medium rule alarm                                         |
+| Modbus timeout    | Every fourth simulated RX omitted, error counter increases; SSE remains connected |
 
 ## Known scientific limitations
 

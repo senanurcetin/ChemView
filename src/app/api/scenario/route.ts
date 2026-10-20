@@ -9,11 +9,13 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const limiter = new RateLimiter(60, 10_000);
-const requestSchema = z.object({
-  scenario: z.enum(SCENARIO_IDS),
-  seed: z.number().int().min(0).max(2147483647),
-  expectedRunId: z.string().uuid().optional(),
-}).strict();
+const requestSchema = z
+  .object({
+    scenario: z.enum(SCENARIO_IDS),
+    seed: z.number().int().min(0).max(2147483647),
+    expectedRunId: z.string().uuid().optional(),
+  })
+  .strict();
 
 /** Demo-only experiment reset; not a Modbus command or real plant operation. */
 export async function POST(request: Request) {

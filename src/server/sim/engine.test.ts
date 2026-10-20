@@ -53,7 +53,7 @@ describe('synthetic model validation', () => {
   it('matches the discrete analytical solution for passive Newton cooling', () => {
     const initial = base({ temp: 68, level: 65, isHeaterOn: false });
     const n = 120;
-    const massCp = (PHYSICS.densityKgM3 * 0.65) * PHYSICS.specificHeatKJKgK;
+    const massCp = PHYSICS.densityKgM3 * 0.65 * PHYSICS.specificHeatKJKgK;
     const factor = 1 - PHYSICS.heatLossKWPerK / massCp;
     let state = initial;
     for (let i = 0; i < n; i++) state = step(state, () => 0.5);
@@ -102,7 +102,8 @@ describe('synthetic model validation', () => {
   it('enforces low-inventory heater protection and independent concurrent alarms', () => {
     expect(
       applyCommand(base({ level: MIN_HEATER_LEVEL_PERCENT }), {
-        type: 'set_heater', on: true,
+        type: 'set_heater',
+        on: true,
       }).ok,
     ).toBe(false);
     const alerts = evaluateAllRules(base({ temp: 82, ph: 8.4, level: 8 }));
@@ -479,9 +480,7 @@ describe('Engine', () => {
     expect(snapshot.state.level).toBeLessThanOrEqual(10);
     expect(snapshot.state.isHeaterOn).toBe(false);
     expect(snapshot.audit.some((x) => x.message.includes('automatically disabled'))).toBe(true);
-    expect(snapshot.alerts.some((x) => x.message.includes('Low reactor inventory'))).toBe(
-      true,
-    );
+    expect(snapshot.alerts.some((x) => x.message.includes('Low reactor inventory'))).toBe(true);
     expect(engine.command({ type: 'set_heater', on: true }).ok).toBe(false);
   });
 
@@ -496,9 +495,7 @@ describe('Engine', () => {
     expect(snapshot.network.errorCount).toBe(2);
     expect(snapshot.network.packetCount).toBe(14);
     expect(snapshot.traffic.filter((entry) => entry.direction === 'RX')).toHaveLength(6);
-    expect(snapshot.audit.some((entry) => entry.message.includes('MODBUS TIMEOUT'))).toBe(
-      true,
-    );
+    expect(snapshot.audit.some((entry) => entry.message.includes('MODBUS TIMEOUT'))).toBe(true);
   });
 
   it('caps log buffers at 50 entries', () => {

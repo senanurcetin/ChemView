@@ -205,9 +205,7 @@ describe('scenario snapshot metadata', () => {
       scenario: 'ph_excursion',
       scenarioSeed: 42,
     });
-    expect(
-      parseSnapshotEvent(JSON.stringify({ ...data, scenario: 'real-plant' })),
-    ).toBeNull();
+    expect(parseSnapshotEvent(JSON.stringify({ ...data, scenario: 'real-plant' }))).toBeNull();
   });
 });
 
