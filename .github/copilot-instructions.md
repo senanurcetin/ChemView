@@ -14,9 +14,9 @@ ChemView is a **simulated** mixing-process HMI/digital twin, NOT a real PLC/DCS 
 
 ## Verification
 
-- Existing scripts: `npm run typecheck`, `npm run lint`, `npm test` (Vitest), and `npm run build`.
+- Existing scripts: `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run docs:check`, `npm test` (Vitest), and `npm run build`.
 - Use targeted `npm test -- <affected.test.ts>` first, and distinguish offline simulator tests from physical safety certification.
-- An older draft PR #2 covers broader hardening; avoid duplicating or overwriting its work until reconciled.
+- Use the current main branch and active PRs as the baseline. The earlier operator-hardening PRs have already been integrated; do not rely on outdated draft-PR dependency notes.
 - Report actual tests/results, remaining limitations, and changed files. No workflow modifications, deployments or automatic merges without explicit instruction.
 
 ## Copilot specialist
