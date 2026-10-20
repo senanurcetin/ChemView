@@ -18,16 +18,14 @@ Model parameters are in `src/server/sim/physics.ts` and alarm limits in `src/ser
 
 The following scientific claims have automated checks:
 
-| Claim | Independent check |
-| --- | --- |
-| Same initial condition and seed reproduces the same trajectory | Repeated full-run experiment for each named scenario |
-| Passive thermal response follows the discrete Newton cooling solution | `engine.test.ts` analytical solution test |
-| Constant-power warm-up follows the expected Euler recurrence below the setpoint | `engine.test.ts` heating solution |
-| Vessel inventory is conserved with closed valve and falls monotonically while draining | `engine.test.ts` inventory test |
-| Heater trips for low inventory | `scenario-validation.test.ts` cutout scenario |
-| Synthetic pH bias is distinguishable from unaltered chemical pH | `scenario-validation.test.ts` drift experiment |
-| Polling faults increment protocol error counters, not physical state | `scenario-validation.test.ts` communication scenario |
-| A simultaneously hot, low-fill, out-of-range-pH vessel generates multiple rule alerts | `engine.test.ts` independent alarm checks |
+- **Reproducibility:** Run every named scenario twice with an identical seed; compare complete trajectories.
+- **Thermal cooling:** Compare discrete temperature readback with Newton's cooling recurrence.
+- **Thermal warm-up:** Compare heater-driven temperature with an independent Euler recurrence.
+- **Inventory:** Check closed-valve conservation and monotone discharge at open valve.
+- **Low fill:** Check the heater automatically disables when inventory drops to 10%.
+- **Sensor bias:** Compare actual synthetic pH reference with the separately biased readback.
+- **Communication faults:** Check packet losses and error counters without disturbing physics.
+- **Simultaneous faults:** Check independent rule alarms for temperature, pH and low fill.
 
 All values are synthetic; passing these tests verifies **consistency with the documented equations** only. It does not validate correspondence with an actual reactor.
 
