@@ -1,4 +1,5 @@
 import { THRESHOLDS } from './thresholds';
+import { MIN_HEATER_LEVEL_PERCENT } from './physics';
 import type { Command, CommandResult, SimState } from './types';
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
@@ -61,6 +62,9 @@ export function applyCommand(state: SimState, cmd: Command): CommandResult {
       };
     }
     case 'set_heater':
+      if (cmd.on && state.level <= MIN_HEATER_LEVEL_PERCENT) {
+        return deny(state, 'Low liquid level: simulated heater cannot be enabled.');
+      }
       if (state.isHeaterOn === cmd.on) return { ok: true, state, wrote: false };
       return {
         ok: true,

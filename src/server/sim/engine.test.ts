@@ -6,6 +6,8 @@ import { commandFrame, readRequestFrame, readResponseFrame } from './modbus';
 import { createRng } from './rng';
 import { commandSchema } from './schema';
 import type { SimState } from './types';
+import { PHYSICS, MIN_HEATER_LEVEL_PERCENT } from './physics';
+import { evaluateAllRules } from './alerts';
 
 const base = (over: Partial<SimState> = {}): SimState => ({ ...initialState(), ...over });
 
@@ -42,8 +44,75 @@ describe('step', () => {
     const rng = createRng(1);
     let s = base({ isHeaterOn: true, isManualMode: true, targetTempManual: 60, valveOpen: true });
     s = step(s, rng);
-    expect(s.temp).toBeCloseTo(24.65);
-    expect(s.level).toBe(63);
+    expect(s.temp).toBeCloseTo(24.675, 2);
+    expect(s.level).toBeCloseTo(65 - 0.25 * Math.sqrt(65), 8);
+  });
+});
+
+describe('synthetic model validation', () => {
+  it('matches the discrete analytical solution for passive Newton cooling', () => {
+    const initial = base({ temp: 68, level: 65, isHeaterOn: false });
+    const n = 120;
+    const massCp = (PHYSICS.densityKgM3 * 0.65) * PHYSICS.specificHeatKJKgK;
+    const factor = 1 - PHYSICS.heatLossKWPerK / massCp;
+    let state = initial;
+    for (let i = 0; i < n; i++) state = step(state, () => 0.5);
+    const reference = PHYSICS.ambientC + (68 - PHYSICS.ambientC) * factor ** n;
+    expect(state.temp).toBeCloseTo(reference, 8);
+    expect(state.level).toBe(65);
+  });
+
+  it('matches the constant-power heating analytical solution below setpoint', () => {
+    const n = 70;
+    let state = base({
+      temp: 24.5,
+      isHeaterOn: true,
+      isManualMode: true,
+      targetTempManual: 100,
+    });
+    const massCp = 650 * PHYSICS.specificHeatKJKgK;
+    const factor = 1 - PHYSICS.heatLossKWPerK / massCp;
+    const equilibrium = PHYSICS.ambientC + PHYSICS.heaterKW / PHYSICS.heatLossKWPerK;
+    for (let i = 0; i < n; i++) state = step(state, () => 0.5);
+    const reference = equilibrium + (24.5 - equilibrium) * factor ** n;
+    expect(state.temp).toBeCloseTo(reference, 7);
+  });
+
+  it('conserves inventory while valve closed and slows discharge with falling head', () => {
+    let state = base({ valveOpen: true });
+    const first = state.level - step(state, () => 0.5).level;
+    for (let i = 0; i < 80; i++) {
+      const next = step(state, () => 0.5);
+      expect(next.level).toBeLessThanOrEqual(state.level);
+      expect(next.level).toBeGreaterThanOrEqual(0);
+      state = next;
+    }
+    const later = state.level - step(state, () => 0.5).level;
+    expect(later).toBeLessThan(first);
+    state = { ...state, valveOpen: false };
+    expect(step(state, () => 0.5).level).toBe(state.level);
+  });
+
+  it('does not fabricate chemical pH dynamics without reagent dosing', () => {
+    let state = base({ ph: 8.2, isRunning: true });
+    for (let i = 0; i < 100; i++) state = step(state, () => 0.5);
+    expect(state.ph).toBe(8.2);
+  });
+
+  it('enforces low-inventory heater protection and independent concurrent alarms', () => {
+    expect(
+      applyCommand(base({ level: MIN_HEATER_LEVEL_PERCENT }), {
+        type: 'set_heater', on: true,
+      }).ok,
+    ).toBe(false);
+    const alerts = evaluateAllRules(base({ temp: 82, ph: 8.4, level: 8 }));
+    expect(alerts.map((a) => a.key)).toEqual(['temp-high', 'ph-range', 'level-low']);
+    const engine = new Engine({ seed: 12 });
+    // This checks the engine independently raises multiple rule edges.
+    const state = (engine as unknown as { state: SimState }).state;
+    Object.assign(state, { temp: 82, ph: 8.4, level: 8 });
+    engine.tick();
+    expect(engine.getSnapshot().alerts.filter((a) => a.source === 'rule')).toHaveLength(3);
   });
 });
 

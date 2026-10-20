@@ -1,10 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { evaluateRules, NOMINAL_MESSAGE } from './alerts';
+import { evaluateAllRules, NOMINAL_MESSAGE } from './alerts';
 import { Commentator, triggerKey } from './commentary';
 import { applyCommand } from './interlocks';
 import { commandFrame, readRequestFrame, readResponseFrame } from './modbus';
 import { createRng, type Rng } from './rng';
 import { initialState } from './state';
+import { advancePhysicalState, MIN_HEATER_LEVEL_PERCENT } from './physics';
 import { getStore, toSample, type Store } from '../store';
 import type {
   Alert,
@@ -29,32 +30,7 @@ export const TELEMETRY_EVERY = 5;
  * Pure: all randomness comes from the injected `rng`.
  */
 export function step(state: SimState, rng: Rng): SimState {
-  // RPM: rotational inertia
-  let rpm: number;
-  if (!state.isRunning) {
-    rpm = Math.max(0, state.rpm - 15);
-  } else {
-    const target = state.isManualMode ? state.targetRpmManual : 450 + rng() * 50;
-    rpm = state.rpm + (target - state.rpm) * 0.1;
-  }
-
-  // Temperature: heater with thermal inertia, passive cooling towards ambient
-  let temp: number;
-  if (state.isHeaterOn) {
-    const target = state.isManualMode ? state.targetTempManual : 75;
-    temp = state.temp < target ? state.temp + 0.15 : state.temp + (rng() - 0.5) * 0.1;
-  } else {
-    temp = state.temp > 22.0 ? state.temp - 0.05 : state.temp + (rng() - 0.5) * 0.02;
-  }
-
-  // pH: slow stochastic drift
-  const targetPh = 7.2 + rng() * 0.4;
-  const ph = state.ph + (targetPh - state.ph) * 0.05;
-
-  // Level: discharging while the valve is open
-  const level = state.valveOpen ? Math.max(0, state.level - 2) : state.level;
-
-  return { ...state, rpm, temp, ph, level };
+  return advancePhysicalState(state, rng);
 }
 
 export interface EngineOptions {
@@ -86,7 +62,8 @@ export class Engine {
   private traffic: TrafficEntry[] = [];
   private audit: AuditEntry[] = [];
   private alerts: Alert[] = [];
-  private lastAlertKey: string | null = null;
+  private lastAlertKeys = new Set<string>();
+  private hasEvaluatedAlarms = false;
   private readonly commentator?: Commentator;
   private readonly store?: Store;
   private readonly runId = randomUUID();
@@ -143,28 +120,48 @@ export class Engine {
     this.persist((store) => store.saveAlert(tagged));
   }
 
-  /** Raises a rule alert only when the active condition changes (edge-triggered). */
+  /** Each active fault has an independent edge, so simultaneous faults survive. */
   private evaluateAlerts() {
-    const rule = evaluateRules(this.state);
-    const key = rule?.key ?? 'nominal';
-    if (key === this.lastAlertKey) return;
-    this.lastAlertKey = key;
-
-    const message = rule?.message ?? NOMINAL_MESSAGE;
-    const urgency = rule?.urgency ?? 'low';
-    this.pushAlert({
-      id: this.nextId(),
-      timestamp: this.now().toISOString(),
-      source: 'rule',
-      message,
-      urgency,
-    });
-    if (urgency !== 'low') this.pushAudit({ message, level: urgency });
+    const rules = evaluateAllRules(this.state);
+    const current = new Set(rules.map((rule) => rule.key));
+    for (const rule of rules) {
+      if (this.lastAlertKeys.has(rule.key)) continue;
+      this.pushAlert({
+        id: this.nextId(),
+        timestamp: this.now().toISOString(),
+        source: 'rule',
+        message: rule.message,
+        urgency: rule.urgency,
+      });
+      if (rule.urgency !== 'low') {
+        this.pushAudit({ message: rule.message, level: rule.urgency });
+      }
+    }
+    if (current.size === 0 && (this.lastAlertKeys.size > 0 || !this.hasEvaluatedAlarms)) {
+      this.pushAlert({
+        id: this.nextId(),
+        timestamp: this.now().toISOString(),
+        source: 'rule',
+        message: NOMINAL_MESSAGE,
+        urgency: 'low',
+      });
+    }
+    this.lastAlertKeys = current;
+    this.hasEvaluatedAlarms = true;
   }
 
   /** Runs one polling cycle: master read request, slave response, physics step. */
   tick(): Snapshot {
     this.state = step(this.state, this.rng);
+    // The synthetic heater cannot run with insufficient liquid inventory.
+    if (this.state.isHeaterOn && this.state.level <= MIN_HEATER_LEVEL_PERCENT) {
+      this.state = { ...this.state, isHeaterOn: false };
+      this.commandRevision += 1; // invalidate any pending AI explanation
+      this.pushAudit({
+        message: 'LOW LEVEL: simulated heater automatically disabled.',
+        level: 'high',
+      });
+    }
     const txId = ++this.txId;
     this.pushTraffic('TX', readRequestFrame(txId));
     this.network.latencyMs = 12 + this.rng() * 6;
