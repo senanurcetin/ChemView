@@ -51,21 +51,14 @@ function result(
 
 export function buildSyntheticBenchmarks(): ScienceBenchmark[] {
   const waterHeatCapacity =
-    PHYSICS.capacityM3 *
-    PHYSICS.densityKgM3 *
-    0.65 *
-    PHYSICS.specificHeatKJKgK;
+    PHYSICS.capacityM3 * PHYSICS.densityKgM3 * 0.65 * PHYSICS.specificHeatKJKgK;
   const thermalRate = PHYSICS.heatLossKWPerK / waterHeatCapacity;
 
   const coolingSeconds = 120;
   const coolingStart = 68;
-  const cooling = runSteps(
-    { ...initialState(), level: 65, temp: coolingStart },
-    coolingSeconds,
-  );
+  const cooling = runSteps({ ...initialState(), level: 65, temp: coolingStart }, coolingSeconds);
   const coolingReference =
-    PHYSICS.ambientC +
-    (coolingStart - PHYSICS.ambientC) * Math.exp(-thermalRate * coolingSeconds);
+    PHYSICS.ambientC + (coolingStart - PHYSICS.ambientC) * Math.exp(-thermalRate * coolingSeconds);
 
   const heatingSeconds = 70;
   const heatingStart = 24.5;
@@ -80,8 +73,7 @@ export function buildSyntheticBenchmarks(): ScienceBenchmark[] {
     },
     heatingSeconds,
   );
-  const equilibrium =
-    PHYSICS.ambientC + PHYSICS.heaterKW / PHYSICS.heatLossKWPerK;
+  const equilibrium = PHYSICS.ambientC + PHYSICS.heaterKW / PHYSICS.heatLossKWPerK;
   const heatingReference =
     equilibrium + (heatingStart - equilibrium) * Math.exp(-thermalRate * heatingSeconds);
 
@@ -92,11 +84,7 @@ export function buildSyntheticBenchmarks(): ScienceBenchmark[] {
     drainingSeconds,
   );
   const drainingReference =
-    Math.max(
-      0,
-      Math.sqrt(drainingStart) -
-        (PHYSICS.drainCoefficient * drainingSeconds) / 2,
-    ) ** 2;
+    Math.max(0, Math.sqrt(drainingStart) - (PHYSICS.drainCoefficient * drainingSeconds) / 2) ** 2;
 
   const motorSeconds = 60;
   const motorTarget = 800;
@@ -114,8 +102,22 @@ export function buildSyntheticBenchmarks(): ScienceBenchmark[] {
 
   return [
     result('cooling', 'Passive cooling', coolingSeconds, '°C', cooling.temp, coolingReference),
-    result('heating', 'Constant-power warming', heatingSeconds, '°C', heating.temp, heatingReference),
-    result('draining', 'Free tank discharge', drainingSeconds, '% fill', draining.level, drainingReference),
+    result(
+      'heating',
+      'Constant-power warming',
+      heatingSeconds,
+      '°C',
+      heating.temp,
+      heatingReference,
+    ),
+    result(
+      'draining',
+      'Free tank discharge',
+      drainingSeconds,
+      '% fill',
+      draining.level,
+      drainingReference,
+    ),
     result('motor', 'Motor step response', motorSeconds, 'RPM', motor.rpm, motorReference),
   ];
 }
