@@ -41,6 +41,10 @@
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.24.2"
   },
+  "overrides": {
+    "handlebars": "4.7.10",
+    "websocket-driver": "0.7.5"
+  },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "@types/node": "^20",
