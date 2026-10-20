@@ -81,3 +81,32 @@ underlying chemical pH remains exactly 7.00. Only measured pH triggers rule
 alarms and enters Modbus/SSE/persistent samples; true pH is shown exclusively
 in the laboratory as synthetic ground truth. A numerical test verifies that
 the measurement can cross pH 8 without an actual chemical composition change.
+
+## Continuous-time numerical benchmark (HMI)
+
+The expandable **Model benchmark — numerical accuracy** panel runs four small
+fixed, offline reference experiments directly from the simulation equations.
+The panel is **not** a live-model-fit metric. It reports the simulated final
+observable, its mathematically independent continuous-time solution, and
+their absolute difference in the displayed engineering units.
+
+- **Sealed cooling, 120 s, initially 68 °C:** exact Newton cooling,
+  T(t) = Ta + (T0 - Ta) exp[-UA t/(m Cp)] at constant 65% fill.
+- **Sealed heating, 70 s, initially 24.5 °C:** exact constant-power heating,
+  T(t) = Teq + (T0 - Teq) exp[-UA t/(m Cp)],
+  Teq = Ta + Q/UA. Heater stays below the 100 °C setpoint during this case.
+- **Free draining, 40 s, initially 65% fill:** continuous solution
+  L(t) = max(0, sqrt(L0) - k t/2)^2; compare with the one-second
+  explicit-Euler inventory update.
+- **Manual motor step, 60 s, commanded 800 RPM:** exact first-order solution
+  rpm(t) = target(1 - exp[-t/tau]); unlike the fluid updates, the
+  sampled motor equation itself uses the exponential, so its error is
+  expected to be at floating-point scale.
+
+Acceptance tests in `src/lib/science-benchmarks.test.ts` assert finite
+deterministic results, thermal absolute differences below 0.01 °C,
+draining absolute difference between 0.3 and 0.5 percentage points,
+and motor difference below 1e-8 RPM. The tolerances describe these
+**specific reference conditions**, not a global integration error bound.
+No field observations, confidence intervals, fitted coefficients, or
+validated reactor safety properties are provided.
