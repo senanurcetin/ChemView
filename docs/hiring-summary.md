@@ -1,36 +1,34 @@
-# Reviewer brief — ChemView Mixing HMI
+# ChemView — engineering reviewer brief
 
-**Role:** Industrial UI engineering, deterministic process simulation and operator-centered alarm design. **Stage:** engineering prototype, not a connected plant controller.
+**Focus:** Industrial HMI engineering, deterministic process simulation, numerical verification, operator feedback and synthetic telemetry provenance. **Status:** CI-verified *portfolio demonstration*, not a real connected reactor or commercially deployed process controller.
 
-## What to review
+## Inspectable evidence
 
-ChemView runs a mixing-process simulation on the server, presents controls and process telemetry over Server-Sent Events, and maintains a simulated Modbus register map. Safety rules are deterministic; optional Gemini commentary only explains alerts.
+| Reviewer question | Where to inspect |
+| --- | --- |
+| Is the implemented interface real? | [Current NEXUS HMI capture](assets/chemview-dashboard.png) and [all workstation views](design-qa.md) |
+| What process model is demonstrated? | [Physical assumptions, analytical benchmarks and reproducible experiments](science-validation.md) |
+| Is simulated command admission safe by design? | [Server-side interlocks and E-STOP ordering](architecture.md) plus checked-in Vitest/Playwright tests |
+| Can it run offline without an LLM or persistent backend? | [Local setup](../README.md#run-locally); rule alarms and in-memory storage |
+| Can parallel operators overwrite one another silently? | [Server-side concurrency preconditions](architecture.md#concurrent-setpoint-admission) |
+| Are session histories isolated? | [Telemetry and event provenance](architecture.md#telemetry-persistence-and-legacy-records) |
+| Is the latest dependency review perfect? | No. [Security policy](../SECURITY.md) and [open issue #16](https://github.com/senanurcetin/ChemView/issues/16) describe remaining advisory/exposure constraints. |
 
-| Reviewer question                   | Evidence                                                                                                                     |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Is there an actual interface?       | [Captured HMI](assets/chemview-dashboard.png)                                                                                |
-| What prevents conflicting commands? | [Documented server-side interlocks](../README.md#what-it-does): mixer vs discharge valve, valve vs rotor and E-STOP priority |
-| Can it operate without an LLM key?  | [Local setup](../README.md#local-setup); rule-based alarms and in-memory storage remain available                            |
-| Can the architecture be followed?   | [Architecture design](architecture.md) and [main README](../README.md)                                                       |
-| Are controls testable?              | `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`; see [validation commands](../README.md#local-setup)        |
-| Do events cross simulator runs?     | [Run-scoped telemetry, alarms and audit](architecture.md#session-scoped-audit-history), plus synthetic restart/replay tests  |
+## Engineering decisions
 
-## Implementation choices
+- Server, not browser components, is authoritative for vessel state, physics, alarms and interlocks.
+- Modbus frames are deterministic protocol simulations; no actual network Modbus TCP exchange occurs.
+- SSE snapshots, histories and logged alerts/audits carry session UUIDs; malformed, stale or cross-run events are rejected from operator display.
+- Ordinary commands use optimistic preconditions; simulated E-STOP is unconditional, latched and exempt from throttling. No SIL rating is claimed.
+- Optional Gemini explanations are advisory and cannot gate rule alarms.
+- A fixed-seed lab and four independent analytical references distinguish **code verification** from empirical **model validation**.
 
-- Safety-relevant command rules evaluated on the server, not in the UI alone.
-- Separation of simulated register activity, deterministic alarms and optional narrative AI.
-- Run-scoped telemetry, alert and audit history with bounded API queries and CSV export; Firestore is optional.
-- Validation of full SSE snapshots, per-run event provenance and replay rejection after restart.
-- Optimistic concurrency guards on ordinary operator controls, plus E-STOP/reset event ordering.
+## Verified CI evidence
 
-## Scientific scope
+The scientific benchmark [PR #17](https://github.com/senanurcetin/ChemView/pull/17) and dependency-hardening [PR #18](https://github.com/senanurcetin/ChemView/pull/18) were merged after successful checks. [Run 39515611615](https://github.com/senanurcetin/ChemView/actions/runs/39515611615) passed GitHub Actions build/quality, Firestore emulator and Playwright; matching CircleCI node-quality also passed. These are **historical commit results**, not an assertion about every future edit. Review [integration acceptance](integration-verification.md) for current-commit verification rules.
 
-The [synthetic reactor equations and analytical checks](science-validation.md)
-are documented separately. Numerical agreement verifies a chosen model, not
-calibration against industrial measurements. Scenarios are seeded and reproducible.
+## Boundaries
 
-## Engineering limits
+Synthetic equations, no calibration dataset, no real PLC or fieldbus gateway, no safety instrumented system and no public uncontrolled write-enabled demo. User authentication, operational networking, real material balances and field safety engineering are not demonstrated. The project intentionally remains a **noncommercial research/portfolio example**.
 
-The latest integrated main-branch changes still need a consolidated CI/Playwright/Firestore-emulator run before claiming full verification. There is no real PLC, fieldbus gateway or certified safety instrumented system. Neither the simulated E-STOP nor the LLM commentary provides safety protection in the real world. External deployment would need independent access control, networking and industrial safety review.
-
-**More detail:** [Repository README](../README.md) · [Security policy](../SECURITY.md).
+[Repository guide](../README.md) · [Architecture](architecture.md) · [Scientific validation](science-validation.md) · [Security policy](../SECURITY.md)
