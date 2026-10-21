@@ -34,7 +34,7 @@ GitHub Actions uses Node 22. The Playwright suite runs sequentially because one 
 
 ## Reusable image and evidence acceptance
 
-The visual E2E fixture opens both scientific and instrumentation disclosure panels; the matching four checked-in images must exist, be valid PNGs and have the expected screenshot widths. Full-page images intentionally exceed the initial viewport height. The screenshot provenance must cite the source GitHub Actions run _for the current checked-in images_; an older successful workflow cannot establish currency after an HMI change.
+The visual E2E fixture opens both scientific and instrumentation disclosure panels; the matching four checked-in images must exist, be valid PNGs and have the expected screenshot widths. Responsive full-page images intentionally exceed viewport height, while the dedicated 1440×900 science evidence must fit both expanded engineering panels within one viewport. The screenshot provenance must cite the source GitHub Actions run _for the current checked-in images_; an older successful workflow cannot establish currency after an HMI change.
 
 ## Historical integration baseline
 
