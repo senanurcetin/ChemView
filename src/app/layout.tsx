@@ -11,7 +11,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: 'ChemView | Industrial Mixing HMI',
+  title: 'ChemView | NEXUS 2.0 Synthetic Mixing HMI',
   description: 'ChemView by NEXUS — a simulated industrial mixing-process HMI and digital twin.',
 };
 
