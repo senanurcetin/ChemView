@@ -23,6 +23,42 @@ test.beforeEach(async ({ request }) => {
   expect((await command(request, { type: 'set_mode', manual: false })).status()).toBe(200);
 });
 
+test('NEXUS 2.0 approved identity is applied without hiding emergency controls', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(page.getByText('NEXUS 2.0 / Industrial Lab')).toBeVisible();
+  await expect(page.getByRole('img', { name: 'NEXUS' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^e-stop$/i })).toBeVisible();
+  const identity = await page.evaluate(() => {
+    const root = getComputedStyle(document.documentElement);
+    const workspace = document.querySelector('.nexus-workspace');
+    const header = document.querySelector('.nexus-header');
+    return {
+      midnight: root.getPropertyValue('--nexus-midnight').trim(),
+      depth: root.getPropertyValue('--nexus-depth').trim(),
+      cyan: root.getPropertyValue('--nexus-cyan').trim(),
+      blue: root.getPropertyValue('--nexus-blue').trim(),
+      lavender: root.getPropertyValue('--nexus-lavender').trim(),
+      violet: root.getPropertyValue('--nexus-violet').trim(),
+      silver: root.getPropertyValue('--nexus-silver').trim(),
+      workspace: workspace ? getComputedStyle(workspace).backgroundColor : '',
+      headerSurface: header ? getComputedStyle(header).backgroundImage : '',
+    };
+  });
+  expect(identity).toMatchObject({
+    midnight: '#0b0f19',
+    depth: '#061524',
+    cyan: '#00e0ff',
+    blue: '#4ea8ff',
+    lavender: '#8f9bff',
+    violet: '#6e55c6',
+    silver: '#b9c5ce',
+    workspace: 'rgb(11, 15, 25)',
+  });
+  expect(identity.headerSurface).toContain('linear-gradient');
+});
+
 test('NEXUS identity and operator panels remain accessible on shorter desktops', async ({
   page,
   request,
