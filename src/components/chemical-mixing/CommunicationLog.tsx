@@ -58,7 +58,9 @@ export function CommunicationLog({ logs }: CommunicationLogProps) {
             </div>
           ))}
           {logs.length === 0 && (
-            <div className="text-[11px] text-muted-foreground italic">Waiting for bus activity...</div>
+            <div className="text-[11px] text-muted-foreground italic">
+              Waiting for bus activity...
+            </div>
           )}
         </div>
       </ScrollArea>

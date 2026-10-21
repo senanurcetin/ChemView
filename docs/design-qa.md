@@ -21,15 +21,15 @@ Screenshots below come from the **actual running Playwright demo**, not Figma mo
 
 ## Approved NEXUS 2.0 theme implementation
 
-| Token | Approved value | ChemView responsibility |
-| --- | --- | --- |
-| Midnight | `#0B0F19` | Main work surface and background |
-| Depth | `#061524` | Deep process surface, controls and instrument inset |
-| Cyan | `#00E0FF` | Primary readbacks, active instrumentation and focus indication |
-| Blue | `#4EA8FF` | Supporting telemetry, panel borders and secondary signals |
-| Lavender | `#8F9BFF` | Gradient hierarchy and scientific annotation |
-| Violet | `#6E55C6` | Subdued identity accents, never alarm priority |
-| Silver | `#B9C5CE` | Muted labels and secondary textual readbacks |
+| Token    | Approved value | ChemView responsibility                                        |
+| -------- | -------------- | -------------------------------------------------------------- |
+| Midnight | `#0B0F19`      | Main work surface and background                               |
+| Depth    | `#061524`      | Deep process surface, controls and instrument inset            |
+| Cyan     | `#00E0FF`      | Primary readbacks, active instrumentation and focus indication |
+| Blue     | `#4EA8FF`      | Supporting telemetry, panel borders and secondary signals      |
+| Lavender | `#8F9BFF`      | Gradient hierarchy and scientific annotation                   |
+| Violet   | `#6E55C6`      | Subdued identity accents, never alarm priority                 |
+| Silver   | `#B9C5CE`      | Muted labels and secondary textual readbacks                   |
 
 The original generic gray background and `#00FFFF` cyan were replaced by a layered midnight/depth canvas and the sanctioned gradient accents. Typography still uses the NEXUS identity pack's Space Grotesk family with a readable data/monospace hierarchy. Panels use bounded blue borders, subtle top-to-bottom depth gradients and conspicuous keyboard focus. No new marketing artwork or substitute logo was generated.
 

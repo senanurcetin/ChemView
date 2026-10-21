@@ -47,7 +47,11 @@ export function TrendChart({ title, data, color, unit, domain }: TrendChartProps
               unit={unit}
             />
             <Tooltip
-              contentStyle={{ backgroundColor: '#061524', borderColor: '#354968', fontSize: '12px' }}
+              contentStyle={{
+                backgroundColor: '#061524',
+                borderColor: '#354968',
+                fontSize: '12px',
+              }}
               itemStyle={{ color: color }}
               labelStyle={{ display: 'none' }}
               formatter={(value: number) => [`${value.toFixed(2)} ${unit}`, title]}

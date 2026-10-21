@@ -36,7 +36,10 @@ export function ScenarioLab({
       <p className="text-xs text-muted-foreground">
         Synthetic experiments only. Each load starts a new isolated simulation session.
       </p>
-      <div className="text-[11px] font-mono uppercase text-muted-foreground" data-testid="active-scenario">
+      <div
+        className="text-[11px] font-mono uppercase text-muted-foreground"
+        data-testid="active-scenario"
+      >
         ACTIVE: {SCENARIO_LIBRARY[currentScenario].label} · SEED {currentSeed ?? 'DEFAULT'}
       </div>
       {currentScenario === 'sensor_drift' && sensorDiagnostics && (

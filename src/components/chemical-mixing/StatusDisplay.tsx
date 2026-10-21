@@ -34,7 +34,9 @@ export function StatusDisplay({
       unit: '',
       icon: Flame,
       color: isHeaterOn ? 'text-orange-500' : 'text-muted-foreground',
-      glow: isHeaterOn ? 'border-orange-500/20 bg-orange-500/5' : 'border-accent/15 bg-secondary/35',
+      glow: isHeaterOn
+        ? 'border-orange-500/20 bg-orange-500/5'
+        : 'border-accent/15 bg-secondary/35',
     },
     {
       label: 'Reactor Temp',

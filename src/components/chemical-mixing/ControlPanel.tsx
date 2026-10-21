@@ -154,7 +154,9 @@ export function ControlPanel({
       <div className="hmi-panel flex flex-col gap-6 bg-[#061524]/60 border-white/5">
         <div className="flex items-center justify-between border-b border-white/5 pb-4">
           <div className="flex items-center gap-2">
-            <Cpu className={cn('w-4 h-4', !isManualMode ? 'text-primary' : 'text-muted-foreground')} />
+            <Cpu
+              className={cn('w-4 h-4', !isManualMode ? 'text-primary' : 'text-muted-foreground')}
+            />
             <Label className="text-[11px] font-bold uppercase tracking-widest cursor-pointer">
               System Mode: {isManualMode ? 'Manual Override' : 'Auto Mode'}
             </Label>
@@ -172,7 +174,9 @@ export function ControlPanel({
         <div className="grid grid-cols-2 gap-4">
           <div className="p-3 border border-white/5 rounded-md bg-secondary/30 flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <Flame className={cn('w-4 h-4', isHeaterOn ? 'text-orange-500' : 'text-muted-foreground')} />
+              <Flame
+                className={cn('w-4 h-4', isHeaterOn ? 'text-orange-500' : 'text-muted-foreground')}
+              />
               <span className="text-[11px] font-bold text-muted-foreground uppercase">Heater</span>
             </div>
             <div className="flex justify-center">
@@ -197,7 +201,10 @@ export function ControlPanel({
                 >
                   <div className="flex items-center justify-between">
                     <Database
-                      className={cn('w-4 h-4', valveOpen ? 'text-primary' : 'text-muted-foreground')}
+                      className={cn(
+                        'w-4 h-4',
+                        valveOpen ? 'text-primary' : 'text-muted-foreground',
+                      )}
                     />
                     <span className="text-[11px] font-bold text-muted-foreground uppercase">
                       Valve
