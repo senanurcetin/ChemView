@@ -12,6 +12,7 @@
     "test": "vitest run",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "docs:check": "node scripts/check-docs.mjs",
     "genkit:dev": "genkit start -- npx tsx src/ai/dev.ts",
     "test:firestore": "firebase emulators:exec --only firestore --project chemview-test \"vitest run src/server/store.contract.test.ts\"",
     "test:e2e": "playwright test"

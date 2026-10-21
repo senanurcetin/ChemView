@@ -25,7 +25,7 @@ Before any network deployment, independently review authentication, telemetry re
 - The critical Handlebars and websocket-driver transitive advisories are
   addressed by explicit npm overrides and lockfile pins to 4.7.10 and 0.7.5.
   This does **not** resolve every audit finding or prove exploitability for
-  other packages. Review the production-only npm audit artifact on each CI run.
+  other packages. The 2026-10-21 verified lockfile audit reported **0 critical, 14 high and 61 moderate production-tree affected package nodes**; the full dependency tree still included 2 critical dev/test advisories. See [tracked security risks](https://github.com/senanurcetin/ChemView/issues/16). Review fresh audit evidence on each CI run.
 
 Keep the demonstration local, protected, or read-only until its intended
 network exposure has been independently reviewed. No commercial hosting or

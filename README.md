@@ -1,147 +1,90 @@
-# ChemView — Industrial HMI & Mixing-Process Digital Twin
+# ChemView — Chemical Mixing HMI & Synthetic Digital Twin
 
-**Reviewer quick brief:** [Project scope, inspectable evidence and limitations](docs/hiring-summary.md).
+**An industrial automation and numerical-methods portfolio demonstration by NEXUS.** ChemView models one fictional chemical mixing vessel. It is **not a connected plant, a calibrated process digital twin, a commercial product, or a safety-rated controller**.
 
-[![Repository](https://img.shields.io/badge/source-GitHub-181717?logo=github)](https://github.com/senanurcetin/ChemView)
+![ChemView HMI by NEXUS — synthetic mixing vessel, alarms, trends and operator controls](docs/assets/chemview-dashboard.png)
 
-**Next.js · TypeScript · Simulated Modbus · Safety interlocks · SSE · Optional Gemini**
+**[Engineering review](docs/hiring-summary.md)** · **[Architecture](docs/architecture.md)** · **[Scientific validation](docs/science-validation.md)** · **[HMI screenshots and design checks](docs/design-qa.md)** · **[CI / integration acceptance](docs/integration-verification.md)** · **[Security and limitations](SECURITY.md)**
 
-ChemView is an industrial HMI and digital twin **prototype** for a chemical mixing process. It demonstrates how modern web tooling can model telemetry, operator controls, communication traces, and safety interlocks in a single interface.
+## What the demonstration covers
 
-![ChemView by NEXUS — simulated mixing process HMI with live trends, operator controls and safety audit](docs/assets/chemview-dashboard.png)
+- **Server-owned process simulation:** a one-second mixing-vessel engine with synthetic energy balance, tank discharge, motor response and pH observation. It uses deterministic seeded experiments, not laboratory data.
+- **Operator-focused HMI:** NEXUS-branded reactor visualization, simulated P&ID, time-series plots, Modbus traffic traces, network diagnostics, telemetry-age indicator and context-aware command feedback.
+- **Independent safety-rule simulation:** mixer/discharge interlocks, minimum heater level, unconditional latched E-STOP, authenticated reset where configured and deterministic alarms. None of these qualifies as a physical protective system.
+- **Reliable simulated telemetry:** validated SSE messages, session UUIDs, duplicate/out-of-order rejection, last-known-value warnings and per-session telemetry, alarm and audit histories.
+- **Scientific evaluation:** six synthetic experiments and an expandable benchmark comparing four computed observables with continuous-time analytical reference solutions. Test agreement verifies code/model consistency—not accuracy against real equipment.
+- **Optional explanations:** Gemini/Genkit can comment on deterministic alarms but cannot make, delay or veto interlock decisions.
+- **Reproducible testing:** TypeScript, ESLint, Prettier, Vitest, Firestore emulator, Playwright and CircleCI. The default demo runs without an AI key or Firestore credentials.
 
-**Visual QA:** [Responsive workstation checklist](docs/design-qa.md) covers 1366×768, 1440×900 and 1920×1080 capture tests.
+## Demonstration gallery
 
-**Visual identity:** ChemView is presented as an engineering demonstration _by NEXUS_, using the official transparent NEXUS logo from the user's approved brand assets. The original ChemView cyan/orange status palette is retained.
+| Workstation width | Screenshot                                                         | Purpose                                     |
+| ----------------- | ------------------------------------------------------------------ | ------------------------------------------- |
+| 1366 px           | [Compact workstation](docs/assets/chemview-1366x768.png)           | Panel visibility and vertical scrolling     |
+| 1440 px           | [Primary portfolio screenshot](docs/assets/chemview-dashboard.png) | Balanced process/control workspace          |
+| 1920 px           | [Wide workstation](docs/assets/chemview-1920x1080.png)             | Expanded reactor graphics and event history |
 
-The refreshed portfolio image was captured on the running demo after the 1366×768 and 1440×900 browser layout checks. It shows the simulated mixer operating, the heater active and the session-scoped alarm/audit history.
+These are actual Playwright full-page screenshots of a **simulated** running process, not design mockups. See [capture provenance and viewport checks](docs/design-qa.md).
 
-Portfolio case study: [senanur-cetin.vercel.app/projects/chemview](https://senanur-cetin.vercel.app/projects/chemview)
+## Run locally
 
-**Scientific verification:** [Equations, continuous-time benchmarks, scenario matrix and limitations](docs/science-validation.md). The expandable HMI model benchmark compares four fixed synthetic trajectories to analytical reference solutions; this is not empirical validation.
-The HMI also has an optional [annotated instrumentation diagram](docs/design-qa.md).
-
-## Synthetic experiment laboratory
-
-The HMI contains a small **Experiment Laboratory** for reproducible, seeded
-scenarios: baseline, overheating, draining to the low-level heater cutout,
-out-of-range pH, pH sensor bias and a simulated Modbus response timeout. Each experiment starts
-a new simulator `runId`, preserving prior persisted sessions. Loading is
-blocked while the E-STOP latch is active. No real Modbus or PLC is used.
-
-## What it does
-
-- Runs the mixing-tank simulation **on the server** (physics, safety interlocks, simulated Modbus register map) and streams a snapshot to the browser every second over Server-Sent Events.
-- Visualizes operator controls, trends, and the Modbus wire log in one HMI layout.
-- Enforces safety interlocks server-side: the mixer cannot start with the discharge valve open, the valve cannot move while the rotor spins, and E-STOP always wins, immediately disables mixer/heater, and remains latched until an explicit reset; E-STOP is never rate limited.
-- Raises deterministic rule alarms immediately, and layers optional Gemini (Genkit) commentary on top when `GEMINI_API_KEY` is set. The LLM never gates a safety decision; it is rate limited, time boxed, schema validated and falls back silently.
-- Persists run-scoped telemetry, alerts and the audit trail (Firestore when configured, bounded in-memory otherwise). Read-only `/api/history`, `/api/alerts`, `/api/audit` and CSV `/api/export` support review of a single simulation run.
-
-There is still no real PLC: the Modbus layer is a deterministic simulation, not a network client.
-
-### Emergency-stop reset (simulator contract)
-
-The HMI exposes **RESET E-STOP** while the simulated stop is latched. Reset clears the latch only; it never starts the mixer or enables the heater. The server rejects other commands during the latch, including setpoint and valve changes. A fresh server process initializes a new simulator state: this is **not** a hardware or persistent emergency-stop circuit.
-
-When `OPERATOR_TOKEN` is configured, `reset_estop` is an ordinary protected operator command, while `estop` remains callable without a token. The browser HMI does not possess or store the bearer token: a reset attempted from that HMI will receive HTTP 401 in token-protected deployments. An authorized operator integration must send the token server-to-server or use an appropriately secured operator channel; do not embed the token in client JavaScript.
-
-Offline tests cover the latch and authentication contract. This simulation is **not PLC/SIL certified**.
-
-## Stack
-
-- Next.js 15 (App Router, Route Handlers) and React 19
-- TypeScript, Tailwind CSS, shadcn/ui, Recharts
-- Genkit and Gemini for AI-assisted alert commentary
-- Firebase Admin (Firestore) for optional persistence
-- Vitest for unit tests, Playwright for end-to-end smoke tests
-
-## Local setup
+Requires **Node.js 22**, npm and optionally Java 21 for the Firestore emulator. No physical plant or Modbus hardware is needed.
 
 ```bash
-npm install
-cp .env.example .env   # optional: GEMINI_API_KEY and FIREBASE_* values
+npm ci
 npm run dev
 ```
 
-The app runs on `http://localhost:9002`. Without any keys it works fully, using rule alarms and the in-memory store.
+Open `http://localhost:9002`. The simulator starts with bounded in-memory storage and deterministic alarm rules. You may configure optional server-only credentials in a local `.env` file using [.env.example](.env.example) as reference. Never embed secrets in browser code.
 
-Quality checks (also run in CI): `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test`, `npm run build`.
-Extra suites: `npm run test:firestore` (Store contract tests against the Firestore emulator, needs Java) and `npm run test:e2e` (Playwright smoke tests; set `PLAYWRIGHT_CHROMIUM_PATH` to use a preinstalled Chromium, otherwise run `npx playwright install chromium` once).
+**Quality checks**
 
-See [docs/architecture.md](docs/architecture.md) for how the pieces fit together.
+```bash
+npm run typecheck
+npm run lint
+npm run format:check
+npm run docs:check
+npm test
+npm run build
+npm run test:firestore  # requires Java / Firebase emulator
+npm run test:e2e       # requires Playwright Chromium
+```
 
-## Command admission policy
+## API and operator constraints
 
-The simulator models one shared process. Ordinary operator commands have a shared budget of **60 commands per 10 seconds**; client-provided proxy/IP headers cannot reset that budget. E-STOP always bypasses the limit, while E-STOP reset requires the usual authorization and quota. This protects the demo's shared command loop from simple identity rotation, but a busy client can still exhaust the ordinary-command quota for other users. It is not production-grade per-operator admission control.
+| Endpoint                               | Demonstration contract                                                   |
+| -------------------------------------- | ------------------------------------------------------------------------ |
+| `GET /api/stream`                      | Validated server-sent synthetic snapshots                                |
+| `POST /api/command`                    | Server-validated operator commands; E-STOP always exempt from throttling |
+| `POST /api/scenario`                   | Load a named seeded laboratory scenario; never bypasses E-STOP           |
+| `GET /api/history` / `GET /api/export` | Current-run telemetry or explicitly selected archived run; CSV export    |
+| `GET /api/alerts` / `GET /api/audit`   | Read-only current-run or archived synthetic event history                |
 
-## Telemetry session provenance
+The shared simulator permits up to **60 ordinary commands per 10 seconds**. It rejects stale browser preconditions when another operator changes a control. A validated SSE sample must advance before the browser marks telemetry live; after 6 seconds without advancing data it shows **stale**. Archived event records are observational, not certified audit evidence.
 
-Each simulator process has a unique `runId`. New telemetry samples are stored by run (in memory or under Firestore `sim_runs/<runId>/telemetry`) so identical timestamps from separate process sessions cannot overwrite each other. `/api/history` and `/api/export` default to the current run; use a previously recorded UUID via `?runId=<uuid>` to inspect an archived run. CSV includes a `run_id` column. The browser waits for a valid SSE snapshot before loading history for that exact run.
+**Do not expose an unrestricted write-enabled instance to the internet.** Without `OPERATOR_TOKEN`, command/scenario endpoints permit unauthenticated simulated writes; with that token set the stock browser cannot submit protected commands. See [SECURITY.md](SECURITY.md) for the exact boundary. There is no real PLC/Modbus-TCP connection and no SIL certification.
 
-Legacy untagged Firestore records in `telemetry` are **not deleted or migrated**. They remain available through the Store's unscoped history API but are excluded from the new run-scoped dashboard and HTTP defaults. This is a simulation history contract, not certified plant historian behavior.
+## Repository map
 
-## HMI telemetry freshness
+```text
+src/app/                     Next.js UI, API handlers and tests
+src/components/chemical-mixing/
+                             NEXUS HMI and numerical benchmark panel
+src/hooks/, src/lib/         Telemetry validation, charts, benchmark helpers
+src/server/sim/              Physics, protocol simulation, alarm/interlock engine
+src/server/                  Storage, authentication and rate limiting
+src/ai/                      Optional advisory Gemini flow
+e2e/                         Playwright interface/regression checks
+docs/                        Architecture, scientific, design and QA evidence
+docs/assets/                 Versioned portfolio screenshots
+public/                      NEXUS identity asset
+.github/workflows/           CI (no production deployment)
+```
 
-Cross-session and malformed SSE audit/alarm events are rejected before HMI
-rendering. After a simulator restart the browser ignores late packets from
-previously observed run IDs, so old process data cannot override new readback.
+For methodology and constraints use the canonical documents linked at the top. Historical changes are summarized in [CHANGELOG.md](CHANGELOG.md); contributing guidance is in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-The operator display shows the current simulator session and the age of the latest validated telemetry snapshot. If an SSE connection stays open but delivers no advancing samples for 6 seconds, the header switches to `Gateway Stale` and a visible warning labels the displayed process readings as **last known values**. A new accepted sample clears the stale status; reconnecting the transport alone does not imply current data. An engine-session change is shown explicitly. These indicators are for this simulated HMI only and must not be mistaken for field-device or safety-system health.
+## Boundaries and license
 
-## Shared-process operator readback
+ChemView is strictly a **noncommercial research/portfolio demo**. No subscriptions, customer environments, real plant integration or production operations are part of the project. Scientific values are illustrative, not calibrated; physical safety measures require independent engineering verification.
 
-The setpoint sliders follow server-owned values, including accepted writes from another browser. When an operator drags a manual-mode slider, the HMI displays a draft and sends one command on release; an unconfirmed setpoint is labeled `(PENDING)` until the SSE stream echoes its applied value. Denied or unconfirmed drafts revert to server readback. Normal operator controls are disabled if telemetry is stale/disconnected or E-STOP is latched, while the E-STOP action itself stays available. An operator action racing a stale connection is also rejected client-side, though server-side interlocks remain authoritative.
-
-## Session-scoped alarm history
-
-The simulator records its rule-based and optional AI alarm events by `runId`; `GET /api/alerts` returns the last 50 events for the current process run (or `?runId=<uuid>&limit=<1..100>` for a selected archived run). The dashboard merges archived events with live SSE events, showing up to 50 distinct entries. Memory storage keeps the most recent 200 alarm events; Firestore uses `sim_runs/<runId>/alerts`. Older top-level Firestore alerts are retained but excluded from the current-session API. These events are historical observations, not safety-rated alarm acknowledgements. Incoming telemetries with impossible physical readings are rejected before updating the HMI.
-
-## Concurrent setpoint updates
-
-The HMI sends a setpoint command with the expected server value captured at the beginning of a drag and the active simulator `runId`. The engine compares those optional preconditions atomically with its current in-process state. If another operator changed that setpoint, or the simulator restarted, it rejects the stale request with HTTP 409 without writing a simulated Modbus frame. Ordinary API clients can continue to omit these optional fields for backward compatibility. These checks avoid silent lost updates on the two manual setpoints; they are not general transaction isolation across every plant command.
-
-## Concurrent switch and mode controls
-
-Alongside RPM and temperature compare-and-set requests, the HMI now supplies the current simulator `runId` and the observed value for ordinary START/STOP, heater, valve, manual/automatic mode and E-STOP reset commands. The engine rejects stale run or state preconditions with HTTP 409 before generating a simulated Modbus write. This prevents an outdated operator screen from silently undoing a newer switch action. The simulated E-STOP never requires a matching readback. Legacy external clients may omit these optional fields and retain last-write-wins behavior.
-
-## E-STOP event ordering
-
-The simulator tags each E-STOP with an increasing `estopEpoch`. An HMI RESET
-includes the observed epoch and is denied with HTTP 409 if a newer E-STOP
-occurred before processing. E-STOP itself remains unconditional, including
-during connection interruptions; older API clients that omit the optional
-reset precondition remain supported.
-
-## Delayed command responses
-
-HTTP command replies are asynchronous and may arrive after a simulation restart,
-a later operator action, or an E-STOP. The HMI discards obsolete ordinary-command
-feedback so the current process display does not show an error from an earlier
-session or a superseded request. E-STOP failures still surface to the operator.
-The process state remains server-owned and is refreshed only through validated
-SSE snapshots.
-
-## Run-scoped operator audit trail
-
-Audit events now carry the simulator `runId`, alongside telemetry and alerts.
-The HMI merges live audit entries with up to 50 archived events for the current
-run; the read-only `GET /api/audit?runId=<uuid>&limit=<1..100>` endpoint can
-inspect earlier runs. Older, untagged Firestore records remain available in
-the legacy Store collection, but are excluded from current-session displays.
-These records are not cryptographically signed or certified audit evidence.
-
-## AI commentary and simulation events
-
-AI commentary is optional and supplementary to deterministic process alarms. The HMI receives
-an analysis-in-progress update only when an actual Gemini request starts; idle ticks do not
-generate duplicate SSE messages. Late model responses are ignored after an E-STOP, operator
-control change, or change of the triggering condition. AI analysis is skipped while E-STOP is
-latched. This behavior is part of the simulated HMI, not a safety-rated control mechanism.
-
-## Scope and operational boundaries
-
-The process, Modbus register map, interlocks, and telemetry are simulated. No physical PLC, fieldbus gateway, safety-rated controller, or plant equipment is connected. This is an engineering demonstration, **not a certified safety system**. Production use would require independent industrial safety assessment, hardened access controls and validated equipment integration.
-
-## License
-
-MIT
+Source code: MIT — see [LICENSE](LICENSE).

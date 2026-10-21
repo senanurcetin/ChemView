@@ -1,55 +1,45 @@
-# Consolidated integration verification
+# Integration and acceptance — simulation-only ChemView
 
-ChemView is a **simulation-only engineering prototype**. This checklist is for
-the combined `main` branch after the run-scoped telemetry, audit, alarms,
-multi-operator interlocks and optional AI commentary changes.
+This is the source of truth for **how to verify a specific commit**. A historical green PR is not proof that a later combined branch was tested, and unit tests are not evidence of physical PLC safety.
 
-## Required automated gates
+## Quality gates
 
-The existing GitHub Actions workflow runs these groups on a non-skipped push
-to `main`. Individual implementation commits intentionally skipped CI to
-avoid redundant full-suite executions.
+| Gate                                     | Local command            | GitHub Actions job             |
+| ---------------------------------------- | ------------------------ | ------------------------------ |
+| Dependency integrity                     | `npm ci`                 | build, firestore-emulator, e2e |
+| TypeScript                               | `npm run typecheck`      | build                          |
+| ESLint                                   | `npm run lint`           | build                          |
+| Prettier                                 | `npm run format:check`   | build                          |
+| Documentation references and images      | `npm run docs:check`     | build                          |
+| Simulation and API unit tests            | `npm test`               | build                          |
+| Next production compilation              | `npm run build`          | build                          |
+| Firestore store-contract tests (Java 21) | `npm run test:firestore` | firestore-emulator             |
+| Chromium HMI/regression tests            | `npm run test:e2e`       | e2e                            |
+| Independent Node quality                 | CircleCI `node-quality`  | CircleCI                       |
 
-- **Build:** `npm ci`, `npm run typecheck`, `npm run lint`,
-  `npm run format:check`, `npm test` and `npm run build`
-- **Persistence:** `npm run test:firestore` against the Firestore emulator
-- **Browser:** `npm run test:e2e` with Playwright Chromium
+GitHub Actions uses Node 22. The Playwright suite runs sequentially because one server-owned synthetic process is shared by all browser pages.
 
-GitHub-hosted jobs use Node.js 22, matching the Firebase Admin SDK's
-runtime requirement. The browser tests exercise accessible slider handles,
-not only visual container labels.
+## Verification boundaries and acceptance scenarios
 
-## Acceptance scenarios
+- Validated, advancing SSE telemetry unlocks ordinary controls; a stale connection displays **last known** data and disables ordinary actions, but not E-STOP.
+- Run UUIDs prevent cross-run telemetry, alert and audit history mixing; invalid/out-of-order replay is ignored.
+- Stale or conflicting setpoints/discrete actions are rejected server-side rather than silently overwriting newer readbacks.
+- E-STOP is unconditional and latched; a stale or unauthorized reset must not clear a newer stop.
+- The 60-commands-per-10-seconds admission budget cannot be bypassed by rotating arbitrary IP-forwarding headers. The rate-limit tests must not disable safeguards just to pass.
+- Sensor bias is kept conceptually separate from synthetic underlying chemical pH. Simulated Modbus dropouts do not modify plant physics.
+- All six seeded scenarios are deterministic; thermal/inventory/motor reference tests must pass under the stated simplified assumptions.
+- Model benchmark, explanatory caveat, P&ID and NEXUS identity remain accessible.
+- The 1366×768, 1440×900 and 1920×1080 captures have no horizontal document overflow. The history and lower panels remain reachable by vertical scrolling.
+- AI commentary never blocks deterministic alarm/interlock paths, and no test should access a real PLC, customer historian, live plant or production Firebase.
 
-- The HMI waits for a validated, current SSE payload before unlocking controls.
-- Alarm and audit histories occupy balanced full-width panels below the operator controls.
-- At 1366×768 and 1440×900 the layout retains its NEXUS identity, has no
-  horizontal document overflow, remains vertically scrollable and exposes
-  safety actions. GitHub Actions stores fresh full-page screenshots as
-  `chemview-hmi-design-captures` for visual review.
-- A late packet from a retired simulation run cannot reactivate stale readback.
-- Telemetry, alarm events and audit records are scoped by `runId`.
-- Simulated E-STOP is unconditional and cannot be cleared by a stale RESET.
-- Stale multi-operator commands cannot silently overwrite current process state.
-- A denied slider write returns the readback to the server-owned value; a later
-  operator write is not hidden by an old local draft.
-- Shared-demo API 429 responses are handled in browser-test setup using
-  the server's `Retry-After`; the production rate limiter is not disabled.
-- A delayed AI response cannot override a newer command or alarm condition.
-- Deterministic alarms still fire independently of optional Gemini responses.
-- No test reaches a real PLC, Modbus TCP device or production Firebase instance.
+## Latest established pre-maintenance baseline
 
-## Reporting rule
+[GitHub Actions run 39515611615](https://github.com/senanurcetin/ChemView/actions/runs/39515611615) passed build (typecheck, lint, format, Vitest, Next build), Firestore emulator and Playwright on the security/benchmark change set. The final updated security PR also passed CircleCI. These results **pre-date** this documentation restructuring; a new PR/main CI run is required for final acceptance.
 
-A saved test or a green historical PR check is **not** proof that the current
-combined `main` branch passed. Report the current commit SHA, workflow run
-and each job result separately; disclose failures and skipped checks.
+Visual source artifact: `chemview-hmi-design-captures` on that run. The committed images are located under [`docs/assets/`](design-qa.md). The screenshot update never represents field-instrument calibration.
 
-## Verified design capture
+## Reporting
 
-The reference screenshot in `docs/assets/chemview-dashboard.png` was refreshed by
-GitHub Actions after the final responsive HMI checks. The captured scenario
-shows the simulated mixer and heater in operation; this is not real plant data.
-The temporary workflow job with repository-write permission was removed once
-the screenshot had been committed. Screenshot capture tests remain available in
-Playwright for future visual reviews.
+For release-quality demo acceptance record: tested commit SHA, workflow URL, each independent job result, screenshot source run and residual issues. The remaining dependency advisories and unauthenticated-demo exposure are tracked in [security issue #16](https://github.com/senanurcetin/ChemView/issues/16); passing CI does not close that issue.
+
+The project remains an advanced **noncommercial engineering research demonstration** with no requirement for live plant integration, billing, accounts or SaaS operations.

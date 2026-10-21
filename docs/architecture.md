@@ -1,5 +1,7 @@
 # Architecture
 
+ChemView is a **synthetic, noncommercial engineering research demonstration**. The authoritative physical assumptions and verification bounds are in [science-validation.md](science-validation.md); responsive HMI evidence and committed screenshots are in [design-qa.md](design-qa.md). No code in this architecture connects to a real PLC or certified safety controller.
+
 ```
 Browser (Dashboard)                     Next.js server (Node runtime)
 ┌──────────────────┐   SSE /api/stream   ┌────────────────────────────────────┐

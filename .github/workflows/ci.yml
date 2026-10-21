@@ -48,6 +48,9 @@ jobs:
       - name: Format check
         run: npm run format:check
 
+      - name: Documentation links and screenshot integrity
+        run: npm run docs:check
+
       - name: Unit tests
         run: npm test
 

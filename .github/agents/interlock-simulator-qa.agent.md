@@ -13,7 +13,7 @@ Treat ChemView as a digital-twin **prototype**. Prove observable server-side sim
 
 ## Workflow
 
-1. Check `git status` and inspect `README.md`, `src/server/sim/`, `src/server/store.ts`, `src/server/rate-limit.ts`, `src/app/api/command/`, and nearby Vitest tests. Coordinate with open draft PR #2 rather than duplicating broad hardening changes.
+1. Check `git status` and inspect `README.md`, `src/server/sim/`, `src/server/store.ts`, `src/server/rate-limit.ts`, `src/app/api/command/`, and nearby Vitest tests. Treat the current default branch as authoritative; investigate active PRs rather than assumed old drafts.
 2. Reproduce defects with deterministic clocks and pure simulated state: mixer cannot start with discharge open; valve cannot open while rotor is spinning; E-STOP always wins; commands after stop fail closed.
 3. Add negative tests that invoke command handlers directly, bypassing UI. Check rate-limit edge cases, ordering, concurrent/contradictory commands and malformed payloads. Emergency stop must not be throttled.
 4. Only when a test demonstrates failure, make the smallest correction to implementation; preserve deterministic simulation and reject unauthorized operations.

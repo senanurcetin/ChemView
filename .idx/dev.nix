@@ -5,7 +5,7 @@
   channel = "stable-24.11"; # or "unstable"
   # Use https://search.nixos.org/packages to find packages
   packages = [
-    pkgs.nodejs_20
+    pkgs.nodejs_22
     pkgs.zulu
   ];
   # Sets environment variables in the workspace
@@ -13,7 +13,7 @@
   # This adds a file watcher to startup the firebase emulators. The emulators will only start if
   # a firebase.json file is written into the user's directory
   services.firebase.emulators = {
-    # Disabling because we are using prod backends right now
+    # Keep the emulator off unless explicitly running local store tests; no production backend is needed
     detect = false;
     projectId = "demo-app";
     services = ["auth" "firestore"];
