@@ -6,7 +6,7 @@
 
 | Reviewer question                                        | Where to inspect                                                                                                                                                 |
 | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Is the implemented interface real?                       | [Current NEXUS HMI capture](assets/chemview-dashboard.png) and [all workstation views](design-qa.md)                                                             |
+| Is the implemented interface real?                       | [Current expanded NEXUS HMI](assets/chemview-dashboard.png), [P&ID/model benchmark evidence](assets/chemview-engineering-evidence.png), and [workstation captures](design-qa.md)                                                             |
 | What process model is demonstrated?                      | [Physical assumptions, analytical benchmarks and reproducible experiments](science-validation.md)                                                                |
 | Is simulated command admission safe by design?           | [Server-side interlocks and E-STOP ordering](architecture.md) plus checked-in Vitest/Playwright tests                                                            |
 | Can it run offline without an LLM or persistent backend? | [Local setup](../README.md#run-locally); rule alarms and in-memory storage                                                                                       |
@@ -22,6 +22,10 @@
 - Ordinary commands use optimistic preconditions; simulated E-STOP is unconditional, latched and exempt from throttling. No SIL rating is claimed.
 - Optional Gemini explanations are advisory and cannot gate rule alarms.
 - A fixed-seed lab and four independent analytical references distinguish **code verification** from empirical **model validation**.
+
+## Visual and scientific evidence
+
+The current Playwright screenshot test explicitly opens both the simulated P&ID and numerical benchmark panels before capturing 1366, 1440 and 1920-pixel full-page views. Earlier screenshots did not show these expanded features. Numerical model-reference comparisons are synthetic verification, not measured reactor fidelity.
 
 ## Verified CI evidence
 
