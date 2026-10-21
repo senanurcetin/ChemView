@@ -6,12 +6,12 @@ ChemView retains the cyan/orange, dark-workstation hierarchy of its original HMI
 
 Screenshots below come from the **actual running Playwright demo**, not Figma mockups, AI-rendered images or equipment photographs. The mixer and synthetic heater are enabled in the capture fixture. Crucially, both **Simulated P&ID** and **Model benchmark — numerical accuracy** expanders are opened before screenshots. Earlier committed images showed these new engineering sections collapsed; those images were valid UI captures but incomplete evidence of current functionality.
 
-| Viewport  | Full-page capture                                        | Checked properties                                                                        |
-| --------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| 1366×768  | [Compact HMI](assets/chemview-1366x768.png)              | NEXUS identity, control access and scrollability without horizontal document overflow     |
-| 1440×900  | [Default portfolio image](assets/chemview-dashboard.png) | Expanded instrumentation and scientific verification visible with operator controls |
-| 1440×900  | [Engineering evidence](assets/chemview-engineering-evidence.png) | Dedicated checked-in capture showing current P&ID and analytical comparison table |
-| 1920×1080 | [Wide workstation](assets/chemview-1920x1080.png)        | Expanded reactor graphic and legible lower-page event/audit sections                      |
+| Viewport  | Full-page capture                                                | Checked properties                                                                    |
+| --------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| 1366×768  | [Compact HMI](assets/chemview-1366x768.png)                      | NEXUS identity, control access and scrollability without horizontal document overflow |
+| 1440×900  | [Default portfolio image](assets/chemview-dashboard.png)         | Expanded instrumentation and scientific verification visible with operator controls   |
+| 1440×900  | [Engineering evidence](assets/chemview-engineering-evidence.png) | Dedicated checked-in capture showing current P&ID and analytical comparison table     |
+| 1920×1080 | [Wide workstation](assets/chemview-1920x1080.png)                | Expanded reactor graphic and legible lower-page event/audit sections                  |
 
 ![1440px ChemView workstation showing expanded synthetic P&ID and model benchmark](assets/chemview-dashboard.png)
 

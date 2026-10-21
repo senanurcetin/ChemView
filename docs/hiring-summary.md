@@ -4,15 +4,15 @@
 
 ## Inspectable evidence
 
-| Reviewer question                                        | Where to inspect                                                                                                                                                 |
-| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Is the implemented interface real?                       | [Current expanded NEXUS HMI](assets/chemview-dashboard.png), [P&ID/model benchmark evidence](assets/chemview-engineering-evidence.png), and [workstation captures](design-qa.md)                                                             |
-| What process model is demonstrated?                      | [Physical assumptions, analytical benchmarks and reproducible experiments](science-validation.md)                                                                |
-| Is simulated command admission safe by design?           | [Server-side interlocks and E-STOP ordering](architecture.md) plus checked-in Vitest/Playwright tests                                                            |
-| Can it run offline without an LLM or persistent backend? | [Local setup](../README.md#run-locally); rule alarms and in-memory storage                                                                                       |
-| Can parallel operators overwrite one another silently?   | [Server-side concurrency preconditions](architecture.md#concurrent-setpoint-admission)                                                                           |
-| Are session histories isolated?                          | [Telemetry and event provenance](architecture.md#telemetry-persistence-and-legacy-records)                                                                       |
-| Is the latest dependency review perfect?                 | No. [Security policy](../SECURITY.md) and [open issue #16](https://github.com/senanurcetin/ChemView/issues/16) describe remaining advisory/exposure constraints. |
+| Reviewer question                                        | Where to inspect                                                                                                                                                                 |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Is the implemented interface real?                       | [Current expanded NEXUS HMI](assets/chemview-dashboard.png), [P&ID/model benchmark evidence](assets/chemview-engineering-evidence.png), and [workstation captures](design-qa.md) |
+| What process model is demonstrated?                      | [Physical assumptions, analytical benchmarks and reproducible experiments](science-validation.md)                                                                                |
+| Is simulated command admission safe by design?           | [Server-side interlocks and E-STOP ordering](architecture.md) plus checked-in Vitest/Playwright tests                                                                            |
+| Can it run offline without an LLM or persistent backend? | [Local setup](../README.md#run-locally); rule alarms and in-memory storage                                                                                                       |
+| Can parallel operators overwrite one another silently?   | [Server-side concurrency preconditions](architecture.md#concurrent-setpoint-admission)                                                                                           |
+| Are session histories isolated?                          | [Telemetry and event provenance](architecture.md#telemetry-persistence-and-legacy-records)                                                                                       |
+| Is the latest dependency review perfect?                 | No. [Security policy](../SECURITY.md) and [open issue #16](https://github.com/senanurcetin/ChemView/issues/16) describe remaining advisory/exposure constraints.                 |
 
 ## Engineering decisions
 

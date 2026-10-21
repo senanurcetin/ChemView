@@ -26,7 +26,6 @@
 
 These are actual Playwright **full-page** screenshots of a **simulated** running process, not design mockups. The evidence captures deliberately expand the P&ID and model-benchmark sections; numerical comparisons verify the synthetic equations and are not experimental plant calibration. See [capture provenance and viewport checks](docs/design-qa.md).
 
-
 ![Current synthetic P&ID and analytical model-reference evidence](docs/assets/chemview-engineering-evidence.png)
 
 ## Run locally
