@@ -22,10 +22,22 @@ Before any network deployment, independently review authentication, telemetry re
   The browser intentionally does not receive this token, so its ordinary
   controls will not work without a separate authorized channel. Simulated
   E-STOP remains callable without that token.
-- The critical Handlebars and websocket-driver transitive advisories are
-  addressed by explicit npm overrides and lockfile pins to 4.7.10 and 0.7.5.
-  This does **not** resolve every audit finding or prove exploitability for
-  other packages. The 2026-10-21 verified lockfile audit reported **0 critical, 14 high and 61 moderate production-tree affected package nodes**; the full dependency tree still included 2 critical dev/test advisories. See [tracked security risks](https://github.com/senanurcetin/ChemView/issues/16). Review fresh audit evidence on each CI run.
+- The critical Handlebars and websocket-driver transitive advisories were
+  previously addressed by explicit overrides pinned to 4.7.10 and 0.7.5.
+- **Latest dependency evidence (21 October 2026):** [GitHub Actions run 39613329653](https://github.com/senanurcetin/ChemView/actions/runs/39613329653),
+  artifact `chemview-dependency-audit` (ID `12352211171`). Its patched lockfile
+  reports **0 critical, 8 high, 59 moderate** affected production dependency
+  nodes. Including development and test dependencies the counts are
+  **0 critical, 20 high, 64 moderate**. These are affected package nodes,
+  not 67 demonstrated exploit paths. Earlier 0/14/61 production and
+  2/26/65 full-tree counts are historical and should not be described as
+  the current inventory.
+- The build-only `tailwindcss-animate` package was moved to dev dependencies,
+  selected compatible transitive patches were applied without `npm audit fix
+  --force`, and Vitest test tooling was updated to 5.0.5 alongside Node 22
+  typings. The remaining high/moderate audit findings, especially Genkit,
+  Firebase, OpenTelemetry and Next.js/PostCSS constraints, remain explicitly
+  tracked in [security issue #16](https://github.com/senanurcetin/ChemView/issues/16).
 
 Keep the demonstration local, protected, or read-only until its intended
 network exposure has been independently reviewed. No commercial hosting or
