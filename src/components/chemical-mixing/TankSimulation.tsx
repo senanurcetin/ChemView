@@ -47,7 +47,7 @@ export function TankSimulation({
   return (
     <div
       aria-label="Simulated chemical reactor schematic"
-      className="relative flex min-h-[340px] w-full flex-1 items-center justify-center overflow-hidden rounded-xl border border-accent/20 bg-[#061524]/65 px-3 py-14 sm:px-7"
+      className="relative flex min-h-[340px] w-full flex-1 items-center justify-center overflow-hidden rounded-xl border border-accent/20 bg-[#061524]/[0.65] px-3 py-14 sm:px-7"
     >
       <div className="absolute left-3 top-3 font-mono text-[11px] font-semibold uppercase tracking-wider text-zinc-300">
         Reactor 01 · Simulated vessel
@@ -123,7 +123,7 @@ export function TankSimulation({
       </div>
 
       {/* HUD Overlay */}
-      <div className="absolute top-2 right-2 text-right bg-[#061524]/85 p-1.5 rounded border border-accent/20">
+      <div className="absolute top-2 right-2 text-right bg-[#061524]/[0.85] p-1.5 rounded border border-accent/20">
         <div className="text-[11px] font-bold uppercase text-zinc-300">Mixer RPM</div>
         <div className="text-sm font-bold text-primary tabular-nums">{rpm.toFixed(0)}</div>
       </div>
