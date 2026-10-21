@@ -34,7 +34,7 @@ Before any network deployment, independently review authentication, telemetry re
   the current inventory.
 - The build-only `tailwindcss-animate` package was moved to dev dependencies,
   selected compatible transitive patches were applied without `npm audit fix
-  --force`, and Vitest test tooling was updated to 5.0.5 alongside Node 22
+--force`, and Vitest test tooling was updated to 5.0.5 alongside Node 22
   typings. The remaining high/moderate audit findings, especially Genkit,
   Firebase, OpenTelemetry and Next.js/PostCSS constraints, remain explicitly
   tracked in [security issue #16](https://github.com/senanurcetin/ChemView/issues/16).
