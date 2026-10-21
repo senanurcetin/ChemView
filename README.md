@@ -18,12 +18,12 @@
 
 ## Demonstration gallery
 
-| Workstation width | Screenshot                                                         | Purpose                                     |
-| ----------------- | ------------------------------------------------------------------ | ------------------------------------------- |
-| 1366 px           | [Compact workstation](docs/assets/chemview-1366x768.png)           | Panel visibility and vertical scrolling     |
-| 1440 px           | [Primary portfolio screenshot](docs/assets/chemview-dashboard.png) | Balanced process/control workspace          |
-| 1440 px | [Focused instrumentation and numerical validation](docs/assets/chemview-engineering-evidence.png) | Both expanded engineering panels in one viewport |
-| 1920 px           | [Wide workstation](docs/assets/chemview-1920x1080.png)             | Expanded reactor graphics and event history |
+| Workstation width | Screenshot                                                                                        | Purpose                                          |
+| ----------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| 1366 px           | [Compact workstation](docs/assets/chemview-1366x768.png)                                          | Panel visibility and vertical scrolling          |
+| 1440 px           | [Primary portfolio screenshot](docs/assets/chemview-dashboard.png)                                | Balanced process/control workspace               |
+| 1440 px           | [Focused instrumentation and numerical validation](docs/assets/chemview-engineering-evidence.png) | Both expanded engineering panels in one viewport |
+| 1920 px           | [Wide workstation](docs/assets/chemview-1920x1080.png)                                            | Expanded reactor graphics and event history      |
 
 These are actual Playwright screenshots of a **simulated** running process, not design mockups. The workstation captures are full-page; the engineering-evidence image is a focused 1440×900 viewport. The evidence captures deliberately expand the P&ID and model-benchmark sections; numerical comparisons verify the synthetic equations and are not experimental plant calibration. See [capture provenance and viewport checks](docs/design-qa.md).
 

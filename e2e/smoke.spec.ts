@@ -89,8 +89,7 @@ test('NEXUS identity and operator panels remain accessible on shorter desktops',
         if (pid) window.scrollTo(0, pid.getBoundingClientRect().top + window.scrollY - 45);
       });
       const visibleEvidence = await page.evaluate(() => ({
-        pidTop: document.querySelector('[data-testid="pid-expander"]')?.getBoundingClientRect()
-          .top,
+        pidTop: document.querySelector('[data-testid="pid-expander"]')?.getBoundingClientRect().top,
         benchmarkBottom: document
           .querySelector('[data-testid="science-benchmark"]')
           ?.getBoundingClientRect().bottom,
