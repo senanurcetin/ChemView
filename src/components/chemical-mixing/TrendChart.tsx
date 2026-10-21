@@ -27,9 +27,9 @@ interface TrendChartProps {
 
 export function TrendChart({ title, data, color, unit, domain }: TrendChartProps) {
   return (
-    <Card className="h-full border-border/40 bg-card/50 backdrop-blur-sm">
+    <Card className="nexus-chart-panel h-full border backdrop-blur-sm">
       <CardHeader className="py-3">
-        <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+        <CardTitle className="text-sm font-semibold uppercase tracking-wider text-[#B9C5CE]">
           {title} ({unit})
         </CardTitle>
       </CardHeader>
@@ -41,13 +41,13 @@ export function TrendChart({ title, data, color, unit, domain }: TrendChartProps
             <YAxis
               domain={domain || ['auto', 'auto']}
               fontSize={11}
-              tick={{ fill: '#a1a1aa' }}
+              tick={{ fill: '#B9C5CE' }}
               axisLine={false}
               tickLine={false}
               unit={unit}
             />
             <Tooltip
-              contentStyle={{ backgroundColor: '#111', borderColor: '#333', fontSize: '12px' }}
+              contentStyle={{ backgroundColor: '#061524', borderColor: '#354968', fontSize: '12px' }}
               itemStyle={{ color: color }}
               labelStyle={{ display: 'none' }}
               formatter={(value: number) => [`${value.toFixed(2)} ${unit}`, title]}
