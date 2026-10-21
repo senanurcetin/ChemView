@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 /** Detect broken in-repo Markdown links and stale portfolio screenshots. */
@@ -35,6 +35,7 @@ for (const file of markdown) {
 const images = [
   ['docs/assets/chemview-1366x768.png', 1366, 768],
   ['docs/assets/chemview-dashboard.png', 1440, 900],
+  ['docs/assets/chemview-engineering-evidence.png', 1440, 900],
   ['docs/assets/chemview-1920x1080.png', 1920, 1080],
 ];
 for (const [name, targetWidth, minHeight] of images) {

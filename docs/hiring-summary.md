@@ -4,15 +4,15 @@
 
 ## Inspectable evidence
 
-| Reviewer question                                        | Where to inspect                                                                                                                                                 |
-| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Is the implemented interface real?                       | [Current NEXUS HMI capture](assets/chemview-dashboard.png) and [all workstation views](design-qa.md)                                                             |
-| What process model is demonstrated?                      | [Physical assumptions, analytical benchmarks and reproducible experiments](science-validation.md)                                                                |
-| Is simulated command admission safe by design?           | [Server-side interlocks and E-STOP ordering](architecture.md) plus checked-in Vitest/Playwright tests                                                            |
-| Can it run offline without an LLM or persistent backend? | [Local setup](../README.md#run-locally); rule alarms and in-memory storage                                                                                       |
-| Can parallel operators overwrite one another silently?   | [Server-side concurrency preconditions](architecture.md#concurrent-setpoint-admission)                                                                           |
-| Are session histories isolated?                          | [Telemetry and event provenance](architecture.md#telemetry-persistence-and-legacy-records)                                                                       |
-| Is the latest dependency review perfect?                 | No. [Security policy](../SECURITY.md) and [open issue #16](https://github.com/senanurcetin/ChemView/issues/16) describe remaining advisory/exposure constraints. |
+| Reviewer question                                        | Where to inspect                                                                                                                                                                 |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Is the implemented interface real?                       | [Current expanded NEXUS HMI](assets/chemview-dashboard.png), [P&ID/model benchmark evidence](assets/chemview-engineering-evidence.png), and [workstation captures](design-qa.md) |
+| What process model is demonstrated?                      | [Physical assumptions, analytical benchmarks and reproducible experiments](science-validation.md)                                                                                |
+| Is simulated command admission safe by design?           | [Server-side interlocks and E-STOP ordering](architecture.md) plus checked-in Vitest/Playwright tests                                                                            |
+| Can it run offline without an LLM or persistent backend? | [Local setup](../README.md#run-locally); rule alarms and in-memory storage                                                                                                       |
+| Can parallel operators overwrite one another silently?   | [Server-side concurrency preconditions](architecture.md#concurrent-setpoint-admission)                                                                                           |
+| Are session histories isolated?                          | [Telemetry and event provenance](architecture.md#telemetry-persistence-and-legacy-records)                                                                                       |
+| Is the latest dependency review perfect?                 | No. [Security policy](../SECURITY.md) and [open issue #16](https://github.com/senanurcetin/ChemView/issues/16) describe remaining advisory/exposure constraints.                 |
 
 ## Engineering decisions
 
@@ -23,9 +23,13 @@
 - Optional Gemini explanations are advisory and cannot gate rule alarms.
 - A fixed-seed lab and four independent analytical references distinguish **code verification** from empirical **model validation**.
 
+## Visual and scientific evidence
+
+The current Playwright screenshot test explicitly opens both the simulated P&ID and numerical benchmark panels before capturing 1366, 1440 and 1920-pixel full-page views. Earlier screenshots did not show these expanded features. Numerical model-reference comparisons are synthetic verification, not measured reactor fidelity.
+
 ## Verified CI evidence
 
-The scientific benchmark [PR #17](https://github.com/senanurcetin/ChemView/pull/17) and dependency-hardening [PR #18](https://github.com/senanurcetin/ChemView/pull/18) were merged after successful checks. [Run 39515611615](https://github.com/senanurcetin/ChemView/actions/runs/39515611615) passed GitHub Actions build/quality, Firestore emulator and Playwright; matching CircleCI node-quality also passed. These are **historical commit results**, not an assertion about every future edit. Review [integration acceptance](integration-verification.md) for current-commit verification rules.
+The scientific benchmark [PR #17](https://github.com/senanurcetin/ChemView/pull/17) and dependency-hardening [PR #18](https://github.com/senanurcetin/ChemView/pull/18) were merged after successful checks. [Run 39520435860](https://github.com/senanurcetin/ChemView/actions/runs/39520435860) passed the GitHub Actions build/quality, Firestore emulator and Playwright jobs with both engineering panels expanded in the screenshot fixture. [The previous documentation PR's verification](https://github.com/senanurcetin/ChemView/actions/runs/39518285480) also passed GitHub Actions and CircleCI. The new image-source artifact has been matched byte-for-byte against the checked-in PNGs. These are **historical commit results**, not an assertion about every future edit. Review [integration acceptance](integration-verification.md) for current-commit verification rules.
 
 ## Boundaries
 

@@ -29,14 +29,18 @@ GitHub Actions uses Node 22. The Playwright suite runs sequentially because one 
 - Sensor bias is kept conceptually separate from synthetic underlying chemical pH. Simulated Modbus dropouts do not modify plant physics.
 - All six seeded scenarios are deterministic; thermal/inventory/motor reference tests must pass under the stated simplified assumptions.
 - Model benchmark, explanatory caveat, P&ID and NEXUS identity remain accessible.
-- The 1366×768, 1440×900 and 1920×1080 captures have no horizontal document overflow. The history and lower panels remain reachable by vertical scrolling.
+- The 1366×768, 1440×900 and 1920×1080 captures display the **opened P&ID and four-row model benchmark**, with no horizontal document overflow. The history and lower panels remain reachable by vertical scrolling.
 - AI commentary never blocks deterministic alarm/interlock paths, and no test should access a real PLC, customer historian, live plant or production Firebase.
 
-## Latest established pre-maintenance baseline
+## Reusable image and evidence acceptance
 
-[GitHub Actions run 39515611615](https://github.com/senanurcetin/ChemView/actions/runs/39515611615) passed build (typecheck, lint, format, Vitest, Next build), Firestore emulator and Playwright on the security/benchmark change set. The final updated security PR also passed CircleCI. These results **pre-date** this documentation restructuring; a new PR/main CI run is required for final acceptance.
+The visual E2E fixture opens both scientific and instrumentation disclosure panels; the matching four checked-in images must exist, be valid PNGs and have the expected screenshot widths. Responsive full-page images intentionally exceed viewport height, while the dedicated 1440×900 science evidence must fit both expanded engineering panels within one viewport. The screenshot provenance must cite the source GitHub Actions run _for the current checked-in images_; an older successful workflow cannot establish currency after an HMI change.
 
-Visual source artifact: `chemview-hmi-design-captures` on that run. The committed images are located under [`docs/assets/`](design-qa.md). The screenshot update never represents field-instrument calibration.
+## Historical integration baseline
+
+[GitHub Actions run 39520435860](https://github.com/senanurcetin/ChemView/actions/runs/39520435860) passed build (typecheck, lint, Prettier, documentation-reference checks, Vitest and Next build), Firestore emulator and Playwright, including the expanded P&ID and scientific-reference screenshot fixture. The four committed PNG blobs were verified byte-for-byte against that run's visual artifact. This is an **already tested PR source commit**, not automatic evidence that any later merge commit passed. The documentation refresh must pass its own final PR/main checks.
+
+Visual source artifact: `chemview-hmi-design-captures` (ID `12310708053`) on that run. The committed images are located under [`docs/assets/`](design-qa.md). The screenshot update never represents field-instrument calibration.
 
 ## Reporting
 

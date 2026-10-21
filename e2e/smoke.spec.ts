@@ -66,6 +66,14 @@ test('NEXUS identity and operator panels remain accessible on shorter desktops',
     await expect(auditHeading).toBeInViewport();
 
     if (size.width === 1366) await page.waitForTimeout(4500);
+    // Portfolio captures must show the actual engineering features that the
+    // documentation describes, rather than the old default collapsed UI.
+    await page.getByText('Simulated P&ID — instrumentation and signal paths').click();
+    await page.getByText('Model benchmark — numerical accuracy').click();
+    await expect(
+      page.getByRole('img', { name: 'Synthetic reactor process and instrumentation diagram' }),
+    ).toBeVisible();
+    await expect(page.getByTestId('science-benchmark').getByRole('table')).toBeVisible();
     await page.evaluate(() => window.scrollTo(0, 0));
 
     await page.screenshot({
@@ -73,6 +81,26 @@ test('NEXUS identity and operator panels remain accessible on shorter desktops',
       fullPage: true,
       animations: 'disabled',
     });
+    if (size.width === 1440) {
+      // Dedicated viewport evidence is focused on the two expanded engineering panels,
+      // not a second copy of the full-page portfolio screenshot.
+      await page.evaluate(() => {
+        const pid = document.querySelector('[data-testid="pid-expander"]');
+        if (pid) window.scrollTo(0, pid.getBoundingClientRect().top + window.scrollY - 45);
+      });
+      const visibleEvidence = await page.evaluate(() => ({
+        pidTop: document.querySelector('[data-testid="pid-expander"]')?.getBoundingClientRect().top,
+        benchmarkBottom: document
+          .querySelector('[data-testid="science-benchmark"]')
+          ?.getBoundingClientRect().bottom,
+      }));
+      expect(visibleEvidence.pidTop).toBeGreaterThanOrEqual(0);
+      expect(visibleEvidence.benchmarkBottom).toBeLessThanOrEqual(size.height);
+      await page.screenshot({
+        path: 'artifacts/chemview-hmi-engineering-evidence-1440x900.png',
+        animations: 'disabled',
+      });
+    }
   }
 });
 
