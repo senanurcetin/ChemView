@@ -2,6 +2,13 @@
 
 This log records meaningful engineering-demo milestones, **not commercial product releases**. Git history and merged PRs remain the detailed audit trail.
 
+## 2026-10-21 — NEXUS 2.0 industrial HMI design
+
+- Applied the approved Drive `Logo/NEXUS_Identity_2_0` identity to the **existing** ChemView frontend without replacing the official logo ([PR #21](https://github.com/senanurcetin/ChemView/pull/21)).
+- Reworked the workstation, reactor, P&ID, operator panels, charts, event history, laboratory and numerical-verification area using the approved midnight, depth, cyan, blue, lavender, violet and silver palette.
+- Kept red E-STOP/fault and orange heater/thermal warning semantics separate from the brand gradients; no simulated safety behavior changed.
+- Added exact design-token and E-STOP Playwright checks and refreshed four images from real responsive-browser runs.
+
 ## 2026-10-21 — Scientific benchmark and dependency hardening
 
 - Added inspectable continuous-time reference comparisons for passive cooling, constant-power heating, free discharge and manual motor response in the NEXUS HMI ([PR #17](https://github.com/senanurcetin/ChemView/pull/17)).
