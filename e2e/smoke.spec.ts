@@ -66,6 +66,14 @@ test('NEXUS identity and operator panels remain accessible on shorter desktops',
     await expect(auditHeading).toBeInViewport();
 
     if (size.width === 1366) await page.waitForTimeout(4500);
+    // Portfolio captures must show the actual engineering features that the
+    // documentation describes, rather than the old default collapsed UI.
+    await page.getByText('Simulated P&ID — instrumentation and signal paths').click();
+    await page.getByText('Model benchmark — numerical accuracy').click();
+    await expect(
+      page.getByRole('img', { name: 'Synthetic reactor process and instrumentation diagram' }),
+    ).toBeVisible();
+    await expect(page.getByTestId('science-benchmark').getByRole('table')).toBeVisible();
     await page.evaluate(() => window.scrollTo(0, 0));
 
     await page.screenshot({
@@ -73,6 +81,13 @@ test('NEXUS identity and operator panels remain accessible on shorter desktops',
       fullPage: true,
       animations: 'disabled',
     });
+    if (size.width === 1440) {
+      await page.screenshot({
+        path: 'artifacts/chemview-hmi-engineering-evidence-1440x900.png',
+        fullPage: true,
+        animations: 'disabled',
+      });
+    }
   }
 });
 
