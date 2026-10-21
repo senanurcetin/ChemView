@@ -11,8 +11,8 @@ interface NetworkStatsProps {
 
 export function NetworkStats({ packetCount, latency, errorRate }: NetworkStatsProps) {
   return (
-    <div className="hmi-panel bg-zinc-950/50 border-white/5 p-3 flex flex-col gap-3">
-      <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+    <div className="hmi-panel bg-[#061524]/60 border-[#4EA8FF]/20 p-3 flex flex-col gap-3">
+      <div className="flex items-center gap-2 border-b border-accent/15 pb-2">
         <Network className="w-3 h-3 text-primary" />
         <span className="text-[11px] font-bold uppercase tracking-widest text-primary">
           Gateway Diagnostics
@@ -34,7 +34,7 @@ export function NetworkStats({ packetCount, latency, errorRate }: NetworkStatsPr
         </div>
       </div>
 
-      <div className="flex items-center justify-between text-[11px] text-zinc-500 font-mono mt-1 pt-2 border-t border-white/5">
+      <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono mt-1 pt-2 border-t border-white/5">
         <div className="flex items-center gap-1">
           <Activity className="w-2 h-2" />
           <span>SIMULATED MODBUS</span>
