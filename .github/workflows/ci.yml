@@ -120,3 +120,48 @@ jobs:
             playwright-report/
             test-results/
           retention-days: 7
+
+  import-nexus-2-visual-evidence:
+    if: github.event_name == 'pull_request' && github.head_ref == 'design/nexus-2-hmi-identity-20261021' && github.event.pull_request.head.repo.full_name == github.repository
+    needs: e2e
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: design/nexus-2-hmi-identity-20261021
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - name: Import actual Playwright screens and format design changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$(git log -1 --format=%s)" = "docs(design): sync actual NEXUS 2.0 Playwright screenshots" ]; then
+            echo "Evidence already imported."
+            exit 0
+          fi
+          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --name chemview-hmi-design-captures --dir "$RUNNER_TEMP/nexus-hmi"
+          for name in chemview-hmi-1366x768.png chemview-hmi-1440x900.png chemview-hmi-1920x1080.png chemview-hmi-engineering-evidence-1440x900.png; do
+            test -s "$RUNNER_TEMP/nexus-hmi/$name"
+          done
+          cp "$RUNNER_TEMP/nexus-hmi/chemview-hmi-1366x768.png" docs/assets/chemview-1366x768.png
+          cp "$RUNNER_TEMP/nexus-hmi/chemview-hmi-1440x900.png" docs/assets/chemview-dashboard.png
+          cp "$RUNNER_TEMP/nexus-hmi/chemview-hmi-1920x1080.png" docs/assets/chemview-1920x1080.png
+          cp "$RUNNER_TEMP/nexus-hmi/chemview-hmi-engineering-evidence-1440x900.png" docs/assets/chemview-engineering-evidence.png
+          npm ci
+          npx prettier --write README.md docs/design-qa.md src/app/globals.css src/app/layout.tsx e2e/smoke.spec.ts src/components/chemical-mixing/*.tsx
+          npm run docs:check
+          git diff --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md docs/design-qa.md src/app/globals.css src/app/layout.tsx e2e/smoke.spec.ts src/components/chemical-mixing/ docs/assets/
+          if git diff --cached --quiet; then
+            echo "Evidence and formatting already synchronized."
+          else
+            git commit -m "docs(design): sync actual NEXUS 2.0 Playwright screenshots"
+            git push origin HEAD:design/nexus-2-hmi-identity-20261021
+          fi
