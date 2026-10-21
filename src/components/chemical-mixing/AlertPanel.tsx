@@ -17,7 +17,7 @@ const formatTime = (iso: string) =>
 
 export function AlertPanel({ alerts, isGenerating }: AlertPanelProps) {
   return (
-    <div className="hmi-panel bg-zinc-950/50 border-white/5 flex min-w-0 flex-col h-[280px]">
+    <div className="hmi-panel bg-[#061524]/60 border-accent/20 flex min-w-0 flex-col h-[280px]">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <BrainCircuit className="w-5 h-5 text-primary" />
@@ -37,8 +37,8 @@ export function AlertPanel({ alerts, isGenerating }: AlertPanelProps) {
         <div className="space-y-3">
           {alerts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="w-12 h-12 rounded-full border border-zinc-800 flex items-center justify-center mb-4">
-                <Info className="w-6 h-6 text-zinc-600" />
+              <div className="w-12 h-12 rounded-full border border-accent/15 flex items-center justify-center mb-4">
+                <Info className="w-6 h-6 text-muted-foreground" />
               </div>
               <p className="text-xs text-muted-foreground max-w-[200px]">
                 No recorded alerts for this simulation session.
@@ -52,7 +52,7 @@ export function AlertPanel({ alerts, isGenerating }: AlertPanelProps) {
                   ? 'text-red-500 border-red-500/20 bg-red-500/5'
                   : alert.urgency === 'medium'
                     ? 'text-orange-500 border-orange-500/20 bg-orange-500/5'
-                    : 'text-cyan-500 border-cyan-500/20 bg-cyan-500/5';
+                    : 'text-primary border-primary/20 bg-primary/5';
 
               return (
                 <div
