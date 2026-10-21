@@ -14,7 +14,7 @@ export function ModelBenchmark() {
       <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-primary">
         Model benchmark — numerical accuracy
       </summary>
-      <p className="mt-3 text-xs text-zinc-300">
+      <p className="mt-3 text-xs text-muted-foreground">
         Fixed synthetic reference experiments. The model is compared with exact continuous-time
         solutions under simplified conditions, not with plant measurements. Values and errors use
         the units shown.
@@ -25,7 +25,7 @@ export function ModelBenchmark() {
             Synthetic model trajectories compared with analytical references
           </caption>
           <thead>
-            <tr className="border-b border-white/20 text-zinc-300">
+            <tr className="border-b border-accent/25 text-muted-foreground">
               <th scope="col" className="px-2 py-2 font-semibold">
                 Experiment
               </th>
@@ -42,10 +42,10 @@ export function ModelBenchmark() {
           </thead>
           <tbody>
             {benchmarks.map((benchmark) => (
-              <tr key={benchmark.id} className="border-b border-white/10 text-zinc-200">
+              <tr key={benchmark.id} className="border-b border-accent/10 text-foreground">
                 <th scope="row" className="px-2 py-2 font-normal">
                   {benchmark.label}
-                  <span className="block text-[10px] text-zinc-400">
+                  <span className="block text-[10px] text-muted-foreground">
                     {benchmark.durationSeconds} s · {benchmark.unit}
                   </span>
                 </th>
