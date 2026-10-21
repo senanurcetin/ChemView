@@ -37,6 +37,12 @@ GitHub Actions uses Node 22. The Playwright suite runs sequentially because one 
 
 The visual E2E fixture opens both scientific and instrumentation disclosure panels; the matching four checked-in images must exist, be valid PNGs and have the expected screenshot widths. Responsive full-page images intentionally exceed viewport height, while the dedicated 1440×900 science evidence must fit both expanded engineering panels within one viewport. The screenshot provenance must cite the source GitHub Actions run _for the current checked-in images_; an older successful workflow cannot establish currency after an HMI change.
 
+## Final dependency and repository maintenance evidence
+
+[PR #22](https://github.com/senanurcetin/ChemView/pull/22) verified the updated Node 22/Vitest 5 dependency graph against GitHub Actions [run 39613329653](https://github.com/senanurcetin/ChemView/actions/runs/39613329653): build, Firestore emulator and Chromium Playwright all passed. The `chemview-dependency-audit` artifact (ID `12352211171`) reports 0 critical / 8 high / 59 moderate affected production nodes; the complete dependency tree reports 0 critical / 20 high / 64 moderate. These counts are package advisory inventory, not proof of exploitable paths, and the open risks remain documented in [SECURITY.md](../SECURITY.md) and [issue #16](https://github.com/senanurcetin/ChemView/issues/16). The four screenshot SHA-256 checks now prevent unreviewed image replacements while preserving the original verified capture provenance.
+
+**Acceptance boundary:** those are results for the indicated PR source, not automatic confirmation of a later merge commit. Subsequent changes must pass their own CI before final acceptance.
+
 ## Historical integration baseline
 
 [GitHub Actions run 39520435860](https://github.com/senanurcetin/ChemView/actions/runs/39520435860) passed build (typecheck, lint, Prettier, documentation-reference checks, Vitest and Next build), Firestore emulator and Playwright, including the expanded P&ID and scientific-reference screenshot fixture. The four committed PNG blobs were verified byte-for-byte against that run's visual artifact. This is an **already tested PR source commit**, not automatic evidence that any later merge commit passed. The documentation refresh must pass its own final PR/main checks.

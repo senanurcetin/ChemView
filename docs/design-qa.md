@@ -45,4 +45,4 @@ Playwright verifies the seven approved brand tokens and workspace background, an
 
 These checks do **not** establish WCAG conformance, keyboard-only usability across every control, accessibility color-contrast ratios, live PLC connections or physical safety. The diagram is illustrative, and the display does not provide a certified safety-rated emergency-stop function.
 
-For new visual changes, regenerate captures with `npm run test:e2e`, inspect the successful CI artifact at all sizes, then update only `docs/assets/` and this provenance section. Keep disposable `artifacts/` files out of Git.
+For new visual changes, regenerate captures with `npm run test:e2e`, inspect the successful CI artifact at all sizes, then update `docs/assets/`, this provenance section and the image SHA-256 fingerprints in `scripts/check-docs.mjs` together. This prevents an older or altered PNG from passing as the reviewed capture merely because its dimensions are valid. Keep disposable `artifacts/` files out of Git.
