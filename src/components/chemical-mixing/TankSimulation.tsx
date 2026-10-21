@@ -47,7 +47,7 @@ export function TankSimulation({
   return (
     <div
       aria-label="Simulated chemical reactor schematic"
-      className="relative flex min-h-[340px] w-full flex-1 items-center justify-center overflow-hidden rounded-xl border border-primary/10 bg-black/20 px-3 py-14 sm:px-7"
+      className="relative flex min-h-[340px] w-full flex-1 items-center justify-center overflow-hidden rounded-xl border border-accent/20 bg-[#061524]/[0.65] px-3 py-14 sm:px-7"
     >
       <div className="absolute left-3 top-3 font-mono text-[11px] font-semibold uppercase tracking-wider text-zinc-300">
         Reactor 01 · Simulated vessel
@@ -55,11 +55,11 @@ export function TankSimulation({
       {/* Tank Container */}
       <div
         data-testid="reactor-vessel"
-        className="relative h-72 w-52 overflow-hidden rounded-b-2xl border-2 border-gray-500 bg-gray-900/30 shadow-[0_0_30px_rgba(0,255,255,0.05)] xl:h-80 xl:w-64"
+        className="relative h-72 w-52 overflow-hidden rounded-b-2xl border-2 border-[#4EA8FF]/50 bg-[#0B0F19]/60 shadow-[0_0_32px_rgba(0,224,255,0.09)] xl:h-80 xl:w-64"
       >
         {/* Liquid Layer */}
         <div
-          className="absolute bottom-0 left-0 w-full bg-primary/10 transition-all duration-1000 ease-in-out"
+          className="absolute bottom-0 left-0 w-full bg-[#4EA8FF]/15 transition-all duration-1000 ease-in-out"
           style={{ height: `${fillLevel}%` }}
         >
           {/* Surface Animation */}
@@ -97,7 +97,7 @@ export function TankSimulation({
             <path
               d="M10,30 Q20,10 30,30 T50,30 T70,30 T90,30 T110,30 T130,30 T150,30 T170,30 T190,30"
               fill="none"
-              stroke={isHeaterOn ? '#ff4500' : '#333'}
+              stroke={isHeaterOn ? '#fb923c' : '#46566e'}
               strokeWidth="4"
               className={cn('transition-colors duration-1000', isHeaterOn && 'animate-pulse')}
               style={{ filter: isHeaterOn ? 'drop-shadow(0 0 5px #ff4500)' : 'none' }}
@@ -106,7 +106,7 @@ export function TankSimulation({
         </div>
 
         {/* Mixer Logic */}
-        <div className="absolute left-1/2 top-0 z-10 h-[82%] w-1 -translate-x-1/2 bg-gray-700">
+        <div className="absolute left-1/2 top-0 z-10 h-[82%] w-1 -translate-x-1/2 bg-[#66758b]">
           <div
             className="hmi-mixer-blades absolute bottom-10 left-1/2 -translate-x-1/2"
             style={{
@@ -114,20 +114,20 @@ export function TankSimulation({
                 rotationDuration > 0 ? `spin ${rotationDuration}s linear infinite` : 'none',
             }}
           >
-            <div className="relative w-24 h-2 bg-gray-500 rounded-full flex items-center justify-between">
-              <div className="w-6 h-3 bg-gray-400 -ml-1 skew-x-12" />
-              <div className="w-6 h-3 bg-gray-400 -mr-1 -skew-x-12" />
+            <div className="relative w-24 h-2 bg-[#8F9BFF]/65 rounded-full flex items-center justify-between">
+              <div className="w-6 h-3 bg-[#B9C5CE]/70 -ml-1 skew-x-12" />
+              <div className="w-6 h-3 bg-[#B9C5CE]/70 -mr-1 -skew-x-12" />
             </div>
           </div>
         </div>
       </div>
 
       {/* HUD Overlay */}
-      <div className="absolute top-2 right-2 text-right bg-black/40 p-1.5 rounded border border-white/5">
+      <div className="absolute top-2 right-2 text-right bg-[#061524]/[0.85] p-1.5 rounded border border-accent/20">
         <div className="text-[11px] font-bold uppercase text-zinc-300">Mixer RPM</div>
         <div className="text-sm font-bold text-primary tabular-nums">{rpm.toFixed(0)}</div>
       </div>
-      <div className="absolute bottom-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-2 font-mono text-[11px] text-zinc-300">
+      <div className="absolute bottom-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 border-t border-accent/15 pt-2 font-mono text-[11px] text-zinc-300">
         <span>FILL: {fillLevel.toFixed(0)}%</span>
         <span>TEMP: {temperature.toFixed(1)} °C</span>
         <span>pH: {ph.toFixed(1)}</span>

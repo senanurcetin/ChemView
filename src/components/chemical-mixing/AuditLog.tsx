@@ -26,8 +26,8 @@ interface AuditLogProps {
 
 export function AuditLog({ logs }: AuditLogProps) {
   return (
-    <div className="hmi-panel bg-zinc-950/50 border-white/5 flex min-w-0 flex-col h-[280px]">
-      <div className="flex items-center gap-2 mb-4 border-b border-white/5 pb-4">
+    <div className="hmi-panel bg-[#061524]/60 border-accent/20 flex min-w-0 flex-col h-[280px]">
+      <div className="flex items-center gap-2 mb-4 border-b border-accent/15 pb-4">
         <History className="w-4 h-4 text-primary" />
         <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
           System Event Audit Log
@@ -49,7 +49,7 @@ export function AuditLog({ logs }: AuditLogProps) {
                   ? 'text-red-500'
                   : log.level === 'medium'
                     ? 'text-orange-500'
-                    : 'text-zinc-400';
+                    : 'text-muted-foreground';
 
               return (
                 <div
@@ -68,7 +68,7 @@ export function AuditLog({ logs }: AuditLogProps) {
                         {log.level}
                       </span>
                     </div>
-                    <p className="text-xs leading-relaxed text-zinc-200 font-medium">
+                    <p className="text-xs leading-relaxed text-foreground font-medium">
                       {log.message}
                     </p>
                   </div>

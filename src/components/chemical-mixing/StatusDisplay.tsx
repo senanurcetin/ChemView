@@ -34,7 +34,9 @@ export function StatusDisplay({
       unit: '',
       icon: Flame,
       color: isHeaterOn ? 'text-orange-500' : 'text-muted-foreground',
-      glow: isHeaterOn ? 'border-orange-500/20 bg-orange-500/5' : 'border-zinc-800 bg-zinc-900/50',
+      glow: isHeaterOn
+        ? 'border-orange-500/20 bg-orange-500/5'
+        : 'border-accent/15 bg-secondary/35',
     },
     {
       label: 'Reactor Temp',
@@ -50,7 +52,7 @@ export function StatusDisplay({
       unit: '',
       icon: Database,
       color: valveOpen ? 'text-primary' : 'text-muted-foreground',
-      glow: valveOpen ? 'border-primary/20 bg-primary/5' : 'border-zinc-800 bg-zinc-900/50',
+      glow: valveOpen ? 'border-primary/20 bg-primary/5' : 'border-accent/15 bg-secondary/35',
     },
   ];
 

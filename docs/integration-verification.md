@@ -29,6 +29,7 @@ GitHub Actions uses Node 22. The Playwright suite runs sequentially because one 
 - Sensor bias is kept conceptually separate from synthetic underlying chemical pH. Simulated Modbus dropouts do not modify plant physics.
 - All six seeded scenarios are deterministic; thermal/inventory/motor reference tests must pass under the stated simplified assumptions.
 - Model benchmark, explanatory caveat, P&ID and NEXUS identity remain accessible.
+- NEXUS 2.0 browser checks assert all seven approved Drive palette tokens, the midnight canvas, branded header/logo and visible semantic red E-STOP independently of the theme.
 - The 1366×768, 1440×900 and 1920×1080 captures display the **opened P&ID and four-row model benchmark**, with no horizontal document overflow. The history and lower panels remain reachable by vertical scrolling.
 - AI commentary never blocks deterministic alarm/interlock paths, and no test should access a real PLC, customer historian, live plant or production Firebase.
 
