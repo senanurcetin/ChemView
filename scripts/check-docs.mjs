@@ -36,10 +36,30 @@ for (const file of markdown) {
 // SHA-256 fingerprints of actual CI-origin full-page and focused captures.
 // Update these only with the source workflow evidence in docs/design-qa.md.
 const images = [
-  ['docs/assets/chemview-1366x768.png', 1366, 768, '0ea89b4194fd5d1143c6f1b2426d33ac43a07783a2b9749d523ce583fe50b795'],
-  ['docs/assets/chemview-dashboard.png', 1440, 900, 'f905dca5a94c3c477b00dc8456f21b68b2b1e11a192d418adf8b2d302b845342'],
-  ['docs/assets/chemview-engineering-evidence.png', 1440, 900, 'de7405f6f67df801df473275fede552254a16e8ad3bad69c152e4544660299cd'],
-  ['docs/assets/chemview-1920x1080.png', 1920, 1080, '669685f4c7f68eb588835ed074c5b3f33e5ce8a56d2125c32b7471237b381887'],
+  [
+    'docs/assets/chemview-1366x768.png',
+    1366,
+    768,
+    '0ea89b4194fd5d1143c6f1b2426d33ac43a07783a2b9749d523ce583fe50b795',
+  ],
+  [
+    'docs/assets/chemview-dashboard.png',
+    1440,
+    900,
+    'f905dca5a94c3c477b00dc8456f21b68b2b1e11a192d418adf8b2d302b845342',
+  ],
+  [
+    'docs/assets/chemview-engineering-evidence.png',
+    1440,
+    900,
+    'de7405f6f67df801df473275fede552254a16e8ad3bad69c152e4544660299cd',
+  ],
+  [
+    'docs/assets/chemview-1920x1080.png',
+    1920,
+    1080,
+    '669685f4c7f68eb588835ed074c5b3f33e5ce8a56d2125c32b7471237b381887',
+  ],
 ];
 for (const [name, targetWidth, minHeight, expectedSha256] of images) {
   const filename = path.join(repo, name);
@@ -55,7 +75,9 @@ for (const [name, targetWidth, minHeight, expectedSha256] of images) {
     bytes.readUInt32BE(20) < minHeight ||
     createHash('sha256').update(bytes).digest('hex') !== expectedSha256
   ) {
-    violations.push(name + ': invalid PNG signature, dimensions or reviewed screenshot fingerprint');
+    violations.push(
+      name + ': invalid PNG signature, dimensions or reviewed screenshot fingerprint',
+    );
   }
 }
 
