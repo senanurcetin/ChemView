@@ -120,3 +120,29 @@ jobs:
             playwright-report/
             test-results/
           retention-days: 7
+
+  maintenance-format-security:
+    if: github.event_name == 'pull_request' && github.head_ref == 'chore/chemview-final-security-docs-20261021' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: chore/chemview-final-security-docs-20261021
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - name: Normalize security report formatting
+        run: |
+          npm ci --no-audit --no-fund
+          npx prettier --write SECURITY.md
+          git diff --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add SECURITY.md
+          if ! git diff --cached --quiet; then
+            git commit -m "docs(security): normalize dependency audit report"
+            git push origin HEAD:chore/chemview-final-security-docs-20261021
+          fi
