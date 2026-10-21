@@ -1,15 +1,15 @@
 # ChemView — Chemical Mixing HMI & Synthetic Digital Twin
 
-**An industrial automation and numerical-methods portfolio demonstration by NEXUS.** ChemView models one fictional chemical mixing vessel. It is **not a connected plant, a calibrated process digital twin, a commercial product, or a safety-rated controller**.
+**An industrial automation and numerical-methods portfolio demonstration using the approved NEXUS 2.0 visual identity.** ChemView models one fictional chemical mixing vessel. It is **not a connected plant, a calibrated process digital twin, a commercial product, or a safety-rated controller**.
 
 ![ChemView HMI by NEXUS — current mixing vessel, expanded P&ID, model benchmarks and operator controls](docs/assets/chemview-dashboard.png)
 
-**[Engineering review](docs/hiring-summary.md)** · **[Architecture](docs/architecture.md)** · **[Scientific validation](docs/science-validation.md)** · **[HMI screenshots and design checks](docs/design-qa.md)** · **[CI / integration acceptance](docs/integration-verification.md)** · **[Security and limitations](SECURITY.md)**
+**[Engineering review](docs/hiring-summary.md)** · **[Architecture](docs/architecture.md)** · **[Scientific validation](docs/science-validation.md)** · **[NEXUS 2.0 design system, screenshots and QA](docs/design-qa.md)** · **[CI / integration acceptance](docs/integration-verification.md)** · **[Security and limitations](SECURITY.md)**
 
 ## What the demonstration covers
 
 - **Server-owned process simulation:** a one-second mixing-vessel engine with synthetic energy balance, tank discharge, motor response and pH observation. It uses deterministic seeded experiments, not laboratory data.
-- **Operator-focused HMI:** NEXUS-branded reactor visualization, simulated P&ID, time-series plots, Modbus traffic traces, network diagnostics, telemetry-age indicator and context-aware command feedback.
+- **Operator-focused NEXUS 2.0 HMI:** official NEXUS logo and approved midnight/cyan/blue/lavender visual system, simulated P&ID, time-series plots, Modbus traffic traces, diagnostics and context-aware controls. E-STOP red and thermal-warning orange remain semantic rather than decorative brand colors.
 - **Independent safety-rule simulation:** mixer/discharge interlocks, minimum heater level, unconditional latched E-STOP, authenticated reset where configured and deterministic alarms. None of these qualifies as a physical protective system.
 - **Reliable simulated telemetry:** validated SSE messages, session UUIDs, duplicate/out-of-order rejection, last-known-value warnings and per-session telemetry, alarm and audit histories.
 - **Scientific evaluation:** six synthetic experiments and an expandable benchmark comparing four computed observables with continuous-time analytical reference solutions. Test agreement verifies code/model consistency—not accuracy against real equipment.
