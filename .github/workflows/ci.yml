@@ -120,38 +120,3 @@ jobs:
             playwright-report/
             test-results/
           retention-days: 7
-
-  maintenance-lock-and-format:
-    if: github.event_name == 'pull_request' && github.head_ref == 'chore/chemview-final-security-docs-20261021' && github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          ref: chore/chemview-final-security-docs-20261021
-      - uses: actions/setup-node@v5
-        with:
-          node-version: '22'
-          cache: 'npm'
-      - name: Regenerate nonbreaking dependency graph and canonical docs
-        run: |
-          if [ "$(git log -1 --format=%s)" = "fix(deps): regenerate verified ChemView package lock" ]; then
-            echo "Maintenance lock already generated."
-            exit 0
-          fi
-          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-          npm audit fix --package-lock-only --ignore-scripts --no-fund || true
-          npm ci --no-audit --no-fund
-          npx prettier --write package.json docs/architecture.md docs/design-qa.md scripts/check-docs.mjs
-          npm run docs:check
-          git diff --check
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package.json package-lock.json docs/architecture.md docs/design-qa.md scripts/check-docs.mjs
-          if git diff --cached --quiet; then
-            echo "No dependency or documentation changes."
-          else
-            git commit -m "fix(deps): regenerate verified ChemView package lock"
-            git push origin HEAD:chore/chemview-final-security-docs-20261021
-          fi
