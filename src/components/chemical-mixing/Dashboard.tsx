@@ -179,15 +179,19 @@ export function Dashboard() {
   const ageLabel = lastUpdateAgeSeconds === null ? 'WAITING' : `${lastUpdateAgeSeconds}s AGO`;
 
   return (
-    <div className="flex min-h-screen w-full max-w-[1800px] flex-col overflow-x-hidden bg-[#222222] p-4 lg:p-6 mx-auto">
-      <header className="mb-4 flex flex-col gap-4 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="nexus-workspace mx-auto flex min-h-screen w-full max-w-[1800px] flex-col overflow-x-hidden p-3 sm:p-4 lg:p-6">
+      <header className="nexus-header mb-5 flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between lg:px-5">
         <div className="flex flex-col gap-1.5">
-          <h1 className="text-2xl font-bold tracking-tighter text-primary">
-            CHEMVIEW <span className="text-white font-light">HMI 1.0</span>
+          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
+            NEXUS 2.0 / Industrial Lab
+          </p>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            <span className="nexus-title">CHEMVIEW</span>{' '}
+            <span className="font-light text-foreground">HMI 1.0</span>
           </h1>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <p className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider">
-              Industrial Digital Twin Prototype
+              Synthetic Industrial Digital Twin Demo
             </p>
             <span className="rounded border border-primary/20 bg-primary/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
               Simulated Process
@@ -195,13 +199,13 @@ export function Dashboard() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3 sm:justify-end lg:gap-5">
-          <div className="flex items-center gap-3 bg-zinc-900/50 px-3 py-1.5 rounded-md border border-white/5">
+          <div className="nexus-micro-panel flex items-center gap-3 px-3 py-1.5">
             <div className="flex flex-col items-center">
               <span className="text-[10px] font-bold text-zinc-400 uppercase">RX</span>
               <div
                 className={cn(
                   'w-1.5 h-1.5 rounded-full transition-all',
-                  rxActive ? 'bg-primary glow-primary' : 'bg-zinc-800',
+                  rxActive ? 'bg-primary glow-primary' : 'bg-muted',
                 )}
               />
             </div>
@@ -210,7 +214,7 @@ export function Dashboard() {
               <div
                 className={cn(
                   'w-1.5 h-1.5 rounded-full transition-all',
-                  txActive ? 'bg-orange-500 shadow-orange-500' : 'bg-zinc-800',
+                  txActive ? 'bg-accent shadow-[0_0_10px_rgba(78,168,255,0.45)]' : 'bg-muted',
                 )}
               />
             </div>
@@ -219,7 +223,7 @@ export function Dashboard() {
             variant="outline"
             size="sm"
             onClick={exportToCsv}
-            className="h-9 text-[11px] font-mono gap-2 border-white/10"
+            className="h-9 gap-2 border-primary/20 bg-secondary/50 font-mono text-[11px] hover:border-primary/40"
           >
             <Download className="w-3 h-3" /> EXPORT CSV
           </Button>
@@ -255,7 +259,7 @@ export function Dashboard() {
             </span>
           </div>
           <div
-            className="flex items-center gap-2 border-l border-white/10 pl-3"
+            className="nexus-brand-mark flex items-center gap-2 px-3 py-1.5"
             aria-label="Nexus brand"
           >
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground">by</span>
@@ -321,14 +325,14 @@ export function Dashboard() {
               <TrendChart
                 title="Temperature"
                 data={tempHistory}
-                color="#00FFFF"
+                color="#00E0FF"
                 unit="°C"
                 domain={[20, 100]}
               />
               <TrendChart
                 title="Mixer Speed"
                 data={rpmHistory}
-                color="#00FFFF"
+                color="#00E0FF"
                 unit="RPM"
                 domain={[0, 1500]}
               />
@@ -444,7 +448,7 @@ export function Dashboard() {
         </section>
       </main>
 
-      <footer className="mt-5 flex flex-col gap-2 border-t border-white/10 pt-3">
+      <footer className="mt-5 flex flex-col gap-2 border-t border-primary/15 pt-3">
         <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] font-mono text-muted-foreground uppercase tracking-wider">
           <div className="flex flex-wrap gap-x-4 gap-y-1">
             <span>LATENCY: {network.latencyMs.toFixed(1)}ms</span>
@@ -453,7 +457,7 @@ export function Dashboard() {
           </div>
           <span>OPERATOR: {OPERATOR_ID}</span>
         </div>
-        <div className="flex flex-wrap gap-x-4 gap-y-1 rounded border border-white/5 bg-zinc-900/50 p-2 font-mono text-[10px] uppercase text-zinc-400">
+        <div className="nexus-footer-status flex flex-wrap gap-x-4 gap-y-1 p-2 font-mono text-[10px] uppercase text-muted-foreground">
           <span>STATE: {systemState}</span>
           <span>INTERLOCK: {interlockActive}</span>
           <span>HEATER: {isHeaterOn ? 'ON' : 'OFF'}</span>
