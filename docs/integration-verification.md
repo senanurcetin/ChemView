@@ -38,7 +38,7 @@ The visual E2E fixture opens both scientific and instrumentation disclosure pane
 
 ## Historical integration baseline
 
-[GitHub Actions run 39515611615](https://github.com/senanurcetin/ChemView/actions/runs/39515611615) passed build (typecheck, lint, format, Vitest, Next build), Firestore emulator and Playwright on the security/benchmark change set. The final updated security PR also passed CircleCI. These results are **historical**. Later changes, including screenshot refreshes, require their own SHA-specific PR/main CI results.
+[GitHub Actions run 39520435860](https://github.com/senanurcetin/ChemView/actions/runs/39520435860) passed build (typecheck, lint, Prettier, documentation-reference checks, Vitest and Next build), Firestore emulator and Playwright, including the expanded P&ID and scientific-reference screenshot fixture. The four committed PNG blobs were verified byte-for-byte against that run's visual artifact. This is an **already tested PR source commit**, not automatic evidence that any later merge commit passed. The documentation refresh must pass its own final PR/main checks.
 
 Visual source artifact: `chemview-hmi-design-captures` on that run. The committed images are located under [`docs/assets/`](design-qa.md). The screenshot update never represents field-instrument calibration.
 
