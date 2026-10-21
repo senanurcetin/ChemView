@@ -96,7 +96,7 @@ export function ControlPanel({
                     'h-16 w-full text-sm font-bold gap-3 transition-all duration-300',
                     !isRunning &&
                       'bg-primary text-primary-foreground glow-primary hover:bg-primary/90',
-                    isRunning && 'bg-zinc-800 text-zinc-300 border border-zinc-700',
+                    isRunning && 'bg-secondary text-muted-foreground border border-accent/20',
                     mixerLocked && 'opacity-50',
                   )}
                 >
@@ -112,7 +112,7 @@ export function ControlPanel({
               </div>
             </TooltipTrigger>
             {mixerLocked && (
-              <TooltipContent className="bg-zinc-900 border-red-500/50 text-red-400">
+              <TooltipContent className="bg-[#061524]/75 border-red-500/50 text-red-400">
                 <p className="text-[11px] font-bold uppercase">
                   {estopLatched ? 'Reset E-STOP first' : 'Mixer Locked: Close valve first'}
                 </p>
@@ -151,10 +151,10 @@ export function ControlPanel({
       )}
 
       {/* Main Control Panel */}
-      <div className="hmi-panel flex flex-col gap-6 bg-zinc-950/50 border-white/5">
+      <div className="hmi-panel flex flex-col gap-6 bg-[#061524]/60 border-white/5">
         <div className="flex items-center justify-between border-b border-white/5 pb-4">
           <div className="flex items-center gap-2">
-            <Cpu className={cn('w-4 h-4', !isManualMode ? 'text-primary' : 'text-zinc-500')} />
+            <Cpu className={cn('w-4 h-4', !isManualMode ? 'text-primary' : 'text-muted-foreground')} />
             <Label className="text-[11px] font-bold uppercase tracking-widest cursor-pointer">
               System Mode: {isManualMode ? 'Manual Override' : 'Auto Mode'}
             </Label>
@@ -170,9 +170,9 @@ export function ControlPanel({
 
         {/* Secondary Industrial Switches */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="p-3 border border-white/5 rounded-md bg-zinc-900/30 flex flex-col gap-3">
+          <div className="p-3 border border-white/5 rounded-md bg-secondary/30 flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <Flame className={cn('w-4 h-4', isHeaterOn ? 'text-orange-500' : 'text-zinc-600')} />
+              <Flame className={cn('w-4 h-4', isHeaterOn ? 'text-orange-500' : 'text-muted-foreground')} />
               <span className="text-[11px] font-bold text-muted-foreground uppercase">Heater</span>
             </div>
             <div className="flex justify-center">
@@ -191,13 +191,13 @@ export function ControlPanel({
               <TooltipTrigger asChild>
                 <div
                   className={cn(
-                    'p-3 border rounded-md bg-zinc-900/30 flex flex-col gap-3 transition-colors',
+                    'p-3 border rounded-md bg-secondary/30 flex flex-col gap-3 transition-colors',
                     valveLocked ? 'border-red-500/20 opacity-50' : 'border-white/5',
                   )}
                 >
                   <div className="flex items-center justify-between">
                     <Database
-                      className={cn('w-4 h-4', valveOpen ? 'text-primary' : 'text-zinc-600')}
+                      className={cn('w-4 h-4', valveOpen ? 'text-primary' : 'text-muted-foreground')}
                     />
                     <span className="text-[11px] font-bold text-muted-foreground uppercase">
                       Valve
@@ -216,7 +216,7 @@ export function ControlPanel({
                 </div>
               </TooltipTrigger>
               {valveLocked && (
-                <TooltipContent className="bg-zinc-900 border-red-500/50 text-red-400">
+                <TooltipContent className="bg-[#061524]/75 border-red-500/50 text-red-400">
                   <p className="text-[11px] font-bold uppercase">
                     Safety Lock: Mixer must be at 0 RPM
                   </p>
