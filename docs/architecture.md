@@ -148,38 +148,15 @@ Safety alarms are deterministic and raised on the tick the condition appears. Ge
 
 ## Tests
 
-`npm run test:firestore` runs the shared Store contract suite (`src/server/store.contract.test.ts`) against the Firestore emulator (needs Java 11+); plain `npm test` runs the same suite for the in-memory store and skips the Firestore cases.
+`npm run test:firestore` runs the shared Store contract suite (`src/server/store.contract.test.ts`) against the Firestore emulator (uses Java 21 in CI); plain `npm test` runs the same suite for the in-memory store and skips the Firestore cases.
 
 `npm run test:e2e` drives the real built app in Chromium: connection, starting the mixer, the discharge interlock toast, E-STOP and trend persistence across a reload. The simulation is one shared server state, so these tests run serially and reset the plant first.
 
 `npm test` covers the physics (including determinism via the seeded RNG), every interlock, the Modbus frame encoding, the engine, the commentary guards (with a mocked LLM), the stores, history/CSV parsing and the rate limiter.
 
-## Scientific model V2 — synthetic parameterization
+## Synthetic physics — implementation boundary
 
-The 1-second engine step now uses **dimensionally consistent, illustrative**
-energy, volume and motor balances (`src/server/sim/physics.ts`). This is
-**not calibrated against plant measurements**. A 1 m³ water-like batch with
-1000 kg/m³ density and 4.18 kJ/(kg·K) specific heat is assumed. The heater
-is 480 kW while below target; lumped heat loss is 2 kW/K relative to 22 °C.
-An effective thermal-mass floor represents unmodelled vessel heat capacity.
-These values accelerate thermal excursions for a reviewable demonstration,
-not a recommended industrial reactor design.
-
-For timestep Δt=1 s, the explicit Euler equations are
-
-- **Energy:** ΔT = [Q − UA(T − Tₐ)] Δt / (m Cₚ), where power is kJ/s.
-- **Inventory:** ΔL = −k√L Δt when valve open, with percent fill L and
-  surrogate discharge coefficient k=0.25 √(%)/s; the valve-closed level is conserved.
-- **Motor:** ω(t+Δt)=ω(t)+(ω*−ω(t))(1−exp(−Δt/9.5s)) under power;
-  stopping uses fixed 15 RPM/s simulated braking.
-- **pH:** remains constant without reagent additions; no chemical
-  equilibrium/speciation model is claimed.
-
-The heater is denied at ≤10% inventory and is de-energized automatically
-when a running discharge crosses that limit. Every simultaneously active
-rule condition is raised independently. Analytical energy solution tests,
-monotonic discharge invariants and an explicit low-level interlock test
-exercise these assumptions; they do not constitute empirical validation.
+`src/server/sim/physics.ts` owns the one-second illustrative numerical model; `src/server/sim/engine.ts` coordinates simulation state, interlocks, scenarios and event publishing. For parameters, units, mathematical recurrences, numerical benchmarks, test tolerances and empirical limitations use the single canonical [scientific validation](science-validation.md) document. This architecture page documents integration and ownership, not a duplicate copy of the equations.
 
 ## Repeatable experiment laboratory
 
