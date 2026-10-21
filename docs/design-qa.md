@@ -17,7 +17,7 @@ Screenshots below come from the **actual running Playwright demo**, not Figma mo
 
 ![Synthetic engineering instrumentation and benchmark comparison](assets/chemview-engineering-evidence.png)
 
-**Capture provenance:** See the current screenshot-source workflow in this document's evidence record and `e2e/smoke.spec.ts`. Playwright exports `chemview-hmi-design-captures` for the active PR SHA; the four committed PNGs are copied from a successful current-source run, not regenerated artwork. Images are **full-page** and do not claim that every panel fits above the fold. The source must be updated to a verified new CI run whenever these images are changed.
+**Capture provenance:** See the current screenshot-source workflow in this document's evidence record and `e2e/smoke.spec.ts`. Playwright exports `chemview-hmi-design-captures` for the active PR SHA; the four committed PNGs are copied from a successful current-source run, not regenerated artwork. The three workstation views are **full-page**. The dedicated 1440×900 engineering image is a **focused viewport** scrolled to show both opened engineering panels; it is not a redundant full-page copy. Neither format claims that every panel fits above the fold. The source must be updated to a verified new CI run whenever these images are changed.
 
 ## Original design intent retained
 
