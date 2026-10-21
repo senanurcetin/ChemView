@@ -17,7 +17,9 @@ Screenshots below come from the **actual running Playwright demo**, not Figma mo
 
 ![Synthetic engineering instrumentation and benchmark comparison](assets/chemview-engineering-evidence.png)
 
-**Verified capture provenance (21 October 2026):** [GitHub Actions run 39520435860](https://github.com/senanurcetin/ChemView/actions/runs/39520435860), source commit `da44ba27516b132bde0bbfb89e52e90443ff083e`, artifact `chemview-hmi-design-captures` (ID `12310708053`). Its **build, Firestore emulator and Playwright jobs all passed**; the four checked-in PNG Git blob SHAs were individually matched to the source artifact files. The screenshot-only import step also succeeded. No mockups or generated illustrations are substituted. The three workstation views are **full-page**. The dedicated 1440×900 engineering image is a **focused viewport** scrolled to show both opened engineering panels; it is not a redundant full-page copy. Neither format claims that every panel fits above the fold. The source must be updated to a verified new CI run whenever these images are changed.
+**Verified NEXUS 2.0 capture provenance (21 October 2026):** [GitHub Actions run 39606570852](https://github.com/senanurcetin/ChemView/actions/runs/39606570852), tested source SHA `56ca5059e610efad414ecfb9e807d8471fd1c615`, passing Playwright `e2e` job, artifact `chemview-hmi-design-captures` (ID `12347714694`). All **four** committed PNG blobs were individually matched byte-for-byte against these real-browser artifact files. Firestore and CircleCI checks passed on this source; its separate first build job failed on **Prettier formatting** before the automatic correction, so the entire initial run is **not** called green. The follow-up PR-head CI run must validate the fully formatted code.
+
+The three workstation views are **full-page**; the 1440×900 engineering image is a separate **focused viewport**, with both P&ID and benchmark visible. Image height beyond the viewport is intentional for the three full-page workstation captures. No Figma mockups or generated artwork were substituted for running application evidence.
 
 ## Approved NEXUS 2.0 theme implementation
 
