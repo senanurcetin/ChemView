@@ -2,6 +2,14 @@
 
 This log records meaningful engineering-demo milestones, **not commercial product releases**. Git history and merged PRs remain the detailed audit trail.
 
+## 2026-10-21 — Final repository and dependency maintenance
+
+- Rechecked the 125-file repository structure and reviewed all 12 Markdown documents; no duplicate or broken local documentation links remain.
+- Moved build-only `tailwindcss-animate` out of production dependencies, refreshed compatible transitive lockfile packages and updated Vitest/Node 22 development tooling, subject to passing checks ([PR #22](https://github.com/senanurcetin/ChemView/pull/22)).
+- Consolidated repeated physical equations under [scientific validation](docs/science-validation.md); updated the architecture's Java 21 test prerequisite.
+- Strengthened documentation verification with SHA-256 fingerprints of the four CI-provenance Playwright images.
+- Residual package advisories remain under [security issue #16](https://github.com/senanurcetin/ChemView/issues/16); an audit node count is not proof of an exploitable path.
+
 ## 2026-10-21 — NEXUS 2.0 industrial HMI design
 
 - Applied the approved Drive `Logo/NEXUS_Identity_2_0` identity to the **existing** ChemView frontend without replacing the official logo ([PR #21](https://github.com/senanurcetin/ChemView/pull/21)).
