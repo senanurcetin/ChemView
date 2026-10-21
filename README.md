@@ -24,7 +24,7 @@
 | 1440 px           | [Primary portfolio screenshot](docs/assets/chemview-dashboard.png) | Balanced process/control workspace          |
 | 1920 px           | [Wide workstation](docs/assets/chemview-1920x1080.png)             | Expanded reactor graphics and event history |
 
-These are actual Playwright **full-page** screenshots of a **simulated** running process, not design mockups. The evidence captures deliberately expand the P&ID and model-benchmark sections; numerical comparisons verify the synthetic equations and are not experimental plant calibration. See [capture provenance and viewport checks](docs/design-qa.md).
+These are actual Playwright screenshots of a **simulated** running process, not design mockups. The workstation captures are full-page; the engineering-evidence image is a focused 1440×900 viewport. The evidence captures deliberately expand the P&ID and model-benchmark sections; numerical comparisons verify the synthetic equations and are not experimental plant calibration. See [capture provenance and viewport checks](docs/design-qa.md).
 
 ![Current synthetic P&ID and analytical model-reference evidence](docs/assets/chemview-engineering-evidence.png)
 
