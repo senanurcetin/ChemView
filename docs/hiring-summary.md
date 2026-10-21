@@ -29,7 +29,7 @@ The current Playwright screenshot test explicitly opens both the simulated P&ID 
 
 ## Verified CI evidence
 
-The scientific benchmark [PR #17](https://github.com/senanurcetin/ChemView/pull/17) and dependency-hardening [PR #18](https://github.com/senanurcetin/ChemView/pull/18) were merged after successful checks. [Run 39515611615](https://github.com/senanurcetin/ChemView/actions/runs/39515611615) passed GitHub Actions build/quality, Firestore emulator and Playwright; matching CircleCI node-quality also passed. These are **historical commit results**, not an assertion about every future edit. Review [integration acceptance](integration-verification.md) for current-commit verification rules.
+The scientific benchmark [PR #17](https://github.com/senanurcetin/ChemView/pull/17) and dependency-hardening [PR #18](https://github.com/senanurcetin/ChemView/pull/18) were merged after successful checks. [Run 39520435860](https://github.com/senanurcetin/ChemView/actions/runs/39520435860) passed the GitHub Actions build/quality, Firestore emulator and Playwright jobs with both engineering panels expanded in the screenshot fixture. [The previous documentation PR's verification](https://github.com/senanurcetin/ChemView/actions/runs/39518285480) also passed GitHub Actions and CircleCI. The new image-source artifact has been matched byte-for-byte against the checked-in PNGs. These are **historical commit results**, not an assertion about every future edit. Review [integration acceptance](integration-verification.md) for current-commit verification rules.
 
 ## Boundaries
 
