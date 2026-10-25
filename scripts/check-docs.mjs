@@ -81,7 +81,35 @@ for (const [name, targetWidth, minHeight, expectedSha256] of images) {
   }
 }
 
-for (const redundant of ['docs/blueprint.md', 'docs/scientific-model.md']) {
+// Keep one canonical document for each engineering subject, with a single
+// discoverable README entry point. These checks prevent document drift.
+const canonicalDocs = [
+  'docs/architecture.md',
+  'docs/science-validation.md',
+  'docs/design-qa.md',
+  'docs/integration-verification.md',
+];
+const readme = readFileSync(path.join(repo, 'README.md'), 'utf8');
+for (const name of canonicalDocs) {
+  if (!tracked.includes(name)) {
+    violations.push('Missing canonical documentation: ' + name);
+  } else if (!readme.includes('](' + name + ')')) {
+    violations.push('Canonical documentation missing from README index: ' + name);
+  }
+}
+
+const reviewedAssets = new Set(images.map(([name]) => name));
+for (const name of tracked.filter((entry) => entry.startsWith('docs/assets/'))) {
+  if (!reviewedAssets.has(name)) {
+    violations.push('Unreviewed asset in docs/assets/: ' + name);
+  }
+}
+
+for (const redundant of [
+  'docs/blueprint.md',
+  'docs/scientific-model.md',
+  'docs/hiring-summary.md',
+]) {
   if (existsSync(path.join(repo, redundant))) {
     violations.push('Redundant legacy document must be consolidated: ' + redundant);
   }

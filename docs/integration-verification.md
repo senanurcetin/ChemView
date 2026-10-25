@@ -37,17 +37,13 @@ GitHub Actions uses Node 22. The Playwright suite runs sequentially because one 
 
 The visual E2E fixture opens both scientific and instrumentation disclosure panels; the matching four checked-in images must exist, be valid PNGs and have the expected screenshot widths. Responsive full-page images intentionally exceed viewport height, while the dedicated 1440×900 science evidence must fit both expanded engineering panels within one viewport. The screenshot provenance must cite the source GitHub Actions run _for the current checked-in images_; an older successful workflow cannot establish currency after an HMI change.
 
-## Final dependency and repository maintenance evidence
+## Verified integrated baseline — 21 October 2026
 
-[PR #22](https://github.com/senanurcetin/ChemView/pull/22) verified the updated Node 22/Vitest 5 dependency graph against GitHub Actions [run 39613329653](https://github.com/senanurcetin/ChemView/actions/runs/39613329653): build, Firestore emulator and Chromium Playwright all passed. The `chemview-dependency-audit` artifact (ID `12352211171`) reports 0 critical / 8 high / 59 moderate affected production nodes; the complete dependency tree reports 0 critical / 20 high / 64 moderate. These counts are package advisory inventory, not proof of exploitable paths, and the open risks remain documented in [SECURITY.md](../SECURITY.md) and [issue #16](https://github.com/senanurcetin/ChemView/issues/16). The four screenshot SHA-256 checks now prevent unreviewed image replacements while preserving the original verified capture provenance.
+The current completed maintenance baseline was merged as commit `3766178e56ae7beab7ead70c9ad6ad56109ff0e4` ([PR #22](https://github.com/senanurcetin/ChemView/pull/22)). Its **postmerge main** [GitHub Actions run 39615510325](https://github.com/senanurcetin/ChemView/actions/runs/39615510325) passed build/quality, Firestore emulator and Chromium Playwright; [CircleCI node-quality 210](https://circleci.com/gh/senanurcetin/ChemView/210) also passed. This is a commit-specific verification baseline, **not** acceptance of later modifications.
 
-**Acceptance boundary:** those are results for the indicated PR source, not automatic confirmation of a later merge commit. Subsequent changes must pass their own CI before final acceptance.
+That baseline's dependency audit (artifact `chemview-dependency-audit`, run 39615510325) reported **0 critical, 8 high, 59 moderate** affected production nodes and **0 critical, 20 high, 64 moderate** across the full installation. Advisories remain tracked in [SECURITY.md](../SECURITY.md) and [issue #16](https://github.com/senanurcetin/ChemView/issues/16); counts are not proof of directly exploitable entry points.
 
-## Historical integration baseline
-
-[GitHub Actions run 39520435860](https://github.com/senanurcetin/ChemView/actions/runs/39520435860) passed build (typecheck, lint, Prettier, documentation-reference checks, Vitest and Next build), Firestore emulator and Playwright, including the expanded P&ID and scientific-reference screenshot fixture. The four committed PNG blobs were verified byte-for-byte against that run's visual artifact. This is an **already tested PR source commit**, not automatic evidence that any later merge commit passed. The documentation refresh must pass its own final PR/main checks.
-
-Visual source artifact: `chemview-hmi-design-captures` (ID `12310708053`) on that run. The committed images are located under [`docs/assets/`](design-qa.md). The screenshot update never represents field-instrument calibration.
+The four committed HMI screenshots and their SHA-256 fingerprints are owned by [design QA](design-qa.md). Earlier source runs and visual-image capture provenance belong there rather than being replicated as separate historical run reports here.
 
 ## Reporting
 
