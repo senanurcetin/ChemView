@@ -2,6 +2,13 @@
 
 This log records meaningful engineering-demo milestones, **not commercial product releases**. Git history and merged PRs remain the detailed audit trail.
 
+## 2026-10-26 — Repository and documentation curation
+
+- Kept the existing feature-based Next.js and server simulation layout; clarified ownership of optional Firebase Studio, Copilot and CI tooling in the README.
+- Retired the redundant `docs/hiring-summary.md` reviewer brief, preserving its reference paths and engineering evidence through the README and canonical documents.
+- Consolidated historical CI notes into a single tested-commit baseline and refreshed NEXUS screenshot provenance without replacing the verified PNG assets.
+- Strengthened `npm run docs:check` to enforce the documentation entry point, reject known obsolete documents and detect unreviewed images; updated contributing rules to prevent duplication.
+
 ## 2026-10-21 — Final repository and dependency maintenance
 
 - Rechecked the 125-file repository structure and reviewed all 12 Markdown documents; no duplicate or broken local documentation links remain.
