@@ -4,7 +4,7 @@
 
 ![ChemView HMI by NEXUS — current mixing vessel, expanded P&ID, model benchmarks and operator controls](docs/assets/chemview-dashboard.png)
 
-**[Engineering review](docs/hiring-summary.md)** · **[Architecture](docs/architecture.md)** · **[Scientific validation](docs/science-validation.md)** · **[NEXUS 2.0 design system, screenshots and QA](docs/design-qa.md)** · **[CI / integration acceptance](docs/integration-verification.md)** · **[Security and limitations](SECURITY.md)**
+**[Architecture](docs/architecture.md)** · **[Scientific validation](docs/science-validation.md)** · **[NEXUS 2.0 design and visual QA](docs/design-qa.md)** · **[Verification and CI evidence](docs/integration-verification.md)** · **[Security and limitations](SECURITY.md)**
 
 ## What the demonstration covers
 
@@ -67,24 +67,36 @@ The shared simulator permits up to **60 ordinary commands per 10 seconds**. It r
 
 **Do not expose an unrestricted write-enabled instance to the internet.** Without `OPERATOR_TOKEN`, command/scenario endpoints permit unauthenticated simulated writes; with that token set the stock browser cannot submit protected commands. See [SECURITY.md](SECURITY.md) for the exact boundary. There is no real PLC/Modbus-TCP connection and no SIL certification.
 
-## Repository map
+## Repository structure
 
 ```text
-src/app/                     Next.js UI, API handlers and tests
-src/components/chemical-mixing/
-                             NEXUS HMI and numerical benchmark panel
-src/hooks/, src/lib/         Telemetry validation, charts, benchmark helpers
-src/server/sim/              Physics, protocol simulation, alarm/interlock engine
-src/server/                  Storage, authentication and rate limiting
-src/ai/                      Optional advisory Gemini flow
-e2e/                         Playwright interface/regression checks
-docs/                        Architecture, scientific, design and QA evidence
-docs/assets/                 Versioned portfolio screenshots
-public/                      NEXUS identity asset
-.github/workflows/           CI (no production deployment)
+src/
+  app/                         Next.js pages, REST/SSE routes and API tests
+  components/
+    chemical-mixing/           NEXUS 2.0 HMI and engineering instrumentation
+    ui/                        Shared accessible UI components
+  hooks/                       Telemetry and operator-control synchronization
+  lib/                         Data validation, scientific benchmarks, utilities
+  server/
+    sim/                       Synthetic physics, interlocks, Modbus, scenarios
+  ai/                          Optional, non-authoritative Gemini commentary
+e2e/                           Playwright operator and visual regression tests
+docs/
+  architecture.md              Runtime architecture, interfaces and invariants
+  science-validation.md        Only source for equations and scientific limits
+  design-qa.md                 NEXUS identity, image sources and UI validation
+  integration-verification.md  Acceptance criteria, CI and evidence provenance
+  assets/                      Four reviewed, SHA-256-pinned HMI screenshots
+public/                         Official NEXUS logo
+scripts/                        Documentation/image-integrity automation
+.github/                        CI and opt-in Copilot engineering tools
+.circleci/                       Independent read-only quality checks
+.idx/                           Optional Firebase Studio editor configuration
 ```
 
-For methodology and constraints use the canonical documents linked at the top. Historical changes are summarized in [CHANGELOG.md](CHANGELOG.md); contributing guidance is in [CONTRIBUTING.md](CONTRIBUTING.md).
+**Documentation ownership:** This README is the project entry point and reviewer overview. The four `docs/` Markdown files each own a separate engineering subject; [CONTRIBUTING.md](CONTRIBUTING.md) defines the contribution workflow, [SECURITY.md](SECURITY.md) documents exposure and unresolved advisories, and [CHANGELOG.md](CHANGELOG.md) preserves chronological milestones. Avoid parallel specifications and date-stamped status reports that become stale.
+
+The Firebase/App Hosting manifests and editor configuration are optional development infrastructure, not evidence of a production deployment. Review simulation behavior through the tests and the source of truth above, not through marketing claims.
 
 ## Boundaries and license
 
