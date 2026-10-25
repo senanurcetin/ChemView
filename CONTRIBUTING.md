@@ -10,7 +10,7 @@ ChemView is a **noncommercial, simulation-only engineering demonstration**. Cont
 - `docs/architecture.md`, `docs/science-validation.md`, `docs/design-qa.md`: canonical engineering documentation.
 - `docs/integration-verification.md`: acceptance criteria and CI evidence expectations.
 
-Do not reintroduce obsolete early-stage blueprints or duplicate scientific model files.
+Treat `README.md` as the sole entry point. Keep runtime behavior in `docs/architecture.md`, equations and scientific caveats in `docs/science-validation.md`, visual proof in `docs/design-qa.md`, and acceptance evidence in `docs/integration-verification.md`. Update the owning file rather than creating another reviewer brief, status snapshot or parallel specification. Do not reintroduce obsolete blueprints or duplicate scientific model documents.
 
 ## Local quality gates
 
@@ -30,6 +30,6 @@ PRs should update focused unit/E2E tests for any change in alarm thresholds, see
 
 ## Screenshots and documentation
 
-Playwright generates current full-page screenshots at 1366×768, 1440×900 and 1920×1080 in the CI artifact `chemview-hmi-design-captures`. Commit only selected, verified portfolio images under `docs/assets/` and record the source workflow run in [design QA](docs/design-qa.md). Do not commit generated `artifacts/`, test results or Playwright reports. Run `npm run docs:check` after renames or screenshot updates.
+Playwright generates current full-page screenshots at 1366×768, 1440×900 and 1920×1080 in the CI artifact `chemview-hmi-design-captures`. Commit only selected, verified portfolio images under `docs/assets/` and record the source workflow run in [design QA](docs/design-qa.md). Do not commit generated `artifacts/`, test results or Playwright reports. After an intentional screenshot replacement, update its source-run provenance in `docs/design-qa.md` and the corresponding SHA-256 digest in `scripts/check-docs.mjs`. Run `npm run docs:check` after any path, documentation or image change; resolve stale links and avoid orphan assets.
 
 Use synthetic telemetry only. Never commit secrets, real industrial addresses, operator tokens or actual equipment information. Follow [SECURITY.md](SECURITY.md) for security-sensitive reports.
