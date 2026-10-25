@@ -17,9 +17,9 @@ Screenshots below come from the **actual running Playwright demo**, not Figma mo
 
 ![Synthetic engineering instrumentation and benchmark comparison](assets/chemview-engineering-evidence.png)
 
-**Verified NEXUS 2.0 capture provenance (21 October 2026):** [GitHub Actions run 39606570852](https://github.com/senanurcetin/ChemView/actions/runs/39606570852), tested source SHA `56ca5059e610efad414ecfb9e807d8471fd1c615`, passing Playwright `e2e` job, artifact `chemview-hmi-design-captures` (ID `12347714694`). All **four** committed PNG blobs were individually matched byte-for-byte against these real-browser artifact files. Firestore and CircleCI checks passed on this source; its separate first build job failed on **Prettier formatting** before the automatic correction, so the entire initial run is **not** called green. The follow-up PR-head CI run must validate the fully formatted code.
+**Screenshot provenance:** The four checked-in PNGs were individually matched to the actual Chromium Playwright captures from [GitHub Actions run 39606570852](https://github.com/senanurcetin/ChemView/actions/runs/39606570852) (source commit `56ca5059e610efad414ecfb9e807d8471fd1c615`, artifact `chemview-hmi-design-captures`, ID `12347714694`). That run's Playwright job passed; later formatting corrections and the complete HMI integration passed [postmerge main CI 39608107163](https://github.com/senanurcetin/ChemView/actions/runs/39608107163). The later [maintenance main CI 39615510325](https://github.com/senanurcetin/ChemView/actions/runs/39615510325) also passed without replacing these images.
 
-The three workstation views are **full-page**; the 1440×900 engineering image is a separate **focused viewport**, with both P&ID and benchmark visible. Image height beyond the viewport is intentional for the three full-page workstation captures. No Figma mockups or generated artwork were substituted for running application evidence.
+The three workstation screenshots are **full-page** (their height may exceed the viewport); the engineering-evidence image is a **focused 1440×900 viewport**. Neither Figma mockups nor synthetic image-generation outputs are used as browser verification. The reviewed image content is pinned by SHA-256 in `scripts/check-docs.mjs`.
 
 ## Approved NEXUS 2.0 theme implementation
 
