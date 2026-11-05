@@ -156,6 +156,8 @@ describe('POST /api/command — HTTP contract', () => {
       expectedEstopEpoch: -1,
     });
     expect(invalid.status).toBe(400);
+    const unexpectedField = await postCommand(POST, { ...command, on: true });
+    expect(unexpectedField.status).toBe(400);
     expect(engineCommand).toHaveBeenCalledTimes(1);
   });
 
