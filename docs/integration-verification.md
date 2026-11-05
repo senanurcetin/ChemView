@@ -24,7 +24,7 @@ GitHub Actions uses Node 22. The Playwright suite runs sequentially because one 
 - Validated, advancing SSE telemetry unlocks ordinary controls; a stale connection displays **last known** data and disables ordinary actions, but not E-STOP.
 - Run UUIDs prevent cross-run telemetry, alert and audit history mixing; invalid/out-of-order replay is ignored.
 - Stale or conflicting setpoints/discrete actions are rejected server-side rather than silently overwriting newer readbacks.
-- E-STOP is unconditional and latched; a stale or unauthorized reset must not clear a newer stop.
+- E-STOP remains available while latched. The test suite checks that every ordinary command leaves the latched state unchanged. Reset accepts the optional observed run ID and stop generation, rejects extra fields, and requires the configured operator token. A stale reset cannot clear a newer stop.
 - The 60-commands-per-10-seconds admission budget cannot be bypassed by rotating arbitrary IP-forwarding headers. The rate-limit tests must not disable safeguards just to pass.
 - Sensor bias is kept conceptually separate from synthetic underlying chemical pH. Simulated Modbus dropouts do not modify plant physics.
 - All six seeded scenarios are deterministic; thermal/inventory/motor reference tests must pass under the stated simplified assumptions.

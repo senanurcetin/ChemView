@@ -23,13 +23,16 @@ describe('latched emergency stop — simulation only', () => {
     expect(engine.getSnapshot().state.isRunning).toBe(false);
   });
 
-  it('rejects restart, heater activation, valve and setpoint changes until reset', () => {
+  it('rejects every ordinary command without changing the latched state', () => {
     const state = applyCommand(initialState(), { type: 'estop' }).state;
     for (const command of [
       { type: 'start' },
+      { type: 'stop' },
       { type: 'set_heater', on: true },
       { type: 'set_valve', open: true },
+      { type: 'set_mode', manual: true },
       { type: 'set_rpm_setpoint', value: 500 },
+      { type: 'set_temp_setpoint', value: 70 },
     ] as const) {
       const result = applyCommand(state, command);
       expect(result.ok).toBe(false);
