@@ -1,44 +1,27 @@
 # ChemView — Chemical Mixing HMI & Synthetic Digital Twin
 
-**An industrial automation and numerical-methods portfolio demonstration using the approved NEXUS 2.0 visual identity.** ChemView models one fictional chemical mixing vessel. It is **not a connected plant, a calibrated process digital twin, a commercial product, or a safety-rated controller**.
+ChemView is a NEXUS 2.0 operator HMI for a simulated chemical mixing vessel, built to exercise industrial-automation UI patterns, safety-rule logic and numerical model validation in one Next.js app.
 
-![ChemView HMI by NEXUS — current mixing vessel, expanded P&ID, model benchmarks and operator controls](docs/assets/chemview-dashboard.png)
+## Key results
 
-**[Architecture](docs/architecture.md)** · **[Scientific validation](docs/science-validation.md)** · **[NEXUS 2.0 design and visual QA](docs/design-qa.md)** · **[Verification and CI evidence](docs/integration-verification.md)** · **[Security and limitations](SECURITY.md)**
+- **Six seeded synthetic experiments** and a model benchmark comparing **four computed observables** against continuous-time analytical reference solutions ([scientific validation](docs/science-validation.md)).
+- **One-second server-side simulation loop** with validated SSE telemetry; the UI flags data as stale after **6 seconds** without a new sample.
+- Runs with no AI key, Firestore credentials, PLC or Modbus hardware.
 
-## What the demonstration covers
+![ChemView HMI by NEXUS — mixing vessel, expanded P&ID, model benchmarks and operator controls](docs/assets/chemview-dashboard.png)
 
-- **Server-owned process simulation:** a one-second mixing-vessel engine with synthetic energy balance, tank discharge, motor response and pH observation. It uses deterministic seeded experiments, not laboratory data.
-- **Operator-focused NEXUS 2.0 HMI:** official NEXUS logo and approved midnight/cyan/blue/lavender visual system, simulated P&ID, time-series plots, Modbus traffic traces, diagnostics and context-aware controls. E-STOP red and thermal-warning orange remain semantic rather than decorative brand colors.
-- **Independent safety-rule simulation:** mixer/discharge interlocks, minimum heater level, unconditional latched E-STOP, authenticated reset where configured and deterministic alarms. None of these qualifies as a physical protective system.
-- **Reliable simulated telemetry:** validated SSE messages, session UUIDs, duplicate/out-of-order rejection, last-known-value warnings and per-session telemetry, alarm and audit histories.
-- **Scientific evaluation:** six synthetic experiments and an expandable benchmark comparing four computed observables with continuous-time analytical reference solutions. Test agreement verifies code/model consistency—not accuracy against real equipment.
-- **Optional explanations:** Gemini/Genkit can comment on deterministic alarms but cannot make, delay or veto interlock decisions.
-- **Reproducible testing:** TypeScript, ESLint, Prettier, Vitest, Firestore emulator, Playwright and CircleCI. The default demo runs without an AI key or Firestore credentials.
+**[Architecture](docs/architecture.md)** · **[Scientific validation](docs/science-validation.md)** · **[NEXUS 2.0 design and visual QA](docs/design-qa.md)** · **[Verification and CI](docs/integration-verification.md)** · **[Security](SECURITY.md)**
 
-## Demonstration gallery
+## Quick start
 
-| Workstation width | Screenshot                                                                                        | Purpose                                          |
-| ----------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| 1366 px           | [Compact workstation](docs/assets/chemview-1366x768.png)                                          | Panel visibility and vertical scrolling          |
-| 1440 px           | [Primary portfolio screenshot](docs/assets/chemview-dashboard.png)                                | Balanced process/control workspace               |
-| 1440 px           | [Focused instrumentation and numerical validation](docs/assets/chemview-engineering-evidence.png) | Both expanded engineering panels in one viewport |
-| 1920 px           | [Wide workstation](docs/assets/chemview-1920x1080.png)                                            | Expanded reactor graphics and event history      |
-
-These are actual Playwright screenshots of a **simulated** running process, not design mockups. The workstation captures are full-page; the engineering-evidence image is a focused 1440×900 viewport. The evidence captures deliberately expand the P&ID and model-benchmark sections; numerical comparisons verify the synthetic equations and are not experimental plant calibration. See [capture provenance and viewport checks](docs/design-qa.md).
-
-![Current synthetic P&ID and analytical model-reference evidence](docs/assets/chemview-engineering-evidence.png)
-
-## Run locally
-
-Requires **Node.js 22**, npm and optionally Java 21 for the Firestore emulator. No physical plant or Modbus hardware is needed.
+Requires **Node.js 22**, npm and optionally Java 21 for the Firestore emulator.
 
 ```bash
 npm ci
 npm run dev
 ```
 
-Open `http://localhost:9002`. The simulator starts with bounded in-memory storage and deterministic alarm rules. You may configure optional server-only credentials in a local `.env` file using [.env.example](.env.example) as reference. Never embed secrets in browser code.
+Open `http://localhost:9002`. The simulator starts with bounded in-memory storage and deterministic alarm rules. Optional server-only credentials go in a local `.env` file; see [.env.example](.env.example). Never embed secrets in browser code.
 
 **Quality checks**
 
@@ -53,9 +36,31 @@ npm run test:firestore  # requires Java / Firebase emulator
 npm run test:e2e       # requires Playwright Chromium
 ```
 
-## API and operator constraints
+## Features
 
-| Endpoint                               | Demonstration contract                                                   |
+- **Server-owned process simulation:** synthetic energy balance, tank discharge, motor response and pH observation, driven by deterministic seeded experiments.
+- **Operator-focused HMI:** official NEXUS logo and midnight/cyan/blue/lavender palette, simulated P&ID, time-series plots, Modbus traffic traces, diagnostics and context-aware controls. E-STOP red and thermal-warning orange are reserved for their semantic meaning.
+- **Safety-rule simulation:** mixer/discharge interlocks, minimum heater level, unconditional latched E-STOP, authenticated reset where configured and deterministic alarms.
+- **Telemetry handling:** validated SSE messages, session UUIDs, duplicate/out-of-order rejection, last-known-value warnings and per-session telemetry, alarm and audit histories.
+- **Optional AI explanations:** Gemini/Genkit can comment on deterministic alarms but cannot make, delay or veto interlock decisions.
+- **Testing:** TypeScript, ESLint, Prettier, Vitest, Firestore emulator, Playwright and CircleCI.
+
+## Screenshots
+
+| Workstation width | Screenshot                                                                                        | Purpose                                          |
+| ----------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| 1366 px           | [Compact workstation](docs/assets/chemview-1366x768.png)                                          | Panel visibility and vertical scrolling          |
+| 1440 px           | [Primary screenshot](docs/assets/chemview-dashboard.png)                                          | Balanced process/control workspace               |
+| 1440 px           | [Focused instrumentation and numerical validation](docs/assets/chemview-engineering-evidence.png) | Both expanded engineering panels in one viewport |
+| 1920 px           | [Wide workstation](docs/assets/chemview-1920x1080.png)                                            | Expanded reactor graphics and event history      |
+
+Playwright captures of the running simulator. The workstation captures are full-page; the instrumentation image is a focused 1440×900 viewport with the P&ID and model-benchmark sections expanded. See [capture details](docs/design-qa.md).
+
+![Synthetic P&ID and analytical model-reference comparison](docs/assets/chemview-engineering-evidence.png)
+
+## API
+
+| Endpoint                               | Behavior                                                                 |
 | -------------------------------------- | ------------------------------------------------------------------------ |
 | `GET /api/stream`                      | Validated server-sent synthetic snapshots                                |
 | `POST /api/command`                    | Server-validated operator commands; E-STOP always exempt from throttling |
@@ -63,9 +68,9 @@ npm run test:e2e       # requires Playwright Chromium
 | `GET /api/history` / `GET /api/export` | Current-run telemetry or explicitly selected archived run; CSV export    |
 | `GET /api/alerts` / `GET /api/audit`   | Read-only current-run or archived synthetic event history                |
 
-The shared simulator permits up to **60 ordinary commands per 10 seconds**. It rejects stale browser preconditions when another operator changes a control. A validated SSE sample must advance before the browser marks telemetry live; after 6 seconds without advancing data it shows **stale**. Archived event records are observational, not certified audit evidence.
+The shared simulator allows up to **60 ordinary commands per 10 seconds** and rejects stale browser preconditions when another operator changes a control. A validated SSE sample must advance before the browser marks telemetry live.
 
-**Do not expose an unrestricted write-enabled instance to the internet.** Without `OPERATOR_TOKEN`, command/scenario endpoints permit unauthenticated simulated writes; with that token set the stock browser cannot submit protected commands. See [SECURITY.md](SECURITY.md) for the exact boundary. There is no real PLC/Modbus-TCP connection and no SIL certification.
+Without `OPERATOR_TOKEN`, command/scenario endpoints accept unauthenticated simulated writes; with the token set, the stock browser cannot submit protected commands. Do not expose an unrestricted write-enabled instance to the internet. See [SECURITY.md](SECURITY.md).
 
 ## Repository structure
 
@@ -83,10 +88,10 @@ src/
 e2e/                           Playwright operator and visual regression tests
 docs/
   architecture.md              Runtime architecture, interfaces and invariants
-  science-validation.md        Only source for equations and scientific limits
+  science-validation.md        Equations and scientific limits
   design-qa.md                 NEXUS identity, image sources and UI validation
-  integration-verification.md  Acceptance criteria, CI and evidence provenance
-  assets/                      Four reviewed, SHA-256-pinned HMI screenshots
+  integration-verification.md  Acceptance criteria and CI
+  assets/                      Four SHA-256-pinned HMI screenshots
 public/                         Official NEXUS logo
 scripts/                        Documentation/image-integrity automation
 .github/                        CI and opt-in Copilot engineering tools
@@ -94,12 +99,15 @@ scripts/                        Documentation/image-integrity automation
 .idx/                           Optional Firebase Studio editor configuration
 ```
 
-**Documentation ownership:** This README is the project entry point and reviewer overview. The four `docs/` Markdown files each own a separate engineering subject; [CONTRIBUTING.md](CONTRIBUTING.md) defines the contribution workflow, [SECURITY.md](SECURITY.md) documents exposure and unresolved advisories, and [CHANGELOG.md](CHANGELOG.md) preserves chronological milestones. Avoid parallel specifications and date-stamped status reports that become stale.
+See also [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md) (exposure and open advisories) and [CHANGELOG.md](CHANGELOG.md).
 
-The Firebase/App Hosting manifests and editor configuration are optional development infrastructure, not evidence of a production deployment. Review simulation behavior through the tests and the source of truth above, not through marketing claims.
+## Limitations
 
-## Boundaries and license
+- **Simulation only.** One fictional vessel with no real PLC/Modbus-TCP connection or plant integration. It is not a calibrated digital twin; scientific values are illustrative.
+- **Model checks verify consistency, not accuracy.** Agreement with analytical references confirms the code implements the synthetic equations; it is not calibration against real equipment.
+- **No certified safety function.** Interlocks and E-STOP are simulated, with no SIL rating; physical safety measures need independent engineering verification. Archived event records are not certified audit records.
+- **Not a production deployment.** Firebase/App Hosting manifests and editor configuration are optional development infrastructure. ChemView is a noncommercial project with no customer environments or production operations.
 
-ChemView is strictly a **noncommercial research/portfolio demo**. No subscriptions, customer environments, real plant integration or production operations are part of the project. Scientific values are illustrative, not calibrated; physical safety measures require independent engineering verification.
+## License
 
-Source code: MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).
